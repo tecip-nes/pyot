@@ -1,1 +1,1 @@
-TeCIP live testbed registration
+PyoT registration

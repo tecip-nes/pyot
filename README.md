@@ -12,7 +12,7 @@ PyoT puts together Django, Celery, libcoap:
 
 PyoT comes with a Contiki Cooja simulation for local testing.
 
-Requirements and installation
+Requirements and installation (tested on Ubuntu 12.04)
 --------------
 To test PyoT locally you need CONTIKI OS tree.
 
@@ -80,7 +80,7 @@ PyoT Celery workers are designed to be executed on embedded devices connected to
 
 Also change LOCAL_DB to *False* (you will need a mySQL db). Repeat DB installation phase (syncdb command) to create the mySQL DB. I assume that you will install a mySQL server on the same machine where  Web application server is executed.
 
-You will have two copies of PyoT running, one on the web application server, the other one on the (embedded)platform connected to the border router. On the web application server set 
+You will have two copies of PyoT running, one on the web application server, the other one on the (embedded) platform connected to the border router. On the web application server set 
 ```py
 WEB_APPLICATION_SERVER = True
 ```
