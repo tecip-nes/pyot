@@ -184,8 +184,6 @@ INSTALLED_APPS = (
     'django_evolution',
     'registration',
     'debug_toolbar',
-	#'livesettings',
-    #'keyedcache',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -249,17 +247,6 @@ LOGGING = {
             'level': 'DEBUG',
             'class':'django.utils.log.NullHandler',
             }, 
-        #'mail_admins': {
-        #    'level': 'ERROR',
-        #    'class': 'django.utils.log.AdminEmailHandler'
-        #}                  
-        #'db_logging': {
-        #    'level' : 'DEBUG',
-        #    'class' : 'logging.handlers.RotatingFileHandler',
-        #    'backupCount' : 5,
-        #    'maxBytes': 5000000,
-        #    'filename': '/home/enel/logs/django-db.log'
-        #    },
         },
         'loggers': {
             'django.db' : {
@@ -272,16 +259,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         }, 
-        #'django.request': {
-        #    'handlers': ['mail_admins'],
-        #    'level': 'ERROR',
-        #    'propagate': True,
-        #},                
         }
 }
 
 
-# FIXME: Monkeypatch python not to print "Broken Pipe" errors to stdout.
+# Monkeypatch python not to print "Broken Pipe" errors to stdout.
 import SocketServer
 from wsgiref import handlers
 SocketServer.BaseServer.handle_error = lambda *args, **kwargs: None
