@@ -1,3 +1,6 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 from celery.task import task, periodic_task
 from celery.signals import task_revoked
 from models import *

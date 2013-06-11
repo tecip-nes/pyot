@@ -1,7 +1,7 @@
 '''
 Created on Oct 22, 2012
 
-@author: andrea
+@author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
 from models import *

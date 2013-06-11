@@ -1,3 +1,6 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 import logging
 from django.shortcuts import HttpResponse, render
 from django.http import HttpResponseBadRequest

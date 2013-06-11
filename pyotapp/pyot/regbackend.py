@@ -1,7 +1,9 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 import Forms
 from models import UserProfile
 from django.contrib.auth import login
-#, authenticate
 
 def user_created(sender, user, request, **kwargs):
     form = Forms.CustomRegistrationForm(request.POST)

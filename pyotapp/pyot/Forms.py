@@ -1,6 +1,7 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 from django import forms
-#import os
-#import logging
 from models import Resource, METHOD_CHOICES
 #from django.forms import ModelForm
 from registration.forms import RegistrationFormTermsOfService
@@ -33,36 +34,10 @@ class CustomRegistrationForm(RegistrationFormTermsOfService):
         #user.save()
     '''
 
-'''
-class ScriptForm(forms.Form):
-    docfile = forms.FileField(
-        label='Select a file',
-        help_text='must be a .py file'
-    )
-    maj_v = forms.CharField(widget=forms.TextInput(attrs={'size':'1'}),
-                              max_length=1, required=True)
-    min_v = forms.CharField(widget=forms.TextInput(attrs={'size':'1'}),
-                              max_length=1, required=True)
-    def clean(self):
-        cleaned_data = self.cleaned_data
-        #TODO: controllo del numero di telefono e del prefisso
-        #check passwords match
-        f = cleaned_data.get("docfile")
-        _name, ext = os.path.splitext(f.name)
-        if ext != '.py' :
-            logging.debug('estensione errata: ' + ext)
-            raise forms.ValidationError("Must be a .py file")
-        return cleaned_data 
-''' 
 class HandlerForm(forms.Form):
     Description = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}), max_length=50, required=True)
     MaxActivations = forms.IntegerField(min_value = 1, initial=1)
 
-'''    
-class CodeHandlerForm(HandlerForm):
-    VmResource = forms.ModelChoiceField(queryset = VmResource.objects.filter(host__active=True) )
-    Script = forms.ModelChoiceField(queryset = PyScript.objects.all() )
-'''
 class MsgHandlerForm(HandlerForm):
     Resource = forms.ModelChoiceField(queryset = Resource.objects.all().filter(host__active=True).exclude(uri='.well-known') )
     Payload = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),

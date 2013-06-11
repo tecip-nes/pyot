@@ -1,3 +1,6 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 from django.db import models
 import logging
 from datetime import datetime, timedelta

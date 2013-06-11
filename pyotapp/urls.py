@@ -1,3 +1,6 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 from django.conf.urls.defaults import patterns, include, url
 from pyot.Forms import CustomRegistrationForm
 from registration.views import register

@@ -1,12 +1,7 @@
-
-from tasks import coapPut, coapGet, coapPost
 '''
-def sendScript(vm, script):
-    res = coapSendScript.delay(vm, script)
-    print 'res ',  res
-    res.wait()
-    return res.result     
-'''    
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
+from tasks import coapPut, coapGet, coapPost
     
 def sendMsg(msg): 
     if msg.method == 'PUT':

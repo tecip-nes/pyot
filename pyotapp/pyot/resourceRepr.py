@@ -1,3 +1,6 @@
+'''
+@author: Andrea Azzara' <a.azzara@sssup.it>
+'''
 from django.template import Context
 from models import *
 
