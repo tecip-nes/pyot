@@ -1,0 +1,16 @@
+{% extends "base.htm" %}
+{% block title %}Resource List{% endblock %}
+
+
+	{% block h1 %}<h1>Resource List</h1>{% endblock %}
+	
+{% block content %}
+	<script type="text/javascript" >var hostid = '{{ listVar }}';</script>
+
+	<div><table id="resourcetable" style="display:none"></table></div>
+
+	<div class="feedback" id="feedback"></div>
+	<script type="text/javascript" src="/static/list_common.js"></script>
+	<script type="text/javascript" src="/static/resources_list.js"></script>
+	 
+{% endblock %}

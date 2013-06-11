@@ -1,0 +1,41 @@
+CoAP server started on: {{ starttime }}.
+Uptime: {{ uptime }}
+Uptime (seconds): {{ timealiveSecs }}
+=== Global stats ===
+
+Host Count: {{ hostcount }}
+Active Host count: {{hostsactiveCount}}
+Resource Count (.well known excluded): {{ rescount }}
+
+Message Count from subscriptions: {{ msgsubs }}
+
+Resource Discoveries:  {{ discoveries }}
+
+Registrations: {{ registrations }}
+
+Hosts canceled: {{ canceled }}
+
+=== Per host stats ===
+{% for h in perHost %}
+HostIP: {{ h.ip}}
+    Active : {{ h.active }}
+    Last Seen on: {{ h.lastSeen }}
+    Discoveries: {{h.discount}}
+    Cleanings: {{h.cleancount}}
+    Registrations: {{h.regcount}}
+    Keep Alive Count: {{ h.kacount }}
+    Expected Messages: {{ h.expected }}
+    Received: {{ h.perc }} %.
+{% endfor %}
+
+=== Per subscription stats ===
+
+{% for s in perSub %}
+    Resource : {{ s.res }}
+    Type: {{ s.type}}
+    Period: {{s.period}}
+    Threshold: {{s.thr}}
+    Time added: {{s.timeadded}}
+    Message Count: {{ s.messcount }}
+
+{% endfor %}

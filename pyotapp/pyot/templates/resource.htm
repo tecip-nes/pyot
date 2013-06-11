@@ -1,0 +1,70 @@
+{% extends "base.htm" %}
+
+{% block title %}Resource {{ rid }} - {{ uri }} on Host {{ ip }} {% endblock %}
+
+{% block h1 %} 
+
+	<div><h1> Resource {{ uri }} on <a style="text-decoration:none; color: inherit;" href="/resources?id={{hid}}">Host {{ ip }} </a></h1></div> 
+
+{% endblock %}
+	
+{% block includes %}
+	<script type="text/javascript" src="/static/jquery.blockUI.js"></script>	
+	<script type="text/javascript" src="/static/resource.js"></script>
+	<script type="text/javascript" >
+	var currentSt = "CON";
+
+	function setStatus(msg){
+		//$("#resStatus").html(msg);
+		if (msg.substring(0, 3) != currentSt){
+
+			if (msg.substring(0, 3) == "DIS"){
+
+				currentSt = "DIS";
+				$.blockUI({ message: '<h1>Resource disconnected...</h1><a href="{% url hosts %}">Hosts</a>' }); 
+			}
+			else{
+				currentSt = "CON";
+				$.unblockUI();
+			}
+		
+		}
+	}
+	
+	
+        $(document).ready(function() {
+            var source = new EventSource('/resourceStatus/{{ rid }}');
+
+            source.addEventListener("resStatus", function(e) {
+                 setStatus(e.data);
+            });
+        });	
+	
+	</script> 
+
+
+
+{% endblock %}
+
+{% block content %}
+
+	<p>Payload: <input type="text" name="payload" id = "payload"/></p>
+	<p>
+		<input type="submit" value="GET" onclick = "req('GET', {{ rid }});"/> 
+		<input type="submit" value="POST"  onclick = "req('POST', {{ rid }});"/>
+		<input type="submit" value="PUT"  onclick = "req('PUT', {{ rid }});"/>
+	</p>
+
+	
+	<textarea id="feedback" rows="20" cols="80" readonly></textarea>
+	 
+{% endblock %}
+
+{% block extra %}
+		
+
+<script type="text/javascript" >
+
+
+</script> 
+{% endblock %}

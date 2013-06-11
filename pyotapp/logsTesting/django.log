@@ -1,0 +1,146 @@
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.6/dist-packages/django/core/handlers/base.py", line 111, in get_response
+    response = callback(request, *callback_args, **callback_kwargs)
+  File "/home/andrea/Desktop/contikiSnm/pyotapp/pyot/views.py", line 32, in home
+    return render(request,'home.htm')
+  File "/usr/local/lib/python2.6/dist-packages/django/shortcuts/__init__.py", line 44, in render
+    return HttpResponse(loader.render_to_string(*args, **kwargs),
+  File "/usr/local/lib/python2.6/dist-packages/django/template/loader.py", line 176, in render_to_string
+    return t.render(context_instance)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 140, in render
+    return self._render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 134, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 823, in render
+    bit = self.render_node(node, context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/debug.py", line 74, in render_node
+    return node.render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/loader_tags.py", line 123, in render
+    return compiled_parent._render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 134, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 823, in render
+    bit = self.render_node(node, context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/debug.py", line 74, in render_node
+    return node.render(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/defaulttags.py", line 274, in render
+    match = condition.eval(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/defaulttags.py", line 823, in eval
+    return self.value.resolve(context, ignore_failures=True)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 571, in resolve
+    obj = self.var.resolve(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 721, in resolve
+    value = self._resolve_lookup(context)
+  File "/usr/local/lib/python2.6/dist-packages/django/template/base.py", line 754, in _resolve_lookup
+    current = getattr(current, bit)
+  File "/usr/local/lib/python2.6/dist-packages/django/utils/functional.py", line 184, in inner
+    self._setup()
+  File "/usr/local/lib/python2.6/dist-packages/django/utils/functional.py", line 248, in _setup
+    self._wrapped = self._setupfunc()
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/auth/middleware.py", line 16, in <lambda>
+    request.user = SimpleLazyObject(lambda: get_user(request))
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/auth/middleware.py", line 8, in get_user
+    request._cached_user = auth.get_user(request)
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/auth/__init__.py", line 98, in get_user
+    user_id = request.session[SESSION_KEY]
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/sessions/backends/base.py", line 39, in __getitem__
+    return self._session[key]
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/sessions/backends/base.py", line 165, in _get_session
+    self._session_cache = self.load()
+  File "/usr/local/lib/python2.6/dist-packages/django/contrib/sessions/backends/db.py", line 19, in load
+    expire_date__gt=timezone.now()
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/manager.py", line 131, in get
+    return self.get_query_set().get(*args, **kwargs)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 361, in get
+    num = len(clone)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 85, in __len__
+    self._result_cache = list(self.iterator())
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 291, in iterator
+    for row in compiler.results_iter():
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/compiler.py", line 763, in results_iter
+    for rows in self.execute_sql(MULTI):
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/compiler.py", line 818, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/util.py", line 40, in execute
+    return self.cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/sqlite3/base.py", line 337, in execute
+    return Database.Cursor.execute(self, query, params)
+DatabaseError: no such table: django_session
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Internal Server Error: /hostsList
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.6/dist-packages/django/core/handlers/base.py", line 111, in get_response
+    response = callback(request, *callback_args, **callback_kwargs)
+  File "/home/andrea/Desktop/contikiSnm/pyotapp/pyot/views.py", line 177, in hostsList
+    filteredHostList = p.page(page).object_list
+  File "/usr/local/lib/python2.6/dist-packages/django/core/paginator.py", line 37, in page
+    number = self.validate_number(number)
+  File "/usr/local/lib/python2.6/dist-packages/django/core/paginator.py", line 28, in validate_number
+    if number > self.num_pages:
+  File "/usr/local/lib/python2.6/dist-packages/django/core/paginator.py", line 60, in _get_num_pages
+    if self.count == 0 and not self.allow_empty_first_page:
+  File "/usr/local/lib/python2.6/dist-packages/django/core/paginator.py", line 48, in _get_count
+    self._count = self.object_list.count()
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 351, in count
+    return self.query.get_count(using=self.db)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/query.py", line 418, in get_count
+    number = obj.get_aggregation(using=using)[None]
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/query.py", line 384, in get_aggregation
+    result = query.get_compiler(using).execute_sql(SINGLE)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/compiler.py", line 818, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/util.py", line 40, in execute
+    return self.cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/sqlite3/base.py", line 337, in execute
+    return Database.Cursor.execute(self, query, params)
+DatabaseError: no such table: pyot_host
+Not Found: /favicon.ico
+Internal Server Error: /resources
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.6/dist-packages/django/core/handlers/base.py", line 111, in get_response
+    response = callback(request, *callback_args, **callback_kwargs)
+  File "/home/andrea/Desktop/contikiSnm/pyotapp/pyot/views.py", line 202, in resources
+    if len(allres) > 0:
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 85, in __len__
+    self._result_cache = list(self.iterator())
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/query.py", line 291, in iterator
+    for row in compiler.results_iter():
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/compiler.py", line 763, in results_iter
+    for rows in self.execute_sql(MULTI):
+  File "/usr/local/lib/python2.6/dist-packages/django/db/models/sql/compiler.py", line 818, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/util.py", line 40, in execute
+    return self.cursor.execute(sql, params)
+  File "/usr/local/lib/python2.6/dist-packages/django/db/backends/sqlite3/base.py", line 337, in execute
+    return Database.Cursor.execute(self, query, params)
+DatabaseError: no such table: pyot_host
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico

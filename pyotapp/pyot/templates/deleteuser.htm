@@ -1,0 +1,12 @@
+{% extends "base.htm" %}
+{% block title %}Delete User?{% endblock %}
+	
+	{% block h1 %}<h1>Deleting User...</h1>{% endblock %}
+{% block content %}
+
+
+<p>Are you really sure?? </p>
+<p><a href="{% url confirmdeleteuser %}">Yes, I am.</a></p>
+
+
+{% endblock %}

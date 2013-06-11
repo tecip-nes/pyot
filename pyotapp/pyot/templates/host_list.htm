@@ -1,0 +1,16 @@
+{% extends "base.htm" %}
+{% block title %}Host List{% endblock %}
+
+	{% block h1 %}<h1>Host List</h1>{% endblock %}
+	
+{% block content %}
+
+
+	<table id="hoststable" style="display:none"></table>
+
+	<div class="feedback" id="feedback"> </div>
+	<div class="ph" id="ph"></div>
+	<script type="text/javascript" src="/static/list_common.js"></script>
+	<script type="text/javascript" src="/static/host_list.js"></script>
+	 
+{% endblock %}

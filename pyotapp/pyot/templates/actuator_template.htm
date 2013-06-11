@@ -1,0 +1,65 @@
+{% extends "resource.htm" %} {% block content %}
+
+<p style="visibility: hidden;">
+	Payload: <input type="text" name="payload" id="payload" />
+</p>
+<IMG id="act_img" SRC="/static/images/qm.png" onclick="changeAct()";>
+<p>
+	<input type="submit" value="GET" onclick="reqact('GET', {{ rid }});" />
+</p>
+
+<script type="text/javascript" src="/static/resource.js"></script>
+
+<textarea id="feedback" rows="5" cols="80" readonly></textarea>
+
+<script type="text/javascript">
+
+	var imOff = "/static/images/off.jpg";
+	var imOn = "/static/images/on.jpg";
+	var img = document.getElementById("act_img").src; 
+	var state = "unknown";
+	 function changeAct(){
+			 var payload = '2';
+			    $.ajax({
+			          type: "GET",
+			          url: "/opRes",
+			          data: "op=" + 'PUT' +"&id=" + {{ rid }} +'&pd=' + payload,
+			          success: function(msg){
+			                     setFeedback(msg);
+			                     if (msg == "ACK + 200 OK /"){
+									if (state == "on"){
+										document.getElementById("act_img").src = imOff;
+										state = "off";
+									}
+									else if (state == "off"){
+										document.getElementById("act_img").src = imOn;
+										state = "on";								
+									}
+			                     }
+			                   }
+			     });
+		 }
+
+	function reqact(op, id){
+		
+		payload = document.getElementById('payload').value;
+	    $.ajax({
+	          type: "GET",
+	          url: "/opRes",
+	          data: "op=" + op +"&id=" + id +'&pd=' + payload,
+	          success: function(msg){
+	                     setFeedback(msg);
+		          		if (msg == '0'){
+		          			state = "on";
+		          			document.getElementById("act_img").src = imOn;
+			          		}
+		          		else if (msg == '1'){
+		          			state = "off";
+		          			document.getElementById("act_img").src = imOff;
+			          		}	                     
+	                   }
+	     });
+	}	
+	
+	 </script>
+{% endblock %}

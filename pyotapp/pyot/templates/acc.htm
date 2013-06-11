@@ -1,0 +1,105 @@
+{% extends "resource.htm" %}
+	
+{% block content %}
+	
+<!-- 	<p>
+		<input type="submit" value="GET" onclick = "req('GET', {{ rid }});"/> 
+		
+	</p> -->
+	
+	<div>Threshold: <input type="text" name="payload" id = "thr"/>
+	
+	<select id = "opType">
+	   <option value="greater">&gt;</option>
+	   <option value="equal">=</option>
+	   <option value="less">&lt;</option>
+ 	</select>
+	<input type="submit" value="OBSERVE"  onclick = "obs({{ rid }});"/>
+	
+	{% if handlers %}
+	<select id = "handler">	
+		<option value="0">No Handler</option>
+    {% for handler in handlers %}
+        <option value="{{ handler.id }}">{{ handler.description  }}</option> 
+    {% endfor %}
+	</select>
+	{% else %}
+	<div id = "handler"></div>
+	{% endif %}	
+
+	
+	<a href="/handlers/">Create new event handler</a>
+	</div>
+	
+	
+	
+	<textarea id="feedback" rows="3" cols="80" readonly></textarea>
+	<div id="last"></div>
+	<br>
+	<table style = "margin-left: auto; margin-right: auto;">
+		<tr>
+		<td><table id="msgstable" style="display:none"></table></td> 
+		</tr>
+		<tr>
+		<td><div id="placeholder" style="width:500px;height:350px;"></div></td> 
+		</tr>
+
+	</table>
+	<script type="text/javascript"> var subActive= false; </script>
+	<div id="subList"></div>
+	<p><a href="{% url home %}">Home</a> | <a href="{% url hosts %}">Hosts</a> </p>
+	
+	<script type="text/javascript">
+	$("#msgstable").flexigrid({
+		url: '/obsList',
+		method: 'GET',
+		dataType: 'json',
+		colModel : [
+		            {display: 'Id', name : 'id', width : 30, sortable : false, align: 'left'}, 
+		            {display: 'Timestamp', name : 'timeadded', width : 130, sortable : true, align: 'left'},
+		            {display: 'Value', name : 'response', width : 50, sortable : false, align: 'left'},
+		            ],
+
+		                       sortname: "timeadded",
+		                       sortorder: "desc",
+		                       usepager: true,
+		                       title: 'Resources',
+		                       useRp: true,
+		                       rp: 15,
+		                       showTableToggleBtn: true,
+		                       width: 500,
+		                       onSubmit: addFormData,
+		                       height: 250
+	});	
+
+	function reloadTable(){
+	    $('#msgstable').flexReload();
+	    setTimeout("reloadTable()",5000);
+	}
+	reloadTable();
+	//This function adds paramaters to the post of flexigrid. You can add a verification as well by return to false if you don't want flexigrid to submit			
+	function addFormData(){
+		//passing a form object to serializeArray will get the valid data from all the objects, but, if the you pass a non-form object, you have to specify the input elements that the data will come from
+		var dt = $('#sform').serializeArray();
+		
+		$('#msgstable').flexOptions({query: {{rid}}, qtype: 'id'});
+		return true;
+	}
+
+	var rid = {{rid}};
+
+	function terminate(pid){
+		    $.ajax({
+		          type: "GET",
+		          url: "/terminate",
+		          data: "pid=" + pid,
+		          success: function(msg){
+		                     setFeedback(msg);
+		                   }
+		     });
+		}
+	</script>
+	<script type="text/javascript" src="/static/acc.js"></script>
+	<script type="text/javascript" src="/static/jquery.flot.js"></script>
+	
+{% endblock %}

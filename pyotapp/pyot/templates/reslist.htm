@@ -1,0 +1,19 @@
+{% if lista %}
+
+<table class="rounded-corner">
+	<thead>
+		<tr>
+			<th scope="col" class="rounded-company">ID</th>
+			<th scope="col" class="rounded-q1">Host</th>
+			<th scope="col" class="rounded-q1">URI</th>
+		</tr>
+	</thead>
+{% for f in lista %}
+	<tr>
+		<td>{{ f.id}} </td>
+		<td> {{f.host.ip6address}} </td>
+		<td> {{f.uri}} </td>
+	</tr>
+{% endfor %}
+</table>
+{% endif %}

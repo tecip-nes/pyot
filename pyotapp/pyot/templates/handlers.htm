@@ -1,0 +1,72 @@
+{% extends "base.htm" %}
+{% block title %}Event Handlers{% endblock %}
+
+{% block h1 %}<h1>Event Handlers</h1>{% endblock %}
+
+{% block content %}
+
+	{% if msghandlers %}
+		<h2>Current Message handlers</h2>
+	<table id="hor-minimalist-a">
+	    <tr>
+		    <th>ID</th>
+		    <th>Description</th>
+		    <th>Activation Count</th>
+		    <th>Max Activations Limit</th> 
+		    <th>Remove Handler</th> 
+	    </tr>
+    {% for msghandler in msghandlers %}
+        <tr>
+        <td>{{ msghandler.id }}</td>
+        <td>{{ msghandler.description }}</td>
+        <td>{{ msghandler.activationCount }}</td>
+        <td>{{ msghandler.max_activations }}</td>
+        <td><a href="/remHandler/{{ msghandler.eventhandler_ptr.id}}/">Remove</a></td>
+        </tr>
+    {% endfor %}
+    </table>
+	{% endif %}	
+
+<!-- 	{% if codehandlers %}
+		<br> Code handlers <br>
+	    <ul>
+	    {% for codehandler in codehandlers %}
+	        <li>
+	        {{ codehandler.id }} , {{ codehandler.description }}, {{ codehandler.activationCount }}, {{ codehandler.max_activations }}
+			<a href="/remHandler/{{ codehandler.eventhandler_ptr.id}}/">Remove Handler</a>	       
+	        </li>
+	    {% endfor %}
+	    </ul>
+	{% else %}
+	    <p>No Code handlers </p>
+	{% endif %}	
+	
+	
+	----------------------------------- -->
+
+<!-- 	<br>Code Event Form
+<form action="{% url handlers %}" method="post" enctype="multipart/form-data">
+    {{ codeForm.as_p }}
+    <input type="submit" value="New" />
+</form>	 
+
+	----------------------------------- -->
+	<div id="contact-area">	
+		<h3>Create Message Event Handler</h3>
+		<form action="{% url handlers %}" method="post" enctype="multipart/form-data"> {% csrf_token %}
+		    {{ msgForm.as_p }}
+		
+		    <input type="submit" value="New"class="submit-button"  />
+		</form>	
+	</div>
+<!-- 	-----------------------------------
+	<br>Message Event Form, with frequency
+<form action="{% url handlers %}" method="post" enctype="multipart/form-data">
+    {{ msgFormFreq.as_p }}
+
+    <input type="submit" value="New" />
+</form>	 -->
+
+<input type=button value="Previous Page" onClick="javascript:history.go(-1);">
+
+{% endblock %}

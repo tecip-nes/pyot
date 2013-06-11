@@ -1,0 +1,14 @@
+{% extends "base.htm" %}
+
+
+{% block title %}My Account{% endblock %}
+{% block h1 %} <h1>My Account</h1>{% endblock %}
+{% block content %}
+
+<p>If you want to change your password, clic <a href="/password_change">here</a>.</p>
+
+<p>To delete your account, clic <a href="{% url deleteuser %}">here</a>.</p>
+
+
+{% endblock %}
+

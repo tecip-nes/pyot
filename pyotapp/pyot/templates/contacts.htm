@@ -1,0 +1,30 @@
+{% extends "base.htm" %}
+{% block title %}Contacts{% endblock %}
+	
+	{% block h1 %}<h1>Contacts</h1>{% endblock %}
+{% block content %}
+
+<h3>Please, send us comments or... whatever</h3>
+
+<form action="/contacts/" method="post"> {% csrf_token %}
+    {{ form.non_field_errors }}
+    <p class="fieldWrapper">
+        {{ form.subject.errors }}
+        <label for="id_subject">Email subject:</label>
+        {{ form.subject }}
+    </p>
+    <p class="fieldWrapper">
+        {{ form.message.errors }}
+        <label for="id_message">Your message:</label>
+        {{ form.message }}
+    </p>
+    <p class="fieldWrapper">
+        {{ form.sender.errors }}
+        <label for="id_sender">Your email address:</label>
+        {{ form.sender }}
+    </p>
+    <p><input type="submit" value="Send message" /></p>
+</form>
+
+
+{% endblock %}

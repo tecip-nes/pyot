@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<link rel="stylesheet" type="text/css" href="/static/style.css">
+	<link rel="stylesheet" type="text/css" href="/static/flexigrid.css">
+	<link rel="stylesheet" type="text/css" href="/static/tablestyle.css">
+	<script src="/static/jquery-1.8.2.min.js"></script>
+	
+	<script type="text/javascript" src="/static/flexigrid.js"></script>
+	<script type="text/javascript" src="/static/smartupdater.4.0.beta.js"></script>
+	
+{% block includes %}{% endblock %}
+
+	<head>
+		<title>{% block title %}Hello world!{% endblock %}</title>
+	</head>
+	<body>
+
+
+	
+	<div id="wrap">
+	{% block h1 %}
+		<h1>Base Template</h1>
+	{% endblock %}	
+		<ul id="nav">
+	      <li><a href="{% url home %}">PyoT</a></l>
+
+
+
+	      <li><a href="{% url hosts %}">Hosts</a></li>
+	      <li><a href="{% url resources %}">Resources</a></li>
+	      <li><a href="{% url handlers %}">Handlers</a></li>
+	      <li><a href="{% url settings %}">Settings</a></li>
+	      <li><a href="{% url connectivity %}">Connectivity Test</a></li>
+	      <li><a href="/admin">Admin</a></li>
+
+   		</ul>
+	
+		<div id="content">
+		{% block h %}{% endblock %}
+		{% block content %}{% endblock %}
+		{% block extra %}{% endblock %}
+		</div>
+		</div>
+		<div id="bottom" style= "position:relative;">
+
+	<a href="http://www.cnit.it/">
+		<img src="/static/images/cnit.png" height="50" width="90" style="position: absolute; left:70px; top:20px">
+	</a>
+	<a href="http://www.sssup.it/">
+		<img src="/static/images/SSSA.jpg" height="80" width="80" style="position: absolute; left:330px; top:10px">
+	</a>
+	<a href="http://retis.sssup.it/">			
+		<img src="/static/images/Retis.png" height="50" width="90" style="position: absolute; left:600px; top:20px">
+	</a>
+		</div>
+	</body>
+</html>
+

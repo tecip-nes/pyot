@@ -1,0 +1,41 @@
+{% extends "base.htm" %}
+	
+{% block title %}Connectivity Test{% endblock %}
+		{% block h1 %}<h1>Connectivity Test</h1>{% endblock %}
+{% block content %}
+
+	{% if hosts %}
+	<select id = "host">	
+    {% for host in hosts %}
+        <option value="{{ host.id }}">{{ host.ip6address  }}</option> 
+    {% endfor %}
+	</select>
+	<input type="submit" value="Ping"  onclick = "ping();"/>
+	{% else %}
+	<div id = "host"></div>
+	{% endif %}	
+	
+	<textarea id="feedback" rows="8" cols="80" readonly></textarea>
+	
+	<script type="text/javascript">
+
+	function setFeedback(msg){
+		var separator = '****************\n';
+		document.getElementById('feedback').value = msg + '\n' + separator + document.getElementById('feedback').value;
+	}	
+
+	function ping(id){
+		var hostid = document.getElementById('host').value;
+		$.ajax({
+			type: "GET",
+			url: "/startPing/" + hostid,
+			success: function(msg){
+			setFeedback(msg);
+		}
+		});
+	}
+
+	</script>
+
+	
+{% endblock %}
