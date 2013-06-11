@@ -9,7 +9,7 @@
 		<input type="submit" value="PUT"  onclick = "req('PUT', {{ rid }});"/>
 	</p>
 
-{% if user.is_staff %}
+
 	
 	<!--<div>Threshold: <input type="text" name="payload" id = "thr"/>-->
 	<div>Duration: <input type="text" name="duration" id = "duration"/>
@@ -35,7 +35,7 @@
 	<a href="/handlers/">Create new event handler</a>
 	</div>
 	
-{% endif %}	
+	
 	
 	<textarea id="feedback" rows="5" cols="60" readonly></textarea>
 	<div id="last"></div>

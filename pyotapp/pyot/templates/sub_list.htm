@@ -7,10 +7,8 @@
 			<th>Threshold</th>-->
 			<th>Duration</th>			
 			<th>Timeadded</th>
-{% if user.is_staff %}
 			<th>PID</th>
 			<th>Stop</th>
-{% endif %}			
 		</tr>
 	</thead>
 {% for f in subList %}
@@ -19,10 +17,8 @@
 		<td> {{ f.threshold }} </td>-->
 		<td> {{ f.duration }} </td>		
 		<td> {{ f.timeadded}} </td>
-{% if user.is_staff %}
 		<td> {{ f.pid}} </td>	
 		<td> <div class="fake_link" onclick = "terminate('{{f.pid}}');"> Stop task </div ></td>
-{% endif %}
 	</tr>
 {% endfor %}
 </table>

@@ -57,7 +57,7 @@ Start celery workers in another terminal:
 ./manage.py celeryd -B -s celery -E -l INFO -c 10
 ```
 
-Compile and start Cooja simulation:
+Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
 ```sh
 cd pyotapp/appsTesting/contiki_cooja
 make TARGET=cooja server-rd.csc
@@ -68,7 +68,7 @@ Start tunslip, open another terminal and type:
 make connect-router-cooja
 ```
 
-Open 127.0.0.1:8000 in a web browser, enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes .
+Open 127.0.0.1:8000 in a web browser (tested with Chrome), enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
 Macroprogramming tests
 --------------
