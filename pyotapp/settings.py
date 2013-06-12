@@ -246,13 +246,8 @@ LOGGING = {
     }
 }
 
-logfileProduction = os.path.abspath(os.path.dirname(__file__)) + '/logs/django.log'
-logfileTesting  = os.path.abspath(os.path.dirname(__file__)) + '/logsTesting/django.log'
 
-if PRODUCTION:
-    logf = logfileProduction
-else:
-    logf = logfileTesting
+logf = os.path.abspath(os.path.dirname(__file__)) + '/log/django.log'
 
 LOGGING = {
     'version': 1,
