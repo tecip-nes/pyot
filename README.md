@@ -90,3 +90,20 @@ On the (embedded)platform set
 WEB_APPLICATION_SERVER = False
 ```
 and configure SERVER_ADDRESS to the IP address of the Web application server.
+
+Screenshots
+--------------
+**Hosts**
+
+
+![Hosts](https://raw.github.com/tecip-nes/pyot/master/screenshots/hosts.png)
+
+**Observe**
+
+
+![Observe](https://raw.github.com/tecip-nes/pyot/master/screenshots/observe.png)
+
+**Macroprogramming**
+
+
+![Macroprogramming](https://raw.github.com/tecip-nes/pyot/master/screenshots/macroprogramming.png)
