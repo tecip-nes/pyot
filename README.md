@@ -31,10 +31,12 @@ Install python requirements, using virtualenv is reccomended
 sudo pip install -r requirements.txt
 ```
 
-Configure and build libcoap:
+Configure and build libcoap and its examples:
 ```sh
 cd pyotapp/appsTesting/libcoap-4.0.1/
 ./configure
+make
+cd examples
 make
 ```
 
