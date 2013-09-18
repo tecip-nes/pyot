@@ -5,9 +5,9 @@ all: er-example-server er-example-client
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 # for static routing, if enabled
-ifeq ($(TARGET),$(filter $(TARGET),sky cooja))
-PROJECT_SOURCEFILES += static-routing.c
-endif
+#ifeq ($(TARGET),$(filter $(TARGET),sky cooja))
+#PROJECT_SOURCEFILES += static-routing.c
+#endif
 
 # variable for root Makefile.include
 WITH_UIP6=1
