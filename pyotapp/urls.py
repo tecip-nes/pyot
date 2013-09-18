@@ -22,7 +22,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from django.conf.urls.defaults import patterns, include, url
 from pyot.Forms import CustomRegistrationForm
-from registration.views import register
+#from registration.views import register
 import registration.backends.default.urls as regUrls
 from django.views.generic.simple import direct_to_template
 
@@ -60,7 +60,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^startPing/(?P<hid>\d*)', pyot.views.startPing),
     url(r'^shutdown', pyot.views.shutdown),  
-    url(r'^accounts/register/$', 'registration.views.register', {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
+    #url(r'^accounts/register/$', 'registration.views.register', {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
     (r'^accounts/', include('registration.backends.default.urls')), 
     url(r'^', include('django.contrib.auth.urls')),    
     url(r'^login/$', 'django.contrib.auth.views.login',name="my_login"),
