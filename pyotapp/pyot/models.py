@@ -133,7 +133,7 @@ class Host(models.Model):
         return u"%s " % (self.ip6address)
 
     def PING(self, count=3):
-        from tasks import pingTest
+        from tasks import pingHost
         res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
         res.wait()
         return res.result
