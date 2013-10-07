@@ -1,13 +1,12 @@
 
 function obs(id){
-	//var op = document.getElementById('opType').value;
-	//var thr = document.getElementById('thr').value;
 	var duration = document.getElementById('duration').value;
 	var handler = document.getElementById('handler').value;
+	var ren = document.getElementById('renew').checked;	
 	$.ajax({
 		type: "GET",
 		url: "/observe",
-		data: "id=" + id + "&duration=" + duration +"&handler=" + handler,
+		data: "id=" + id + "&duration=" + duration +"&handler=" + handler +"&renew=" + ren,
 		success: function(msg){
 		setFeedback(msg);
 	}

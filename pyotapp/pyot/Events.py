@@ -20,17 +20,15 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from tasks import coapPut, coapGet, coapPost
-    
-def sendMsg(msg): 
+from models import Resource
+
+def sendMsg(msg):
+    res = Resource.objects.get(id=msg.resource.id) 
     if msg.method == 'PUT':
-        res = coapPut.delay(msg.resource.id, msg.payload)
-        res.wait()
+        out = res.PUT(payload = msg.payload)
     if msg.method == 'POST':
-        res = coapPost.delay(msg.resource.id, msg.payload)
-        res.wait()
+        out = res.POST(payload = msg.payload)
     if msg.method == 'GET':
-        res = coapGet.delay(msg.resource.id) 
-        res.wait()  
-    return res.result       
+        out = res.GET(payload = msg.payload)
+    return out       
     

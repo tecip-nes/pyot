@@ -20,6 +20,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
+
 from django.db import models
 import logging
 from datetime import datetime, timedelta
@@ -29,8 +30,9 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 #from django.core.exceptions import ObjectDoesNotExist
 import base64
-
-tfmt = "%Y-%m-%d %H:%M:%S"
+from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
+from settings import TFMT
+from celery.task.control import revoke 
 
 caching = True
 defaultCachingInterval = 60
@@ -56,6 +58,8 @@ LOG_CHOICES = (
     (u'ghost', u'ghost'),
 )
 
+CELERY_DEFAULT_QUEUE = 'celery'
+
 class UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True, related_name='profile')
     organization = models.CharField(max_length=50, blank=False)
@@ -73,83 +77,125 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 post_save.connect(create_user_profile, sender=User)
 
+class Network(models.Model):
+    objects = IPNetworkQuerySet.as_manager()
+    network = IPNetworkField()
+    hostname = models.CharField(max_length=30)
+    pid = models.CharField(max_length=100, null=True, blank=True)
+    timeadded = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def __unicode__(self):
+        return u"%s - %s" % (self.network, self.hostname)
+    
+    def startRD(self):
+        from tasks import coapRdServer
+        r = coapRdServer.apply_async(args=[str(self.network)], queue=self.hostname)
+        self.pid = r.task_id
+        self.save()
+        
+    def stopRD(self):
+        revoke(self.pid, terminate=True)
+        self.pid = None
+        self.save()    
+        
+    def isConnected(self, table=None):
+        pass      
+    
 class Host(models.Model):
-    ip6address = models.CharField(max_length=39)    #len is total number of digits plus ':' chars
+    ip6address = IPAddressField()
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)  
     lastSeen = models.DateTimeField(blank=True)
     active  = models.BooleanField(default = True)
     keepAliveCount = models.IntegerField(default = 0)
     location = models.CharField(max_length=30, blank=True, default='' )
+    kqueue = models.ForeignKey(Network, null = True, blank=True, related_name='queue')
+    
+    def find_network(self):
+        nets = Network.objects.all()
+        for net in nets:
+            if self.ip6address in net.network:
+                return net
+        return None
+        
+    def save(self, *args, **kwargs):
+        n = self.find_network()
+        if n:
+            self.kqueue = n    
+        super(Host, self).save(*args, **kwargs)
+    
+    def getQueue(self):
+        if self.kqueue:
+            return self.kqueue.hostname
+        else:
+            return CELERY_DEFAULT_QUEUE
+    
     def __unicode__(self):
         return u"%s " % (self.ip6address)
-    #def save(self, force_insert=False, force_update=False):
-    #    self.ip6address = self.ip6address.upper()
-    #    super(Host, self).save(force_insert, force_update)
+
     def PING(self, count=3):
         from tasks import pingTest
-        res =  pingTest.delay(self.id, count)
+        res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
         res.wait()
         return res.result
     def DISCOVER(self):
         if self.active == False:
-            return u'Host %s Not Active' % (self.ip6address)
+            return u'Host %s Not Active' % (str(self.ip6address))
         from tasks import coapDiscovery
-        res = coapDiscovery.delay(self.ip6address)
+        res = coapDiscovery.apply_async(args=[str(self.ip6address)], queue=self.getQueue())
         res.wait()
         return res.result
 
 class Resource(models.Model):
     uri = models.CharField(max_length=39)
-    #title = models.CharField(max_length=30, blank=True, default='' )
     host = models.ForeignKey(Host)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True) 
     extra = models.CharField(max_length=30, blank=True, default='' )
     obs = models.BooleanField(default = False)
-    #location = models.CharField(max_length=30, blank=True)
+    
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address) 
-    
+        
     def GET(self, payload=None, timeout=5):
         if caching == True:
             value = getLastResponse(self) 
             if value != None:
                 return value
         from tasks import coapGet
-        res = coapGet.delay(self.id, payload, timeout)
+        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         res.wait()
         return res.result
+
     def PUT(self, payload=None, timeout=5):
         from tasks import coapPut
-        res = coapPut.delay(self.id, payload, timeout)
+        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         res.wait()
         return res.result
 
     def POST(self, payload=None, timeout=5):
         from tasks import coapPost
-        res = coapPost.delay(self.id, payload, timeout)
+        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         res.wait()
         return res.result
     
     def asyncGET(self,payload=None, timeout=5):
         from tasks import coapGet
-        res = coapGet.delay(self.id, payload, timeout)
+        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         return res
 
     def asyncPOST(self,payload=None, timeout=5):
         from tasks import coapPost
-        res = coapPost.delay(self.id, payload, timeout)
+        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         return res
     
     def asyncPUT(self,payload=None, timeout=5):
         from tasks import coapPut
-        res = coapPut.delay(self.id, payload, timeout)
+        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         return res
-     
-    def OBSERVE(self, duration, handler): #TODO handler
+    
+    def OBSERVE(self, duration, handler, renew =False): #TODO handler
         from tasks import coapObserve
-        res = coapObserve.delay(self.id, duration=duration, handler=handler)
+        res = coapObserve.apply_async(kwargs={'rid':self.id, 'duration':duration, 'handler':handler, 'renew': renew}, queue=self.host.getQueue())
         return res
-  
 
 class ModificationTrace(models.Model):
     lastModified = models.DateTimeField(auto_now_add=True, blank=True) 
@@ -157,7 +203,6 @@ class ModificationTrace(models.Model):
     def __unicode__(self):
         return u"{c} - {l}".format(c=self.className, l=self.lastModified) 
         
-   
 class EventHandler(models.Model):
     description = models.CharField(max_length=100)
     activationCount = models.IntegerField(default=0)
@@ -183,11 +228,11 @@ class Subscription(models.Model):
     active  = models.BooleanField(default = True)
     handler = models.ForeignKey(EventHandler, null=True, blank=True)
     def __unicode__(self):
-        return u"{t} {uri} - duration={duration} - active={active}".format(uri=self.resource.uri,
+        return u"{t} {uri} - duration={duration} - active={active}".format(uri=self.resource,
                                                           #type=self.subtype,
                                                           duration=self.duration,
                                                           #thr=self.threshold,
-                                                          t=self.timeadded.strftime(tfmt),
+                                                          t=self.timeadded.strftime(TFMT),
                                                           active=self.active)    
 class CoapMsg(models.Model):
     resource = models.ForeignKey(Resource)
@@ -207,7 +252,7 @@ class CoapMsg(models.Model):
         return u"{t} {method} {uri}: {payload}".format(uri=self.resource.uri,
                                                           method=self.method,
                                                           payload=self.payload,
-                                                          t=self.timeadded.strftime(tfmt))      
+                                                          t=self.timeadded.strftime(TFMT))      
     
 def getLastResponse(resource):
     '''
@@ -242,14 +287,6 @@ class EventHandlerMsg(EventHandler):
         self.activationCount += 1
         self.result  = sendMsg(self.msg)   
         self.save()
-      
-# model to keep the pid of the *only* CoAP server currently running, so that we can
-# revoke it later.
-class RunningServer(models.Model): 
-    ID_CHOICES = ((1,'RunningServer is a single record'),) 
-    id = models.IntegerField(primary_key=True, choices=ID_CHOICES, default=1)
-    pid = models.CharField(max_length=100, blank=True)
-    timeadded = models.DateTimeField(auto_now_add=True, blank=True)
 
 class Log(models.Model):
     type = models.CharField(max_length=30, choices=LOG_CHOICES)

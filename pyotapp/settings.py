@@ -20,7 +20,9 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-import os
+import os, socket
+
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 PRODUCTION = False
 WEB_APPLICATION_SERVER = True
@@ -41,19 +43,23 @@ else:
     SQL_PORT = 13306
     RABBIT_PORT = 15672
 
-#Insert here tasks to be run on the main application server
-#CELERY_ROUTES = {'pyot.tasks.resourceIndexClean': {'queue': 'local'}}
-
 '''
 ADMINS = (
     ('Andrea', 'a.azzara@sssup.it'),
 )
 '''
 
+CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
+CLEANUP_TASK_PERIOD = 30
+CLEANUP_TIME = 90
+
+
+TFMT = "%Y-%m-%d %H:%M:%S" #global format for time strings
+
 AUTH_PROFILE_MODULE = 'pyot.UserProfile'
 
 #MANAGERS = ADMINS
-PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
+
 SQLITE_3 = os.path.join(PROJECT_PATH, 'db')
 
 if LOCAL_DB:
@@ -247,7 +253,7 @@ LOGGING = {
 }
 
 
-logf = os.path.abspath(os.path.dirname(__file__)) + '/log/django.log'
+LOGF = os.path.abspath(os.path.dirname(__file__)) + '/log/django.log'
 
 LOGGING = {
     'version': 1,
@@ -258,7 +264,7 @@ LOGGING = {
             'class' : 'logging.handlers.RotatingFileHandler',
             'backupCount' : 5,
             'maxBytes': 5000000,
-            'filename': logf
+            'filename': LOGF
             },
         'null': {
             'level': 'DEBUG',

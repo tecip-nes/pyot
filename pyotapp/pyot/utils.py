@@ -52,13 +52,15 @@ def get_statistics():
     
     rescount = Resources.count()
 
+    return {}
+
     #server started
     now = datetime.now()
     try:
         server = RunningServer.objects.get()
 
         startT = server.timeadded
-        starttime = startT.strftime(tfmt)
+        starttime = startT.strftime(TFMT)
         #server uptime
         uptime = now - startT   
         messub = CoapMsg.objects.exclude(sub=None).filter(timeadded__gte=startT)
@@ -104,7 +106,7 @@ def get_statistics():
                   'cleancount':cleancount,
                   'regcount':regcount,
                   'active':active,
-                  'lastSeen':lastSeen.strftime(tfmt),
+                  'lastSeen':lastSeen.strftime(TFMT),
                   'kacount': keepaliveCount,
                   'expected': expectedMessages,
                   'perc': perc}
@@ -118,7 +120,7 @@ def get_statistics():
                   'type': s.subtype,
                   'period': s.period,
                   'thr': s.threshold,
-                  'timeadded':s.timeadded.strftime(tfmt),
+                  'timeadded':s.timeadded.strftime(TFMT),
                   'messcount': messcount} 
            perSub.append(dic)         
         '''

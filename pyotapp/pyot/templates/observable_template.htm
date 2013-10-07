@@ -13,11 +13,7 @@
 	
 	<!--<div>Threshold: <input type="text" name="payload" id = "thr"/>-->
 	<div>Duration: <input type="text" name="duration" id = "duration"/>
-	<!--<select id = "opType">
-	   <option value="greater">&gt;</option>
-	   <option value="equal">=</option>
-	   <option value="less">&lt;</option>
- 	</select>-->
+    <input type="checkbox" name="renew" id="renew">Auto Renew<br>
 	<input type="submit" value="OBSERVE"  onclick = "obs({{ rid }});"/>
 	
 	{% if handlers %}

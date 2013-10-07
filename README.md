@@ -9,6 +9,7 @@ PyoT puts together Django, Celery, libcoap:
   - CoAP resources, 6LoWPAN nodes are abstracted as high-level Django models objects
   - Provides a nice interface to interact with CoAP resources
   - Enables macroprogramming, using Django shell
+  - Supports multiple network handled by different celery worker nodes
 
 PyoT comes with a Contiki Cooja simulation for local testing.
 
@@ -23,7 +24,7 @@ export CONTIKI PATH_TO_CONTIKI_ROOT
 
 Installing general requirements:
 ```sh
-sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev
+sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev
 ```
 
 Install python requirements, using virtualenv is reccomended
@@ -43,7 +44,7 @@ make
 Database creation:
 ```sh
 cd pyotapp
-./manage syncdb
+./manage.py syncdb
 ```
 
 Running the application
@@ -51,12 +52,12 @@ Running the application
 Starting Django web application:
 ```sh
 cd pyotapp
-./manage runserver
+./manage.py runserver
 ```
 
 Start celery workers in another terminal:
 ```sh
-./manage.py celeryd -B -s celery -E -l INFO -c 10
+./manage.py celeryd -B -s celery -E -l INFO -c 30 -n cooja -Q cooja,celery,periodic
 ```
 
 Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:

@@ -45,7 +45,7 @@
 	----------------------------------- -->
 
 <!-- 	<br>Code Event Form
-<form action="{% url handlers %}" method="post" enctype="multipart/form-data">
+<form action="{% url "handlers" %}" method="post" enctype="multipart/form-data">
     {{ codeForm.as_p }}
     <input type="submit" value="New" />
 </form>	 
@@ -53,7 +53,7 @@
 	----------------------------------- -->
 	<div id="contact-area">	
 		<h3>Create Message Event Handler</h3>
-		<form action="{% url handlers %}" method="post" enctype="multipart/form-data"> {% csrf_token %}
+		<form action="{% url "handlers" %}" method="post" enctype="multipart/form-data"> {% csrf_token %}
 		    {{ msgForm.as_p }}
 		
 		    <input type="submit" value="New"class="submit-button"  />
@@ -61,7 +61,7 @@
 	</div>
 <!-- 	-----------------------------------
 	<br>Message Event Form, with frequency
-<form action="{% url handlers %}" method="post" enctype="multipart/form-data">
+<form action="{% url "handlers" %}" method="post" enctype="multipart/form-data">
     {{ msgFormFreq.as_p }}
 
     <input type="submit" value="New" />

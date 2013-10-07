@@ -1,5 +1,5 @@
 CouchDB
-Django==1.4.1
+Django
 Mako
 Pyro
 amqplib
@@ -45,3 +45,5 @@ librabbitmq
 six
 sse
 django-sse
+ipaddr
+pycurl

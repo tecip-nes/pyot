@@ -26,8 +26,7 @@ from models import *
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
-import random, time
-
+import random, time, sys
 
 verbose = True
 
@@ -39,9 +38,8 @@ def sendMailAdmin(subject, message):
     mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)
     print '...Done'
 
-#procs = []
-from settings import PROJECT_ROOT
-import subprocess
+from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME
+import subprocess, os, signal
 coapPath = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
 coapClient = coapPath + 'coap-client'
 rdServer = coapPath + 'rd'
@@ -50,11 +48,10 @@ DEFAULT_OBS_TIMEOUT = 30
 termCode = '0.00'
 saveMessageToDB = True
 
-def getFullUri(r):
-    return 'coap://[' + r.host.ip6address + ']' + str(r.uri)
-
-
 allowedMethods = ['get','post','put','delete']
+
+def getFullUri(r):
+    return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60):
     if method not in allowedMethods:
@@ -85,10 +82,15 @@ class HostNotActive(Exception):
     def __str__(self):
         return repr(self.value)
 
-def getResource(rid):
+def getResourceActive(rid):
     r = Resource.objects.get(id=rid)
     if r.host.active == False:
-        raise HostNotActive(r.host.ip6address)
+        raise HostNotActive(str(r.host.ip6address))
+    uri = getFullUri(r)
+    return r, uri
+
+def getResource(rid):
+    r = Resource.objects.get(id=rid)
     uri = getFullUri(r)
     return r, uri
 
@@ -117,11 +119,8 @@ def retMes(code, message):
 
 @task
 def coapPost(rid, payload, timeout = RX_TIMEOUT):
-    sl = (random.random()*600)/1000
-    time.sleep(sl)
-    print 'delay ', sl
     try:
-        _r, uri = getResource(rid)
+        _r, uri = getResourceActive(rid)
         p = coapRequest('post', uri, payload, timeout)
         message = '' 
         code = '0.00'
@@ -144,7 +143,7 @@ def coapPost(rid, payload, timeout = RX_TIMEOUT):
 @task
 def coapGet(rid, payload, timeout = RX_TIMEOUT):
     try:
-        r, uri = getResource(rid)
+        r, uri = getResourceActive(rid)
         p = coapRequest('get', uri, payload, timeout)
         code =''
         message = '' 
@@ -168,10 +167,13 @@ def coapGet(rid, payload, timeout = RX_TIMEOUT):
 
 
 @task
-def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEOUT, handler=None):
+def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEOUT, handler=None, renew=False):
+    if coapObserve.request.retries > 1:
+        print 'coapObserve retry #' + str(coapObserve.request.retries) + '  rid=' + str(rid)    
+    
     s = None
     try:
-        r, uri = getResource(rid)
+        r, uri = getResourceActive(rid)
         p = coapRequest('get', uri, payload, observe=True, duration=duration)
 
         print 'OBSERVE PID = ' + coapObserve.request.id
@@ -198,13 +200,22 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
                     print 'handling event!'
                     h = EventHandler.objects.filter(id = int(handler)).select_subclasses()
                     for i in h:
-                        i.action()        
+                        i.action() 
+        print 'subscription ended...'                
+        if renew:
+            print 'renewing sub'
+            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler}, queue=r.host.getQueue())                               
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
         return 'Host ' + e.value + ' not active' 
-    except Exception as e:
-        print 'Exception Coap GET %s'  % e  
+    except Exception, exc:
+        print 'Exception COAP SERVER %s' % exc
+        if s is not None:
+            s.active=False
+            s.save()
+            print 'Subscription closed'        
+        coapObserve.retry(exc=exc, countdown=10)        
     finally:
         if s is not None:
             s.active=False
@@ -216,7 +227,6 @@ def coapObserve_revoked_handler(sender, terminated, signum, args=None, task_id=N
                       kwargs=None, **kwds):
     try:
         print 'Coap Observe revoked handler'
-        #rid = kwargs['rid']
     except Exception as e:
         print e
 
@@ -224,7 +234,7 @@ def coapObserve_revoked_handler(sender, terminated, signum, args=None, task_id=N
 @task
 def coapPut(rid, payload, timeout = RX_TIMEOUT):
     try:
-        _r, uri = getResource(rid)
+        _r, uri = getResourceActive(rid)
         p = coapRequest('put', uri, payload, timeout)
         message = '' 
         code =''
@@ -250,8 +260,7 @@ def isObs(s):
             return True
     return False
 
-#(rate_limit='10/m')
-@task(rate_limit='20/m')
+@task()
 def coapDiscovery(host):
     print 'resource discovery: get well-Know on ip: ' + host
     Log.objects.create(type = 'discovery', message = host)
@@ -296,17 +305,17 @@ def updateModTrace(sender):
     except ObjectDoesNotExist:
         ModificationTrace.objects.create(className=sender)  
 
+import traceback
+
 @task
-def coapRdServer():
+def coapRdServer(prefix = ''):
     print 'starting Coap Resource Directory Server'
     try:
-        coapRdServer.update_state(state="PROGRESS") #TODO ripristinare quando si usa mysql
-        #logger = coapRdServer.get_logger()
-        #logger.info("Starting task coapRdServer, pid = " + coapRdServer.request.id)
-        p = subprocess.Popen([rdServer + ' -v 1 -A aaaa::1'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        coapRdServer.update_state(state="PROGRESS") 
+        rd = subprocess.Popen([rdServer + ' -v 1 -A aaaa::1'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
  
         while True:
-            response = p.stdout.readline().strip()
+            response = rd.stdout.readline().strip()
             ipAddr= response.split(']')[0].split('[')[1]
             print 'RD server, message from: ' + ipAddr 
             try:
@@ -314,44 +323,42 @@ def coapRdServer():
                 h.lastSeen=datetime.now()
                 if (h.active == False):
                     updateModTrace('Host')
-                    coapDiscovery.delay(ipAddr)
+                    h.DISCOVER()
                 h.active = True
                 h.keepAliveCount += 1
                 h.save()
                 tmp = Resource.objects.filter(host=h)
                 if len(tmp) == 0:
                     print 'The host has no resources.'
-                    coapDiscovery.delay(ipAddr)   
-            except ObjectDoesNotExist:   #the does not exists, create a row in host-db
+                    h.DISCOVER()   
+            except ObjectDoesNotExist:   #the does not exists, create a new Host
                 h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount = 1)
                 h.save()  
-                coapDiscovery.delay(ipAddr)
+                h.DISCOVER()
                 updateModTrace('Host')
             #if rxr.message.payload == 'up':
             #    l = Log(type = 'registration', message = ipAddr)
             #    l.save()
     except Exception, exc:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)  # Log it or whatever here
         coapRdServer.update_state(state="ERROR")  #TODO ripristinare quando si usa mysql
-        print 'Exception COAP SERVER %s' % exc
-        p.kill()
         coapRdServer.retry(exc=exc, countdown=5)
+    finally:
+        print 'finally, killing subprocesses...'
+        if rd is not None:    
+            os.killpg(rd.pid, signal.SIGTERM)
+        print '...done.'
 
 
-@task_revoked.connect(sender=coapRdServer)
-def my_task_revoked_handler(sender, terminated, signum, args=None,
-                      kwargs=None, **kwds):
-    print 'task revoked handler' + sender
-    print terminated, signum
-    #kill_child_processes(sender.worker_pid)
-
-@periodic_task(run_every=timedelta(seconds=15))
-def resourceIndexClean():
-    
+@periodic_task(run_every=timedelta(seconds=CLEANUP_TASK_PERIOD))
+def checkConnectedHosts():
     try:
         rlist = Host.objects.all()
         for i in rlist:
-            if datetime.now() > timedelta(seconds=20) + i.lastSeen and i.active == True:
-                print 'cleaning host: ' + i.ip6address
+            if datetime.now() > timedelta(seconds=CLEANUP_TIME) + i.lastSeen and i.active == True:
+                print 'cleaning host: ' + str(i.ip6address)
                 i.active=False
                 i.save()
                 updateModTrace('Host')
@@ -362,13 +369,13 @@ def resourceIndexClean():
         pass    
 
 @task
-def pingTest(hostId, count=3):
+def pingHost(hostId, count=3):
     c = str(count)
     print 'starting Connectivity Test'
     cmdPre = 'ping6 '
     cmdPost = ' -I tun0 -c ' + c
     r = Host.objects.get(id=hostId)
-    ipAddress = r.ip6address
+    ipAddress = str(r.ip6address)
     cmd = cmdPre + ipAddress + cmdPost
     p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()

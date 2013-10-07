@@ -94,14 +94,4 @@ function act(com, grid){
          } 
 	} 
 }
-//reloadTable();
-/*
-$("#lista").smartupdater({
-	url : "{% url filelist %}"
-	}, function (data) {
-		document.getElementById("lista").innerHTML=data;
-	}
-);
-$("#lista").smartupdater("setTimeout",{{ refresh_js }});
-*/
 

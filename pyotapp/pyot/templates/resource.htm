@@ -21,7 +21,7 @@
 			if (msg.substring(0, 3) == "DIS"){
 
 				currentSt = "DIS";
-				$.blockUI({ message: '<h1>Resource disconnected...</h1><a href="{% url hosts %}">Hosts</a>' }); 
+				$.blockUI({ message: '<h1>Resource disconnected...</h1><a href="{% url "hosts" %}">Hosts</a>' }); 
 			}
 			else{
 				currentSt = "CON";

@@ -95,17 +95,7 @@ def confirmDeleteUser(request):
 
 #@staff_member_required
 def settings(request):
-    status = get_celery_worker_status()
-    if 'ERROR' in status:
-        msg = 'Workers error: ' + status['ERROR']
-    else:
-        msg = 'Workers status: OK' 
-    status = {'status': msg}
-    d =  get_statistics()
-    cont = dict(status.items() + d.items())
-    c = Context(cont)   
-  
-    return render(request,'settings.htm', c)
+    return render(request,'settings.htm')
 
 #@login_required
 def req(request):
@@ -125,27 +115,43 @@ def req(request):
         return HttpResponse(response)
 
 #@staff_member_required
-def startServer(request):
+def startServer(request, wid):
     try:
-        _proc = RunningServer.objects.get()
-        return HttpResponse("Already running")
+        net = Network.objects.get(id=wid)
+        if net.pid:
+            return HttpResponse("Already running")
+        else:
+            net.startRD()
+            return HttpResponse("Started")
     except ObjectDoesNotExist: 
-        r = coapRdServer.delay()  
-        server = RunningServer(pid=r.task_id)
-        server.save()
-        
-        logging.debug('Saved in db')    
-        logging.debug('task pid = ' + r.task_id)
-        return HttpResponse(r.status)
+        msg = 'worker is not in db'
+        return HttpResponse(msg)
+
 
 #@staff_member_required
-def stopServer(request):
+def stopAllSubs():
+    sublist = Subscription.objects.filter(active=True)
+    #stop all active subscriptions
+    for s in sublist:
+        #coapStopObserve.delay(str(s.pid))
+        revoke(s.pid, terminate=True)
+        s.active = False
+        s.save()     
+
+#@staff_member_required
+def stopServer(request, wid):
     logging.debug('stopping') 
     try:   
-        proc = RunningServer.objects.get()
-        revoke(proc.pid, terminate=True)
-        proc = RunningServer.objects.get()
-        proc.delete() 
+        net = Network.objects.get(id=wid)
+        if not net.pid:
+            return HttpResponse("not running")
+        else:
+            stopAllSubs()
+            net.stopRD()
+            #revoke(net.pid, terminate=True)
+            #net.pid = None
+            #net.save()        
+        
         hosts = Host.objects.all()
         for h in hosts:
             h.keepAliveCount = 0
@@ -157,25 +163,52 @@ def stopServer(request):
     except Exception:
         pass
 
-class getServerStatus(BaseSseView):
+def getServerStatus(request):
+    if request.method != 'GET':
+        response = 'Bad request, needs a GET method'
+        return HttpResponseBadRequest(response)
+    sortname = request.REQUEST.get('sortname', 'timeadded')
+    sortorder = request.REQUEST.get('sortorder', 'asc') # Ascending/descending
+    page = request.REQUEST.get('page', 1) # What page we are on
+    rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
+    order = ''
+    if sortorder == 'desc':
+        order = '-'  
+    page = 1 # What page we are on
+    rp = 15 # Num requests per page                   
+    networks = Network.objects.all()
+    p = Paginator(networks, rp)
     
-    #@method_decorator(staff_member_required)
-    def dispatch(self, *args, **kwargs):
-        return super(getServerStatus, self).dispatch(*args, **kwargs)    
-    def iterator(self):
-        while True:
-            try:   
-                proc = RunningServer.objects.get() 
-                res = AsyncResult(proc.pid)  
-                self.sse.add_message("serverStatus", res.status)
-                SSE_SLEEP()
-                yield                
-            except ObjectDoesNotExist:    
-                self.sse.add_message("serverStatus", "No RD server active")
-                SSE_SLEEP()
-                yield
-            except Exception as e:
-                logging.error(e)
+    status = get_celery_worker_status()
+    
+    #filteredNet = p.page(page).object_list
+    
+    l = []
+    for net in networks:
+        Id = str(net.id)
+        host = net.hostname
+        prefix = str(net.network)
+        if net.pid:
+            rstatus = AsyncResult(net.pid).status 
+        else: 
+            rstatus = 'not running'    
+        try:
+            _e = status[host]
+            wstatus = 'Connected'
+            uriLink = '<input type="submit" value="START" onclick = "startCoap('+ Id +');"/><input type="submit" value="STOP" onclick = "stopCoap('+ Id +');"/>' 
+        except KeyError:
+            wstatus = 'Disconnected'       
+            uriLink = ''
+        sub = [host, prefix, uriLink, wstatus, rstatus]
+        dic = {'cell': sub}
+        l.append(dic)
+    json_dict = {
+        'page': 1,
+        'total': 1,
+        'rows': l
+        }
+    json = simplejson.dumps(json_dict)  
+    return HttpResponse(json) 
             
 #@login_required         
 def hosts (request):
@@ -256,7 +289,7 @@ def resourceList(request):
     for i in filteredResList:
         Id = str(i.id)
         uriLink = '<div class="fake_link" onclick = "gotoRes('+ Id +');">' + i.uri + '</div >'
-        sub = [Id, uriLink, i.host.ip6address]
+        sub = [Id, uriLink, str(i.host.ip6address)]
         dic = {'id': Id, 'cell': sub}
         l.append(dic)
     json_dict = {
@@ -346,13 +379,10 @@ class pushUpdate(BaseSseView):
         while True:
             
             cid = self.kwargs['className']
-            #print cid
-            #tfmt = "%Y-%m-%d %H:%M:%S"
             try:
                 t = ModificationTrace.objects.get(className=cid)
                 if t.lastModified > baseTime:
                     baseTime = t.lastModified
-                    #logging.error('T ' + t.lastModified.strftime(tfmt) + ' ' + baseTime.strftime(tfmt))
                     self.sse.add_message("pushUpdate", "T")
                     SSE_SLEEP()
                     yield
@@ -466,6 +496,7 @@ def observe(request):
         rid = request.REQUEST.get('id', '')
         duration = request.REQUEST.get('duration', '30')
         handler = request.REQUEST.get('handler', '')
+        renew = request.REQUEST.get('renew', 'false')
         
         if handler == 'undefined':
             handler = None
@@ -475,10 +506,15 @@ def observe(request):
             nduration = int(duration)    
         if nduration < 0:
             nduration = 0
+        if renew == 'false':
+            renew = False
+        else:
+            renew = True        
+            
         out = 'starting observe on resource ' + rid + ' with duration '+ str(nduration) 
         try:
             r = Resource.objects.get(id=rid)
-            r.OBSERVE(nduration, handler)
+            r.OBSERVE(nduration, handler, renew = renew)
         except ObjectDoesNotExist:
             return HttpResponse('Resource not found')
         return HttpResponse(out)
@@ -541,9 +577,9 @@ def remHandler(request, hid):
 
 #@staff_member_required
 def startPing(request, hid):
-    res = pingTest.delay(hid)
-    res.wait()
-    return HttpResponse(res.result)     
+    h = Host.objects.get(id=hid)
+    res = h.PING()
+    return HttpResponse(res)     
 
 #@staff_member_required
 def pingPage(request):
@@ -559,14 +595,9 @@ def pingPage(request):
     c = {'hosts': hosts}
     return render(request, template, c)       
 
-#@staff_member_required
-def stopAllSubs():
-    sublist = Subscription.objects.filter(active=True)
-    #stop all active subscriptions
-    for s in sublist:
-        coapStopObserve.delay(str(s.pid))
-  
-
+   
+''' 
+#TODO: broadcast shutdown
 #@staff_member_required     
 def shutdown(request):
     try:
@@ -576,4 +607,4 @@ def shutdown(request):
         return HttpResponse('All processes are stopping')
     except Exception as e:
         return HttpResponse('Error, exception %s' % e)
-        
+'''       
