@@ -27,6 +27,8 @@ from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 import random, time, sys
+from djcelery.models import TaskMeta, states
+
 
 verbose = True
 
@@ -38,7 +40,7 @@ def sendMailAdmin(subject, message):
     mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)
     print '...Done'
 
-from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME
+from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, RECOVERY_PERIOD
 import subprocess, os, signal
 coapPath = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
 coapClient = coapPath + 'coap-client'
@@ -381,4 +383,17 @@ def pingHost(hostId, count=3):
     stdout, stderr = p.communicate()
     return stdout + stderr
 
-
+@periodic_task(run_every=timedelta(seconds=RECOVERY_PERIOD))
+def recoveryWorkers():
+    networks = Network.objects.all()
+    TaskMeta.objects.filter(status=states.SUCCESS).delete()
+    for network in networks:
+        if network.isConnected() == False:
+            continue
+        print network.hostname
+        if network.pid is not None:
+            taskObj = TaskMeta.objects.get(task_id=network.pid)
+            print 'RD status = ' + taskObj.status
+            if taskObj.status == 'FAILURE':
+                network.startRD()
+                
