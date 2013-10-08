@@ -51,7 +51,7 @@ urlpatterns = patterns('',
     url(r'^obsLast/(?P<rid>\d*)/', pyot.views.obsLast.as_view()),
     url(r'^subList/(?P<rid>\d*)/', pyot.views.subList),
     url(r'^remHandler/(?P<hid>\d*)/', pyot.views.remHandler),
-    url(r'^terminate/', pyot.views.terminate),
+    url(r'^cancelSub/', pyot.views.cancelSub),
     url(r'^handlers/', pyot.views.handlers, name='handlers'),
     # Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

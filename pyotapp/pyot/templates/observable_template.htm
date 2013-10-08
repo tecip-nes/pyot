@@ -93,7 +93,7 @@
 	function terminate(pid){
 		    $.ajax({
 		          type: "GET",
-		          url: "/terminate",
+		          url: "/cancelSub",
 		          data: "pid=" + pid,
 		          success: function(msg){
 		                     setFeedback(msg);

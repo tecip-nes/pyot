@@ -31,17 +31,17 @@ from resourceRepr import getRenderer
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Forms import *
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from datetime import datetime, timedelta
 from celery.result import AsyncResult
 from utils import *
 from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
+#from django.contrib.auth.decorators import login_required
+#from django.contrib.admin.views.decorators import staff_member_required
+#from django.utils.decorators import method_decorator   
 from django.contrib.auth import logout
-from django.utils.decorators import method_decorator        
 from django_sse.views import BaseSseView
 import time 
 
@@ -133,10 +133,7 @@ def stopAllSubs():
     sublist = Subscription.objects.filter(active=True)
     #stop all active subscriptions
     for s in sublist:
-        #coapStopObserve.delay(str(s.pid))
-        revoke(s.pid, terminate=True)
-        s.active = False
-        s.save()     
+        s.cancel_subscription()
 
 #@staff_member_required
 def stopServer(request, wid):
@@ -148,9 +145,6 @@ def stopServer(request, wid):
         else:
             stopAllSubs()
             net.stopRD()
-            #revoke(net.pid, terminate=True)
-            #net.pid = None
-            #net.save()        
         
         hosts = Host.objects.all()
         for h in hosts:
@@ -167,21 +161,8 @@ def getServerStatus(request):
     if request.method != 'GET':
         response = 'Bad request, needs a GET method'
         return HttpResponseBadRequest(response)
-    sortname = request.REQUEST.get('sortname', 'timeadded')
-    sortorder = request.REQUEST.get('sortorder', 'asc') # Ascending/descending
-    page = request.REQUEST.get('page', 1) # What page we are on
-    rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
-    order = ''
-    if sortorder == 'desc':
-        order = '-'  
-    page = 1 # What page we are on
-    rp = 15 # Num requests per page                   
     networks = Network.objects.all()
-    p = Paginator(networks, rp)
-    
     status = get_celery_worker_status()
-    
-    #filteredNet = p.page(page).object_list
     
     l = []
     for net in networks:
@@ -209,6 +190,7 @@ def getServerStatus(request):
         }
     json = simplejson.dumps(json_dict)  
     return HttpResponse(json) 
+   
             
 #@login_required         
 def hosts (request):
@@ -271,8 +253,8 @@ def resources(request):
 #@login_required 
 def resourceList(request):
     hostidList = None
-    query = request.GET['query']  #TODO gestione delle eccezioni, id non presenti
-    querytype = request.GET['qtype']
+    query = request.REQUEST.get('query', '')
+    querytype = request.REQUEST.get('qtype', '')
     page = request.REQUEST.get('page', 1) # What page we are on
     rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
     
@@ -304,8 +286,8 @@ def resourceList(request):
 def resourcePage(request, rid):
     try:
         r = Resource.objects.get(id=rid)
-    except ObjectDoesNotExist:
-        return HttpResponse('The resource with id= ' + str(rid) + ' does not exist anymore')  
+    except Resource.DoesNotExist:
+        raise Http404  
     resObj= getRenderer(r)
     c, t = resObj.getTemplate(request)
     return render(request, t, c)
@@ -319,22 +301,21 @@ class resourceStatus(BaseSseView):
             try:
                 rid =self.kwargs['rid']
                 r = Resource.objects.get(id=rid)
-            except ObjectDoesNotExist:
+                if r.host.active == True:
+                    status = "CONNECTED"
+                    self.sse.add_message("resStatus", status)
+                    SSE_SLEEP()
+                    yield                    
+                else:
+                    status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime(TFMT)
+                    self.sse.add_message("resStatus", status)
+                    SSE_SLEEP()
+                    yield                  
+            except Resource.DoesNotExist:
                 resp = 'The resource with id= ' + str(rid) + ' does not exist anymore' 
                 self.sse.add_message("resStatus", resp)
                 SSE_SLEEP()
-                yield  
-            if r.host.active == True:
-                status = "CONNECTED"
-                self.sse.add_message("resStatus", status)
-                SSE_SLEEP()
-                yield                    
-            else:
-                status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime('%d %b %Y %H.%M:%S')
-                self.sse.add_message("resStatus", status)
-                SSE_SLEEP()
-                yield                  
-
+                yield 
                
 #@login_required 
 def obsList(request):
@@ -372,12 +353,10 @@ class pushUpdate(BaseSseView):
     #@method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(pushUpdate, self).dispatch(*args, **kwargs)    
-     
     
     def iterator(self):
         baseTime = datetime.now()
         while True:
-            
             cid = self.kwargs['className']
             try:
                 t = ModificationTrace.objects.get(className=cid)
@@ -436,6 +415,7 @@ class obsLast(BaseSseView):
             except Exception as e:
                 logging.error(e)  
 
+
 #@login_required 
 def subList(request,rid):
     try:
@@ -446,22 +426,19 @@ def subList(request,rid):
             active = False    
         c = Context({'subList': sub, 'active': active})   
         return render(request, 'sub_list.htm', c)    
-    except ObjectDoesNotExist as e:
-        return HttpResponse('Error, exception %s' % e)      
+    except Subscription.DoesNotExist:
+        raise Http404
 
 
 #@staff_member_required
-def terminate(request):
+def cancelSub(request):
     pid = request.REQUEST.get('pid', '')
-    if pid == '':
-        return HttpResponse('')
-    logging.debug('PID =' + pid)
-    #coapStopObserve.delay(pid)
-    revoke(pid, terminate=True)
-    s = Subscription.objects.get(pid=pid)
-    s.active = False
-    s.save()    
-    return HttpResponse('ok task revoked')
+    try:
+        s = Subscription.objects.get(pid=pid)
+        s.cancel_subscription()
+        return HttpResponse('ok task revoked')
+    except Subscription.DoesNotExist:
+        raise Http404
 
 
 #@login_required 

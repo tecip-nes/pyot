@@ -381,4 +381,3 @@ def pingHost(hostId, count=3):
     stdout, stderr = p.communicate()
     return stdout + stderr
 
-

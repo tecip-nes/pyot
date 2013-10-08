@@ -47,10 +47,6 @@ $("#workers").flexigrid({
 		],
 	sortname: "name",
 	sortorder: "desc",
-	usepager: true,
-	useRp: true,
-	rp: 15,
-	showTableToggleBtn: true,
 	width: 650,
 	//onSubmit: addFormData,
 	height: 250

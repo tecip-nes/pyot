@@ -33,6 +33,7 @@ import base64
 from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
 from settings import TFMT
 from celery.task.control import revoke 
+from utils import get_celery_worker_status
 
 caching = True
 defaultCachingInterval = 60
@@ -92,6 +93,7 @@ class Network(models.Model):
         r = coapRdServer.apply_async(args=[str(self.network)], queue=self.hostname)
         self.pid = r.task_id
         self.save()
+        return r
         
     def stopRD(self):
         revoke(self.pid, terminate=True)
@@ -99,7 +101,14 @@ class Network(models.Model):
         self.save()    
         
     def isConnected(self, table=None):
-        pass      
+        if table is None:
+            table = get_celery_worker_status()
+        try:    
+            _e = table[self.hostname]
+            return True
+        except KeyError:
+            return False
+
     
 class Host(models.Model):
     ip6address = IPAddressField()
@@ -219,7 +228,6 @@ class EventHandler(models.Model):
                                                                                                 max_activations=self.max_activations,
                                                                                                 active=self.active) 
 
-
 class Subscription(models.Model):
     resource = models.ForeignKey(Resource)
     duration = models.IntegerField(default = 15)
@@ -233,7 +241,12 @@ class Subscription(models.Model):
                                                           duration=self.duration,
                                                           #thr=self.threshold,
                                                           t=self.timeadded.strftime(TFMT),
-                                                          active=self.active)    
+                                                          active=self.active)
+    def cancel_subscription(self):
+        revoke(self.pid, terminate=True)
+        self.active = False
+        self.save()    
+            
 class CoapMsg(models.Model):
     resource = models.ForeignKey(Resource)
     method = models.CharField(max_length=10, blank=False, choices=METHOD_CHOICES)
@@ -293,6 +306,5 @@ class Log(models.Model):
     message = models.CharField(max_length=1024)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
     def __unicode__(self):
-        return u"{t} {type} {message}".format(type=self.type, message=self.message, t=self.timeadded.strftime(tfmt))      
-    
+        return u"{t} {type} {message}".format(type=self.type, message=self.message, t=self.timeadded.strftime(TFMT))      
       

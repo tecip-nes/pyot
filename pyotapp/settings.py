@@ -49,6 +49,11 @@ ADMINS = (
 )
 '''
 
+# Hosts/domain names that are valid for this site; required if DEBUG is False
+# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
+ALLOWED_HOSTS = []
+
+
 CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
 CLEANUP_TASK_PERIOD = 30
 CLEANUP_TIME = 90
@@ -218,7 +223,10 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'django_extensions',
 )
+
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
+
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
