@@ -28,29 +28,24 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 import random, time, sys
 from djcelery.models import TaskMeta, states
-
-
-verbose = True
+from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY
+import subprocess, os, signal
 
 RX_TIMEOUT = 5
+COAP_PATH = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
+COAP_CLIENT = COAP_PATH + 'coap-client'
+RD_SERVER = COAP_PATH + 'rd'
+COAP_DEFAULT_TIMEOUT = 5
+DEFAULT_OBS_TIMEOUT = 30
+TERM_CODE = '0.00'
+saveMessageToDB = True
+allowedMethods = ['get','post','put','delete']
 
 @task
 def sendMailAdmin(subject, message):
     print 'sending mail to admins...'
     mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)
     print '...Done'
-
-from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, RECOVERY_PERIOD
-import subprocess, os, signal
-coapPath = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
-coapClient = coapPath + 'coap-client'
-rdServer = coapPath + 'rd'
-COAP_DEFAULT_TIMEOUT = 5
-DEFAULT_OBS_TIMEOUT = 30
-termCode = '0.00'
-saveMessageToDB = True
-
-allowedMethods = ['get','post','put','delete']
 
 def getFullUri(r):
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
@@ -63,7 +58,7 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
 
     print method + ' ' + uri
     
-    req = coapClient + ' -m '+  method
+    req = COAP_CLIENT + ' -m '+  method
 
     if timeout:
         req = req + '  -B ' + str(timeout)
@@ -74,8 +69,10 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
 
     req = req + ' ' + uri
 
-    p = subprocess.Popen([req], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)    
-    #procs.append(p) 
+    p = subprocess.Popen([req], 
+                         stdin=subprocess.PIPE, 
+                         stdout=subprocess.PIPE, 
+                         shell=True)    
     return p
 
 class HostNotActive(Exception):
@@ -97,7 +94,7 @@ def getResource(rid):
     return r, uri
 
 def isTermCode(response):
-    if response[0:4] == termCode:
+    if response[0:4] == TERM_CODE:
         return True
     else:
         return False
@@ -177,15 +174,15 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
     try:
         r, uri = getResourceActive(rid)
         p = coapRequest('get', uri, payload, observe=True, duration=duration)
-
+        coapObserve.update_state(state="PROGRESS")
         print 'OBSERVE PID = ' + coapObserve.request.id
         taskId = coapObserve.request.id #get task id
 
         if handler != None:
             h = EventHandler.objects.get(id = int(handler))
-            s = Subscription.objects.create(resource=r, duration = duration, pid=taskId, handler=h)
+            s = Subscription.objects.create(resource=r, duration = duration, pid=taskId, handler=h, renew=renew)
         else:
-            s = Subscription.objects.create(resource=r, duration = duration, pid=taskId )
+            s = Subscription.objects.create(resource=r, duration = duration, pid=taskId, renew=renew)
 
         while True:
             response = p.stdout.readline()
@@ -206,7 +203,7 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
         print 'subscription ended...'                
         if renew:
             print 'renewing sub'
-            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler}, queue=r.host.getQueue())                               
+            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())                               
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
@@ -219,7 +216,7 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
             print 'Subscription closed'        
         coapObserve.retry(exc=exc, countdown=10)        
     finally:
-        if s is not None:
+        if s is not None and SUBSCRIPTION_RECOVERY == False:
             s.active=False
             s.save()
             print 'Subscription closed'
@@ -269,7 +266,10 @@ def coapDiscovery(host):
     
     uri = 'coap://[' + host + ']/.well-known/core'
     print uri
-    p = subprocess.Popen([coapClient + ' -m get ' + uri], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)    
+    p = subprocess.Popen([COAP_CLIENT + ' -m get ' + uri], 
+                         stdin=subprocess.PIPE, 
+                         stdout=subprocess.PIPE, 
+                         shell=True)    
     message = '' 
     while True:
         response = p.stdout.readline()
@@ -314,7 +314,10 @@ def coapRdServer(prefix = ''):
     print 'starting Coap Resource Directory Server'
     try:
         coapRdServer.update_state(state="PROGRESS") 
-        rd = subprocess.Popen([rdServer + ' -v 1 -A aaaa::1'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A aaaa::1'], 
+                              stdin=subprocess.PIPE, 
+                              stdout=subprocess.PIPE, 
+                              shell=True)
  
         while True:
             response = rd.stdout.readline().strip()
@@ -333,7 +336,7 @@ def coapRdServer(prefix = ''):
                 if len(tmp) == 0:
                     print 'The host has no resources.'
                     h.DISCOVER()   
-            except ObjectDoesNotExist:   #the does not exists, create a new Host
+            except ObjectDoesNotExist: #the host does not exists, create a new Host
                 h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount = 1)
                 h.save()  
                 h.DISCOVER()
@@ -344,8 +347,8 @@ def coapRdServer(prefix = ''):
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)  # Log it or whatever here
-        coapRdServer.update_state(state="ERROR")  #TODO ripristinare quando si usa mysql
+        print ''.join('!! ' + line for line in lines)  
+        coapRdServer.update_state(state="ERROR")  
         coapRdServer.retry(exc=exc, countdown=5)
     finally:
         print 'finally, killing subprocesses...'
@@ -379,21 +382,46 @@ def pingHost(hostId, count=3):
     r = Host.objects.get(id=hostId)
     ipAddress = str(r.ip6address)
     cmd = cmdPre + ipAddress + cmdPost
-    p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmd, 
+                         shell=True, 
+                         stdin=subprocess.PIPE, 
+                         stdout=subprocess.PIPE, 
+                         stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     return stdout + stderr
 
 @periodic_task(run_every=timedelta(seconds=RECOVERY_PERIOD))
 def recoveryWorkers():
+    """
+    Recoveries lost workers status:
+    Useful in case a worker node resets. When the node connects again
+    the function tries to restart a lost RD server and possible active
+    subscriptions. 
+    """
+    print "####################################################################"
     networks = Network.objects.all()
-    TaskMeta.objects.filter(status=states.SUCCESS).delete()
+    #TaskMeta.objects.filter(status=states.SUCCESS).delete()
     for network in networks:
         if network.isConnected() == False:
             continue
         print network.hostname
         if network.pid is not None:
-            taskObj = TaskMeta.objects.get(task_id=network.pid)
-            print 'RD status = ' + taskObj.status
-            if taskObj.status == 'FAILURE':
+            rdTaskObj = TaskMeta.objects.get(task_id=network.pid)
+            print 'RD status = ' + rdTaskObj.status
+            if rdTaskObj.status == 'FAILURE':
                 network.startRD()
                 
+        subSet = Subscription.objects.filter(active=True,
+                                             resource__host__kqueue=network)
+        for sub in subSet:
+            try:
+                subTaskObj = TaskMeta.objects.get(task_id=sub.pid)
+                if subTaskObj.status == 'FAILURE':
+                    print 'Failure sub: ', sub
+                    #creates a new subscription
+                    sub.resource.OBSERVE(duration=sub.duration,
+                                         handler=sub.handler,
+                                         renew=sub.renew)
+            except TaskMeta.DoesNotExist:
+                pass
+    print "####################################################################"                

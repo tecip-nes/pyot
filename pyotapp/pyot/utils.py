@@ -42,6 +42,9 @@ def get_celery_worker_status():
         d = { ERROR_KEY: str(e)}
     return d
 
+def clearTaskMeta():
+    from djcelery.models import TaskMeta, states
+    TaskMeta.objects.filter(status=states.SUCCESS).delete()
 
 def get_statistics():
     hosts = Host.objects.filter()
@@ -53,7 +56,7 @@ def get_statistics():
     rescount = Resources.count()
 
     return {}
-
+'''
     #server started
     now = datetime.now()
     try:
@@ -111,19 +114,17 @@ def get_statistics():
                   'expected': expectedMessages,
                   'perc': perc}
             perHost.append(dic)  
-        ''' 
         perSub = []
         subs = Subscription.objects.filter(active=True)
         for s in subs:
-           messcount = CoapMsg.objects.filter(sub = s).count()
-           dic = {'res': s.resource,
+            messcount = CoapMsg.objects.filter(sub = s).count()
+            dic = {'res': s.resource,
                   'type': s.subtype,
                   'period': s.period,
                   'thr': s.threshold,
                   'timeadded':s.timeadded.strftime(TFMT),
                   'messcount': messcount} 
-           perSub.append(dic)         
-        '''
+            perSub.append(dic)         
         #per resource /subscription count / expected 
         #excludeList = ['.well-known', 'mnt']
         #Resources = Resource.objects.filter(host__active=True).exclude(uri__in=excludeList)   
@@ -145,3 +146,4 @@ def get_statistics():
         return d
     except ObjectDoesNotExist:
         return {}
+'''
