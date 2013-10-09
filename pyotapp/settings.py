@@ -57,7 +57,10 @@ ALLOWED_HOSTS = []
 CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
 CLEANUP_TASK_PERIOD = 30
 CLEANUP_TIME = 90
+RECOVERY_PERIOD = 30
 
+WORKER_RECOVERY = False
+SUBSCRIPTION_RECOVERY = True
 
 TFMT = "%Y-%m-%d %H:%M:%S" #global format for time strings
 

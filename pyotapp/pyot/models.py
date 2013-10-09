@@ -139,7 +139,7 @@ class Host(models.Model):
             return CELERY_DEFAULT_QUEUE
     
     def __unicode__(self):
-        return u"%s " % (self.ip6address)
+        return u"%s Network: %s" % (self.ip6address, self.kqueue)
 
     def PING(self, count=3):
         from tasks import pingHost
@@ -235,12 +235,14 @@ class Subscription(models.Model):
     pid = models.CharField(max_length=100, blank=True)
     active  = models.BooleanField(default = True)
     handler = models.ForeignKey(EventHandler, null=True, blank=True)
+    renew = models.BooleanField(default = False)
     def __unicode__(self):
-        return u"{t} {uri} - duration={duration} - active={active}".format(uri=self.resource,
+        return u"{t} {uri} - duration={duration} - active={active} - renew={r}".format(uri=self.resource,
                                                           #type=self.subtype,
                                                           duration=self.duration,
                                                           #thr=self.threshold,
                                                           t=self.timeadded.strftime(TFMT),
+                                                          r=self.renew,
                                                           active=self.active)
     def cancel_subscription(self):
         revoke(self.pid, terminate=True)
@@ -306,5 +308,6 @@ class Log(models.Model):
     message = models.CharField(max_length=1024)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
     def __unicode__(self):
-        return u"{t} {type} {message}".format(type=self.type, message=self.message, t=self.timeadded.strftime(TFMT))      
-      
+        return u"{t} {type} {message}".format(type=self.type, 
+                                              message=self.message, 
+                                              t=self.timeadded.strftime(TFMT))      
