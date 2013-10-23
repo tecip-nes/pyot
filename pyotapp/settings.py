@@ -21,27 +21,31 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 import os, socket
+from ConfigParser import RawConfigParser
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+config = RawConfigParser()
+config.read(PROJECT_PATH + '/settings.ini')
 
 PRODUCTION = False
 WEB_APPLICATION_SERVER = True
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-LOCAL_DB = True
+LOCAL_DB = False
 
 if WEB_APPLICATION_SERVER:
-    SQL_USER = 'root'
-    SQL_PWD = SQL_USER
+    SQL_USER = 'pyot'
+    SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')
     SERVER_ADDRESS = '127.0.0.1'
     SQL_PORT = ''
     RABBIT_PORT = 5672
 else:
     SQL_USER = 'sqluser'
-    SQL_PWD = SQL_USER      
-    SERVER_ADDRESS = '10.3.3.82'  
-    SQL_PORT = 13306
-    RABBIT_PORT = 15672
+    SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')    
+    SERVER_ADDRESS = config.get('database', 'DATABASE_HOST')    
+    SQL_PORT = 3306
+    RABBIT_PORT = 5672
 
 '''
 ADMINS = (
