@@ -28,11 +28,19 @@ PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 config = RawConfigParser()
 config.read(PROJECT_PATH + '/settings.ini')
 
-PRODUCTION = False
-WEB_APPLICATION_SERVER = True
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 LOCAL_DB = False
+WEB_APPLICATION_SERVER = False
+
+if socket.gethostname() == 'andrea-lab':
+    WEB_APPLICATION_SERVER = False
+    LOCAL_DB = False
+
+DEBUG = False
+
+if socket.gethostname() == 'pyot-vcr':
+    WEB_APPLICATION_SERVER = True
+    DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
 if WEB_APPLICATION_SERVER:
     SQL_USER = 'pyot'
@@ -41,7 +49,7 @@ if WEB_APPLICATION_SERVER:
     SQL_PORT = ''
     RABBIT_PORT = 5672
 else:
-    SQL_USER = 'sqluser'
+    SQL_USER = 'pyot'
     SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')    
     SERVER_ADDRESS = config.get('database', 'DATABASE_HOST')    
     SQL_PORT = 3306
