@@ -312,10 +312,10 @@ import traceback
 
 @task
 def coapRdServer(prefix = ''):
-    print 'starting Coap Resource Directory Server'
+    print 'starting Coap Resource Directory Server, prefix= ' + prefix 
     try:
         coapRdServer.update_state(state="PROGRESS") 
-        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A aaaa::1'], 
+        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A ' + prefix[:-3] +'1'], 
                               stdin=subprocess.PIPE, 
                               stdout=subprocess.PIPE, 
                               shell=True)

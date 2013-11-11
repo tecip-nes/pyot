@@ -42,18 +42,16 @@ if socket.gethostname() == 'pyot-vcr':
     DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+RABBIT_PORT = 5672
+DB_SCHEMA =  config.get('database', 'DATABASE_NAME')
+SQL_USER = config.get('database', 'DATABASE_USERNAME')
+SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')
+SQL_PORT = ''
+
 if WEB_APPLICATION_SERVER:
-    SQL_USER = 'pyot'
-    SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')
     SERVER_ADDRESS = '127.0.0.1'
-    SQL_PORT = ''
-    RABBIT_PORT = 5672
 else:
-    SQL_USER = 'pyot'
-    SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')    
     SERVER_ADDRESS = config.get('database', 'DATABASE_HOST')    
-    SQL_PORT = 3306
-    RABBIT_PORT = 5672
 
 '''
 ADMINS = (
@@ -97,7 +95,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'coapwebapp',                      # Or path to database file if using sqlite3.
+            'NAME': DB_SCHEMA,                      # Or path to database file if using sqlite3.
             'USER': SQL_USER,                      # Not used with sqlite3.
             'PASSWORD': SQL_PWD,                  # Not used with sqlite3.
             'HOST': SERVER_ADDRESS,                      # Set to empty string for localhost. Not used with sqlite3.
@@ -112,7 +110,7 @@ else:
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Europe/Rome'
+TIME_ZONE = None
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -307,6 +305,13 @@ LOGGING = {
         }, 
         }
 }
+
+IPYTHON_ARGUMENTS = [
+    '--ext', 'django_extensions.management.notebook_extension',
+    '--ext', 'pyot.notebook_extension',
+    '--debug',    "--ip='*'",
+]
+
 
 
 # Monkeypatch python not to print "Broken Pipe" errors to stdout.
