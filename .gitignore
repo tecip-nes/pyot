@@ -6,6 +6,13 @@
 # C extensions
 *.so
 
+*.log
+*.o
+*.a
+*.map
+obj_*
+*.elf
+
 # Packages
 *.egg
 *.egg-info
