@@ -42,14 +42,14 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include "rplinfo/rplinfo.h"
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
-#define REST_RES_PUSHING 1
+#define REST_RES_PUSHING 0
 #define REST_RES_EVENT 1
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
@@ -57,7 +57,7 @@
 #define REST_RES_LIGHT 0
 #define REST_RES_BATTERY 0
 #define REST_RES_RADIO 0
-
+#define REST_RES_RPLINFO 1
 
 
 #if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
@@ -296,15 +296,12 @@ event_event_handler(resource_t *r)
 
   PRINTF("TICK %u for /%s\n", event_counter, r->url);
 
-  printf("a");
   /* Build notification. */
   coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
   coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0 );
   coap_set_payload(notification, content, snprintf(content, sizeof(content), "%u", event_counter));
-  printf("b");
   /* Notify the registered observers with the given message type, observe option, and payload. */
   REST.notify_subscribers(r, event_counter, notification);
-  printf("c");
 }
 #endif /* PLATFORM_HAS_BUTTON */
 
@@ -649,6 +646,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_RADIO) && REST_RES_RADIO
   SENSORS_ACTIVATE(radio_sensor);
   rest_activate_resource(&resource_radio);
+#endif
+#if REST_RES_RPLINFO
+  rplinfo_activate_resources();
 #endif
 
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */

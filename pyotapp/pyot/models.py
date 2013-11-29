@@ -164,41 +164,41 @@ class Resource(models.Model):
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address) 
         
-    def GET(self, payload=None, timeout=5):
+    def GET(self, payload=None, timeout=5, query=None):
         if caching == True:
             value = getLastResponse(self) 
             if value != None:
                 return value
         from tasks import coapGet
-        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         res.wait()
         return res.result
 
-    def PUT(self, payload=None, timeout=5):
+    def PUT(self, payload=None, timeout=5, query=None):
         from tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         res.wait()
         return res.result
 
-    def POST(self, payload=None, timeout=5):
+    def POST(self, payload=None, timeout=5, query=None):
         from tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         res.wait()
         return res.result
     
-    def asyncGET(self,payload=None, timeout=5):
+    def asyncGET(self,payload=None, timeout=5, query=None):
         from tasks import coapGet
-        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
-    def asyncPOST(self,payload=None, timeout=5):
+    def asyncPOST(self,payload=None, timeout=5, query=None):
         from tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
     
-    def asyncPUT(self,payload=None, timeout=5):
+    def asyncPUT(self,payload=None, timeout=5, query=None):
         from tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
     
     def OBSERVE(self, duration, handler, renew =False): #TODO handler

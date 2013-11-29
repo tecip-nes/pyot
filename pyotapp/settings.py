@@ -33,9 +33,9 @@ WEB_APPLICATION_SERVER = False
 
 if socket.gethostname() == 'andrea-lab':
     WEB_APPLICATION_SERVER = False
-    LOCAL_DB = False
+    LOCAL_DB = True
 
-DEBUG = False
+DEBUG = True
 
 if socket.gethostname() == 'pyot-vcr':
     WEB_APPLICATION_SERVER = True

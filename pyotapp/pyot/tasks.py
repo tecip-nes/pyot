@@ -116,11 +116,15 @@ def retMes(code, message):
     else:
         return message
 
+def addQuery(uri, query):
+    return uri + '?' + query
 
 @task
-def coapPost(rid, payload, timeout = RX_TIMEOUT):
+def coapPost(rid, payload, timeout = RX_TIMEOUT, query=None):
     try:
         _r, uri = getResourceActive(rid)
+        if query is not None:
+            uri = addQuery(uri, query)
         p = coapRequest('post', uri, payload, timeout)
         message = '' 
         code = '0.00'
@@ -141,9 +145,11 @@ def coapPost(rid, payload, timeout = RX_TIMEOUT):
         print 'Exception Coap POST %s'  % e        
 
 @task
-def coapGet(rid, payload, timeout = RX_TIMEOUT):
+def coapGet(rid, payload, timeout = RX_TIMEOUT, query=None):
     try:
         r, uri = getResourceActive(rid)
+        if query is not None:
+            uri = addQuery(uri, query)        
         p = coapRequest('get', uri, payload, timeout)
         code =''
         message = '' 
@@ -232,9 +238,11 @@ def coapObserve_revoked_handler(sender, terminated, signum, args=None, task_id=N
 
 
 @task
-def coapPut(rid, payload, timeout = RX_TIMEOUT):
+def coapPut(rid, payload, timeout = RX_TIMEOUT, query=None):
     try:
         _r, uri = getResourceActive(rid)
+        if query is not None:
+            uri = addQuery(uri, query)        
         p = coapRequest('put', uri, payload, timeout)
         message = '' 
         code =''
