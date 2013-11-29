@@ -657,6 +657,18 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* receives all CoAP messages */
   coap_receiver_init();
 
+
+  int wait_time = getRandUint(30);
+  int base_wait = 15;
+
+  etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
+
+  while(1) {
+    PROCESS_YIELD();
+    //PROCESS_WAIT_EVENT();
+    if (etimer_expired(&et)) break;
+    }
+  etimer_reset(&et);
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 
   while(1) {
@@ -669,8 +681,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
       coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
-      //const char msg[] = "Toggle!";
-      //coap_set_payload(request, (uint8_t *)msg, sizeof(msg)-1);
 
       PRINT6ADDR(&server_ipaddr);
       PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
