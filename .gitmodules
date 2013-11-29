@@ -1,0 +1,3 @@
+[submodule "pyotapp/appsTesting/contiki_cooja/rplinfo"]
+	path = pyotapp/appsTesting/contiki_cooja/rplinfo
+	url = https://github.com/andreaazzara/rplinfo.git
