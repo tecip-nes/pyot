@@ -26,14 +26,12 @@ import logging
 from datetime import datetime, timedelta
 from exceptions import NotImplementedError
 from model_utils.managers import InheritanceManager
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
 #from django.core.exceptions import ObjectDoesNotExist
 import base64
 from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
 from settings import TFMT
 from celery.task.control import revoke 
-from utils import get_celery_worker_status
+from pyot.utils import get_celery_worker_status
 
 caching = True
 defaultCachingInterval = 60
@@ -52,31 +50,9 @@ METHOD_CHOICES = (
     (u'DELETE', u'DELETE'), 
 )
 
-LOG_CHOICES = (
-    (u'registration', u'registration'),
-    (u'clean', u'clean'),
-    (u'discovery', u'discovery'),
-    (u'ghost', u'ghost'),
-)
 
 CELERY_DEFAULT_QUEUE = 'celery'
 
-class UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, related_name='profile')
-    organization = models.CharField(max_length=50, blank=False)
-    def save(self, *args, **kwargs):
-        try:
-            existing = UserProfile.objects.get(user=self.user)
-            self.id = existing.id #force update instead of insert
-        except UserProfile.DoesNotExist:
-            pass 
-        models.Model.save(self, *args, **kwargs)
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
 
 class Network(models.Model):
     objects = IPNetworkQuerySet.as_manager()
@@ -108,7 +84,8 @@ class Network(models.Model):
             return True
         except KeyError:
             return False
-
+    class Meta:
+        app_label = 'pyot'
     
 class Host(models.Model):
     ip6address = IPAddressField()
@@ -153,7 +130,9 @@ class Host(models.Model):
         res = coapDiscovery.apply_async(args=[str(self.ip6address)], queue=self.getQueue())
         res.wait()
         return res.result
-
+    class Meta:
+        app_label = 'pyot'
+        
 class Resource(models.Model):
     uri = models.CharField(max_length=39)
     host = models.ForeignKey(Host)
@@ -205,13 +184,17 @@ class Resource(models.Model):
         from tasks import coapObserve
         res = coapObserve.apply_async(kwargs={'rid':self.id, 'duration':duration, 'handler':handler, 'renew': renew}, queue=self.host.getQueue())
         return res
-
+    class Meta:
+        app_label = 'pyot'
+        
 class ModificationTrace(models.Model):
     lastModified = models.DateTimeField(auto_now_add=True, blank=True) 
     className = models.CharField(max_length=10, blank=True)
     def __unicode__(self):
         return u"{c} - {l}".format(c=self.className, l=self.lastModified) 
-        
+    class Meta:
+        app_label = 'pyot'
+                
 class EventHandler(models.Model):
     description = models.CharField(max_length=100)
     activationCount = models.IntegerField(default=0)
@@ -227,7 +210,9 @@ class EventHandler(models.Model):
                                                                                              activationCount=self.activationCount,
                                                                                                 max_activations=self.max_activations,
                                                                                                 active=self.active) 
-
+    class Meta:
+        app_label = 'pyot'
+        
 class Subscription(models.Model):
     resource = models.ForeignKey(Resource)
     duration = models.IntegerField(default = 15)
@@ -248,7 +233,9 @@ class Subscription(models.Model):
         revoke(self.pid, terminate=True)
         self.active = False
         self.save()    
-            
+    class Meta:
+        app_label = 'pyot'
+                    
 class CoapMsg(models.Model):
     resource = models.ForeignKey(Resource)
     method = models.CharField(max_length=10, blank=False, choices=METHOD_CHOICES)
@@ -268,7 +255,9 @@ class CoapMsg(models.Model):
                                                           method=self.method,
                                                           payload=self.payload,
                                                           t=self.timeadded.strftime(TFMT))      
-    
+    class Meta:
+        app_label = 'pyot'
+            
 def getLastResponse(resource):
     '''
     Caching mechanism: try to find a recent value received from the resource
@@ -302,12 +291,5 @@ class EventHandlerMsg(EventHandler):
         self.activationCount += 1
         self.result  = sendMsg(self.msg)   
         self.save()
-
-class Log(models.Model):
-    type = models.CharField(max_length=30, choices=LOG_CHOICES)
-    message = models.CharField(max_length=1024)
-    timeadded = models.DateTimeField(auto_now_add=True, blank=True)
-    def __unicode__(self):
-        return u"{t} {type} {message}".format(type=self.type, 
-                                              message=self.message, 
-                                              t=self.timeadded.strftime(TFMT))      
+    class Meta:
+        app_label = 'pyot'

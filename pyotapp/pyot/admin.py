@@ -37,7 +37,7 @@ admin.site.register(Network)
 admin.site.register(Log)
 admin.site.register(UserProfile)
 admin.site.register(ModificationTrace)
-
+admin.site.register(TResPF)
 
 # Define an inline admin descriptor for UserProfile model
 # which acts a bit like a singleton

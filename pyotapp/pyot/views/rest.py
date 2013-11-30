@@ -23,79 +23,33 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 from django.shortcuts import HttpResponse, render
 from django.http import HttpResponseBadRequest
-from tasks import *
-from models import *
+from pyot.tasks import *
+from pyot.models import *
 from celery.task.control import revoke 
 from django.template import Context
-from resourceRepr import getRenderer
+from pyot.resourceRepr import getRenderer
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from Forms import *
+from pyot.Forms import *
 from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
-from django.utils import simplejson
+import json
 from datetime import datetime, timedelta
 from celery.result import AsyncResult
-from utils import *
+from pyot.utils import *
 from django.core.paginator import Paginator
 #from django.contrib.auth.decorators import login_required
 #from django.contrib.admin.views.decorators import staff_member_required
 #from django.utils.decorators import method_decorator   
-from django.contrib.auth import logout
 from django_sse.views import BaseSseView
 import time 
+
 
 SSE_UPDATE_INTERVAL = 0.5
 
 def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
     time.sleep(interval)
 
-def home(request):
-    return render(request,'home.htm')
-
-def contacts(request):
-    if request.method == 'POST': # If the form has been submitted...
-        form = ContactForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            subject = form.cleaned_data['subject']
-            message = form.cleaned_data['message']
-            
-            sender = form.cleaned_data['sender']
-            mess = 'Sender is ' + sender + '\n' + message            
-            mail_admins(subject, mess, fail_silently=False, connection=None, html_message=None)
-            return HttpResponseRedirect('/thanks/') # Redirect after POST
-    else:
-        form = ContactForm() # An unbound form
-
-    return render(request, 'contacts.htm', {
-        'form': form,
-    })
-
-    return render(request,'contacts.htm')
-
-#@login_required
-def cam(request):
-    return render(request,'cam.htm')
-
-#@login_required
-def myaccount(request):
-    return render(request,'account.html')
-
-
-#@login_required
-def deleteUser(request):
-    return render(request,'deleteuser.htm')
-
-#@login_required
-def confirmDeleteUser(request):
-    request.user.delete()
-    logout(request)
-    return render(request,'home.htm')
-
-
-#@staff_member_required
-def settings(request):
-    return render(request,'settings.htm')
 
 #@login_required
 def req(request):
@@ -188,8 +142,8 @@ def getServerStatus(request):
         'total': 1,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)  
-    return HttpResponse(json) 
+    j = json.dumps(json_dict)  
+    return HttpResponse(j) 
    
             
 #@login_required         
@@ -226,8 +180,8 @@ def hostsList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json) 
+    j = json.dumps(json_dict)        
+    return HttpResponse(j) 
 
 #@login_required 
 def resources(request):
@@ -279,8 +233,8 @@ def resourceList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json)   
+    j = json.dumps(json_dict)        
+    return HttpResponse(j)   
 
 #@login_required
 def resourcePage(request, rid):
@@ -342,9 +296,13 @@ def obsList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json)
+    j = json.dumps(json_dict)        
+    return HttpResponse(j)
 
+
+#@staff_member_required
+def settings(request):
+    return render(request,'settings.htm')
 
 class pushUpdate(BaseSseView):
     '''
@@ -572,16 +530,4 @@ def pingPage(request):
     c = {'hosts': hosts}
     return render(request, template, c)       
 
-   
-''' 
-#TODO: broadcast shutdown
-#@staff_member_required     
-def shutdown(request):
-    try:
-        stopAllSubs()
-        #stop coap server
-        stopServer(request)
-        return HttpResponse('All processes are stopping')
-    except Exception as e:
-        return HttpResponse('Error, exception %s' % e)
-'''       
+
