@@ -23,13 +23,12 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from django.db import models
 from settings import MEDIA_ROOT
-from django.core.files import File
-import os
 from django.db.models.signals import pre_save
+from pyot.models.rest import Resource
 
 scriptFolder = 'scripts/'
 
-class TResPF(models.Model):
+class TResProcessing(models.Model):
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True) 
     name = models.CharField(max_length=20)
     description = models.CharField(max_length=500, blank=True, null=True)
@@ -46,35 +45,27 @@ class TResPF(models.Model):
         return u"{n}".format(n=self.name) 
 
 def verifyPF(sender, instance, raw, **kwargs):
-    print 'Validating '  + instance.sourcefile + ' ...'
+    print 'Validating '  + str(instance.sourcefile) + ' ...'
     
     #check(instance.sourcefile)
     #raise Exception('nooo no no')
     
-pre_save.connect(verifyPF, sender=TResPF)
+pre_save.connect(verifyPF, sender=TResProcessing)
 
-class TResProcessingFunction(object):
-    pf = None
-    def __init__(self, fileRef, name, description=None, version=None):
-        "default constructor, file-based"
-        
-        if type(fileRef) is not file:
-            raise Exception('A file type is required')
-        self.pf = TResPF.objects.create(name=name, 
-                                         description=description,
-                                         version=version,
-                                         sourcefile=os.path.abspath(fileRef.name))
-    
-    @classmethod
-    def fromSource(cls, sourceString, name, description=None, version=None):
-        with open(MEDIA_ROOT + scriptFolder + name, 'w') as newFile:
-            #newFile = open(MEDIA_ROOT + scriptFolder + name, 'w')
-            newFile.write(sourceString)
-            newFile.flush()
-            return cls(newFile, name, description, version)
-        
-    def getPfObject(self):
-        return self.pf
-    
-    def __repr__(self):
-        return self.pf.__unicode__()
+class TResT(models.Model):
+    pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
+    inputS = models.ManyToManyField(Resource)
+    output = models.ForeignKey(Resource, related_name='OutputDestination')
+    class Meta:
+        app_label = 'pyot'
+    def __unicode__(self):
+        return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output) 
+    def deploy(self):
+        pass
+    def start(self):
+        pass
+    def stop(self):
+        pass
+    def getStatus(self):
+        pass
+
