@@ -25,47 +25,89 @@ from django.db import models
 from settings import MEDIA_ROOT
 from django.db.models.signals import pre_save
 from pyot.models.rest import Resource
+from django.core.validators import validate_slug
+import py_compile
 
 scriptFolder = 'scripts/'
 
 class TResProcessing(models.Model):
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True) 
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=10, validators=[validate_slug])
     description = models.CharField(max_length=500, blank=True, null=True)
     version = models.CharField(max_length=10, blank=True, null=True)
     sourcefile = models.FileField(upload_to=scriptFolder)
+    
     class Meta:
         app_label = 'pyot'
         
     def getFileSize(self):
         return self.sourcefile.size
+    
     def getFileName(self):
-        return self.sourcefile.name    
+        return self.sourcefile.name  
+      
     def __unicode__(self):
         return u"{n}".format(n=self.name) 
 
 def verifyPF(sender, instance, raw, **kwargs):
     print 'Validating '  + str(instance.sourcefile) + ' ...'
-    
-    #check(instance.sourcefile)
-    #raise Exception('nooo no no')
+    py_compile.compile(str(instance.sourcefile), doraise=True)
     
 pre_save.connect(verifyPF, sender=TResProcessing)
+
+TRES_STATES = (
+    (u'CREATED', u'CREATED'),
+    (u'INSTALLED', u'INSTALLED'),    
+    (u'RUNNING', u'RUNNING'),
+    (u'STOPPED', u'STOPPED'),
+    (u'CLEARED', u'CLEARED'),
+)
 
 class TResT(models.Model):
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
     inputS = models.ManyToManyField(Resource)
     output = models.ForeignKey(Resource, related_name='OutputDestination')
+    TResResource = models.ForeignKey(Resource, null=True)
+    state = models.CharField(max_length=10, blank=False, choices=TRES_STATES, default=TRES_STATES['CREATED'])
+     
     class Meta:
         app_label = 'pyot'
+        
     def __unicode__(self):
-        return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output) 
-    def deploy(self):
-        pass
+        return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output)
+     
+    def deploy(self, TResResource):
+        if TResResource.isinstance(Resource) == False:
+            raise Exception('TResResource must be a Resource')
+        if TResResource.uri != '/tasks':
+            raise Exception('TResResource must have /tasks uri')
+        self.TResResource=TResResource
+        #call code compiler
+        #call tres client or call libcoap
+        self.state=TRES_STATES['INSTALLED']
+        self.save()         
+         
+    def uninstall(self): 
+        #clear tres resource
+        #self.TResResource.remove(TResResource)
+        self.state=TRES_STATES['CLEARED']
+        self.save()      
+            
     def start(self):
-        pass
+        #send POST to TResResource
+        self.TResResource.POST()
+        self.state=TRES_STATES['RUNNING'] 
+        self.save()   
+         
     def stop(self):
-        pass
+        self.TResResource.POST()        
+        self.state=TRES_STATES['STOPPED']     
+        self.save()   
+        
     def getStatus(self):
         pass
-
+    
+    def getLastOutput(self):
+        loUri = '/tasks/%s/lo' % self.pf.name
+        lo = Resource.objects.get(uri=loUri, host__ip6address=self.TResResource.host.ip6address)
+        return lo

@@ -142,6 +142,9 @@ class Resource(models.Model):
     
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address) 
+
+    def getFullURI(self):
+        return 'coap://['+str(self.host.ip6address)+']'+self.uri
         
     def GET(self, payload=None, timeout=5, query=None):
         if caching == True:

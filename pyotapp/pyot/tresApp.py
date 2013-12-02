@@ -68,11 +68,15 @@ class TResTask(object):
 
     def __repr__(self):
         return self.task.__unicode__()
-    def deploy(self):
-        return self.task.deploy()
+    def deploy(self,TResResource):
+        return self.task.deploy(TResResource)
+    def uninstall(self):   
+        return self.task.uninstall()
     def start(self):
         return self.task.start()
     def stop(self):
         return self.task.stop()
     def getStatus(self):
         return self.task.getStatus()
+    def getLastOutput(self):
+        return self.task.getLastOutput()

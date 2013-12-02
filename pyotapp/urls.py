@@ -22,8 +22,8 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from django.conf.urls import patterns, include, url
 from pyot.Forms import CustomRegistrationForm
-from registration.backends.default.views import RegistrationView
-import registration.backends.default.urls as regUrls
+#from registration.backends.default.views import RegistrationView
+#import registration.backends.default.urls as regUrls
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -58,8 +58,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^startPing/(?P<hid>\d*)', pyot.views.startPing),
-    url(r'^accounts/register/$', RegistrationView.as_view(form_class=CustomRegistrationForm), {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
-    (r'^accounts/', include('registration.backends.default.urls')), 
+    #url(r'^accounts/register/$', RegistrationView.as_view(form_class=CustomRegistrationForm), {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
+    #(r'^accounts/', include('registration.backends.default.urls')), 
     url(r'^', include('django.contrib.auth.urls')),    
     url(r'^login/$', 'django.contrib.auth.views.login',name="my_login"),
     url(r'^myaccount', 'pyot.views.myaccount', name='myaccount'), 
@@ -72,4 +72,7 @@ import os, settings
 urlpatterns += patterns('',
             url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
     )
+urlpatterns += patterns('',
+            url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
+            )
 
