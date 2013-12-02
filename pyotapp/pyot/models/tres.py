@@ -67,8 +67,8 @@ class TResT(models.Model):
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
     inputS = models.ManyToManyField(Resource)
     output = models.ForeignKey(Resource, related_name='OutputDestination')
-    TResResource = models.ForeignKey(Resource, null=True)
-    state = models.CharField(max_length=10, blank=False, choices=TRES_STATES, default=TRES_STATES['CREATED'])
+    TResResource = models.ForeignKey(Resource, null=True, related_name='TresResource', default='CREATED')
+    state = models.CharField(max_length=10, blank=False, choices=TRES_STATES)
      
     class Meta:
         app_label = 'pyot'
