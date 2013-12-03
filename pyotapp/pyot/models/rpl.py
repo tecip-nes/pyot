@@ -20,7 +20,23 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from pyot.models.rest import *
-from pyot.models.misc import *
-from pyot.models.tres import *
-from pyot.models.rpl import *
+
+from django.db import models
+import networkx as nx
+from networkx import *
+import pickle
+
+class RplGraph(models.Model):
+    _graph = models.CharField(max_length=1000, blank=True, null=True)
+    def set_data(self, G):
+        self._graph = pickle.dumps(G)
+    def get_data(self):
+        return pickle.loads(self._graph)
+    graph = property(get_data, set_data)    
+
+    class Meta:
+        app_label = 'pyot'
+    def getGrapg(self):
+        return self.graph
+    def getPNG(self):
+        pass    
