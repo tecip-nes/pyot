@@ -3,13 +3,13 @@ Created on Jul 15, 2013
 
 @author: http://djangosnippets.org/snippets/1961/
 '''
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.forms import fields, widgets
 from ipaddr import _IPAddrBase, IPAddress, IPNetwork
 
-#from django.forms import ValidationError as FormValidationError
-from django.core.exceptions import ValidationError
-from django.forms import fields, widgets
-from django.db import models
 
+#from django.forms import ValidationError as FormValidationError
 class IPNetworkWidget(widgets.TextInput):
     def render(self, name, value, attrs=None):
         if isinstance(value, _IPAddrBase):

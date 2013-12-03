@@ -22,10 +22,12 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.db.models.signals import post_save
+
 from settings import TFMT
+
 
 LOG_CHOICES = (
     (u'registration', u'registration'),

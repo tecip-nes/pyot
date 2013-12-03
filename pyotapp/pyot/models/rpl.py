@@ -22,14 +22,16 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from django.db import models
-import pickle
-from rest import Network
+import errno
 from networkx import *
 import os
-import errno
+import pickle
+
+from rest import Network
+from settings import MEDIA_ROOT
+
 
 fmt = "%Y%m%d%H%M%S"
-from settings import MEDIA_ROOT
 BASE_PATH = MEDIA_ROOT + 'rpl/'
 
 def make_sure_path_exists(path):

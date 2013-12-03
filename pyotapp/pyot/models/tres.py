@@ -27,8 +27,12 @@ from django.db.models.signals import pre_save
 from pyot.models.rest import Resource
 from django.core.validators import validate_slug
 import py_compile
+import subprocess, os, signal
 
 scriptFolder = 'scripts/'
+
+TRES_BASE = '/home/andrea/icsi/t-res/'
+tresClient = TRES_BASE + 'apps/tres/tools/tres-client-13'
 
 class TResProcessing(models.Model):
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True) 
@@ -66,9 +70,9 @@ TRES_STATES = (
 class TResT(models.Model):
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
     inputS = models.ManyToManyField(Resource)
-    output = models.ForeignKey(Resource, related_name='OutputDestination')
-    TResResource = models.ForeignKey(Resource, null=True, related_name='TresResource', default='CREATED')
-    state = models.CharField(max_length=10, blank=False, choices=TRES_STATES)
+    output = models.ForeignKey(Resource, related_name='OutputDestination')#TODO null=True
+    TResResource = models.ForeignKey(Resource, null=True, related_name='TresResource')
+    state = models.CharField(max_length=10, blank=False, choices=TRES_STATES, default='CREATED')
      
     class Meta:
         app_label = 'pyot'
@@ -77,37 +81,65 @@ class TResT(models.Model):
         return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output)
      
     def deploy(self, TResResource):
-        if TResResource.isinstance(Resource) == False:
-            raise Exception('TResResource must be a Resource')
+        #if TResResource.isinstance(Resource) == False:
+        #    raise Exception('TResResource must be a Resource')
         if TResResource.uri != '/tasks':
             raise Exception('TResResource must have /tasks uri')
         self.TResResource=TResResource
         #call code compiler
         #call tres client or call libcoap
-        self.state=TRES_STATES['INSTALLED']
-        self.save()         
+        req = tresClient + ' ' + self.TResResource.getFullURI()+'/'+ self.pf.name
+        req = req + ' ' + str(self.pf.sourcefile)
+        #req = req + ' ' +
+        
+        i = 0
+        for inp in self.inputS.all():
+            if i != 0:
+                req += ',<'+inp.getFullURI()+'>'
+            else:
+                req += ' "<'+inp.getFullURI()+'>'
+                i += 1 
+        req += '" ' 
+        if self.output is not None:
+            req += self.output.getFullURI()
+        
+        
+        p = subprocess.Popen([req], 
+                             stdin=subprocess.PIPE, 
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE,
+                             shell=True, cwd=TRES_BASE+'apps/tres/tools/')    
+        res = ''
+        for line in p.stderr:
+            res += line        
+        print req
+        self.state='INSTALLED'
+        self.save()
+        #TResResource.host.DISCOVER()
+        return res      
          
     def uninstall(self): 
         #clear tres resource
         #self.TResResource.remove(TResResource)
-        self.state=TRES_STATES['CLEARED']
-        self.save()      
+        self.state='CLEARED'
+        self.save()
             
     def start(self):
         #send POST to TResResource
         self.TResResource.POST()
-        self.state=TRES_STATES['RUNNING'] 
-        self.save()   
+        self.state='RUNNING' 
+        self.save()
          
     def stop(self):
         self.TResResource.POST()        
-        self.state=TRES_STATES['STOPPED']     
-        self.save()   
+        self.state='STOPPED'     
+        self.save()
         
     def getStatus(self):
         pass
     
     def getLastOutput(self):
         loUri = '/tasks/%s/lo' % self.pf.name
+        print loUri
         lo = Resource.objects.get(uri=loUri, host__ip6address=self.TResResource.host.ip6address)
         return lo
