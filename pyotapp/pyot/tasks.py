@@ -204,7 +204,10 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
         print 'subscription ended...'                
         if renew:
             print 'renewing sub'
-            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())                               
+            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())      
+        else:
+            s.active=False
+            s.save()                             
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
