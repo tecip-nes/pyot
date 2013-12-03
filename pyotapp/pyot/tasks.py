@@ -31,6 +31,8 @@ from djcelery.models import TaskMeta
 from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME
 from settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY
 import subprocess, os, signal
+from rplApp import DAGupdate
+
 
 RX_TIMEOUT = 5
 COAP_PATH = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
@@ -434,3 +436,9 @@ if WORKER_RECOVERY:
                 except TaskMeta.DoesNotExist:
                     pass
 
+
+@task
+def updateDAGs():
+    ns = Network.objects.all()
+    for n in ns:
+        DAGupdate(n.id)

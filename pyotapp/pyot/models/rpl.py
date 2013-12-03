@@ -22,12 +22,27 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from django.db import models
-import networkx as nx
-from networkx import *
 import pickle
+from rest import Network
+from networkx import *
+import os
+import errno
+
+fmt = "%Y%m%d%H%M%S"
+from settings import MEDIA_ROOT
+BASE_PATH = MEDIA_ROOT + 'rpl/'
+
+def make_sure_path_exists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
 class RplGraph(models.Model):
-    _graph = models.CharField(max_length=1000, blank=True, null=True)
+    _graph = models.CharField(max_length=5000, blank=True, null=True)
+    timeadded = models.DateTimeField(auto_now_add=True, blank=True)
+    net = models.ForeignKey(Network)    
     def set_data(self, G):
         self._graph = pickle.dumps(G)
     def get_data(self):
@@ -36,7 +51,16 @@ class RplGraph(models.Model):
 
     class Meta:
         app_label = 'pyot'
-    def getGrapg(self):
-        return self.graph
+    def __unicode__(self):
+        return u"Rpl graph for %s" % (self.net.hostname) #TODO: more specific info      
+     
     def getPNG(self):
-        pass    
+        A=to_agraph(self.graph)
+        ts = self.timeadded.strftime(fmt)
+        #TODO: assicurare la presenza della directory
+        dir_ = BASE_PATH +self.net.hostname + '/'
+        make_sure_path_exists(dir_)
+        path =  dir_ + 'rpl'+ts+'.png'
+        A.layout(prog='dot') 
+        A.draw(path, format='png')
+        return path   

@@ -32,6 +32,8 @@ from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
 from settings import TFMT
 from celery.task.control import revoke 
 from pyot.utils import get_celery_worker_status
+#from pyot.models.rpl import RplGraph
+
 
 caching = True
 defaultCachingInterval = 60
@@ -40,6 +42,7 @@ defaultCaching =  {'light':15,
                    'baro': 180 } 
 
 KEEPALIVEPERIOD = 10
+WAIT_TIMEOUT = 30
 
 cachingUri = ['light','temp','baro']
 
@@ -60,12 +63,12 @@ class Network(models.Model):
     hostname = models.CharField(max_length=30)
     pid = models.CharField(max_length=100, null=True, blank=True)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
-    
+
     def __unicode__(self):
         return u"%s - %s" % (self.network, self.hostname)
     
     def startRD(self):
-        from tasks import coapRdServer
+        from pyot.tasks import coapRdServer
         r = coapRdServer.apply_async(args=[str(self.network)], queue=self.hostname)
         self.pid = r.task_id
         self.save()
@@ -84,6 +87,11 @@ class Network(models.Model):
             return True
         except KeyError:
             return False
+
+    def rplDagUpdate(self):
+        from pyot.rplApp import DAGupdate
+        DAGupdate(self)
+        
     class Meta:
         app_label = 'pyot'
     
@@ -119,16 +127,16 @@ class Host(models.Model):
         return u"%s Network: %s" % (self.ip6address, self.kqueue)
 
     def PING(self, count=3):
-        from tasks import pingHost
+        from pyot.tasks import pingHost
         res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
-        res.wait()
+        res.wait(WAIT_TIMEOUT)
         return res.result
     def DISCOVER(self):
         if self.active == False:
             return u'Host %s Not Active' % (str(self.ip6address))
-        from tasks import coapDiscovery
+        from pyot.tasks import coapDiscovery
         res = coapDiscovery.apply_async(args=[str(self.ip6address)], queue=self.getQueue())
-        res.wait()
+        res.wait(WAIT_TIMEOUT)
         return res.result
     class Meta:
         app_label = 'pyot'
@@ -151,40 +159,40 @@ class Resource(models.Model):
             value = getLastResponse(self) 
             if value != None:
                 return value
-        from tasks import coapGet
+        from pyot.tasks import coapGet
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
-        res.wait()
+        res.wait(WAIT_TIMEOUT)
         return res.result
 
     def PUT(self, payload=None, timeout=5, query=None):
-        from tasks import coapPut
+        from pyot.tasks import coapPut
         res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
-        res.wait()
+        res.wait(WAIT_TIMEOUT)
         return res.result
 
     def POST(self, payload=None, timeout=5, query=None):
-        from tasks import coapPost
+        from pyot.tasks import coapPost
         res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
-        res.wait()
+        res.wait(WAIT_TIMEOUT)
         return res.result
     
     def asyncGET(self,payload=None, timeout=5, query=None):
-        from tasks import coapGet
+        from pyot.tasks import coapGet
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
     def asyncPOST(self,payload=None, timeout=5, query=None):
-        from tasks import coapPost
+        from pyot.tasks import coapPost
         res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
     
     def asyncPUT(self,payload=None, timeout=5, query=None):
-        from tasks import coapPut
+        from pyot.tasks import coapPut
         res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
     
     def OBSERVE(self, duration, handler, renew =False): #TODO handler
-        from tasks import coapObserve
+        from pyot.tasks import coapObserve
         res = coapObserve.apply_async(kwargs={'rid':self.id, 'duration':duration, 'handler':handler, 'renew': renew}, queue=self.host.getQueue())
         return res
     class Meta:
