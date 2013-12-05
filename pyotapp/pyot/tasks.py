@@ -32,6 +32,7 @@ from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME
 from settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY
 import subprocess, os, signal
 from rplApp import DAGupdate
+import urllib
 
 
 RX_TIMEOUT = 5
@@ -53,7 +54,7 @@ def sendMailAdmin(subject, message):
 def getFullUri(r):
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
-def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60):
+def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None):
     if method not in allowedMethods:
         raise Exception('Method not allowed')
     if observe and method is not 'get':
@@ -62,13 +63,16 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
     print method + ' ' + uri
     
     req = COAP_CLIENT + ' -m '+  method
+    req = req + '  -b 64 '
 
     if timeout:
         req = req + '  -B ' + str(timeout)
     if observe:
         req = req + ' -s ' + str(duration)
     if payload:
-        req = req + ' e ' + payload
+        req = req + ' -e ' + urllib.quote(payload, '')
+    if inputfile:
+        req = req + ' -f ' + inputfile   
 
     req = req + ' ' + uri
 
@@ -122,12 +126,12 @@ def addQuery(uri, query):
     return uri + '?' + query
 
 @task
-def coapPost(rid, payload, timeout = RX_TIMEOUT, query=None):
+def coapPost(rid, payload, timeout = RX_TIMEOUT, query=None, inputfile=None):
     try:
         _r, uri = getResourceActive(rid)
         if query is not None:
             uri = addQuery(uri, query)
-        p = coapRequest('post', uri, payload, timeout)
+        p = coapRequest('post', uri, payload, timeout, inputfile=None)
         message = '' 
         code = '0.00'
         while True:
@@ -240,12 +244,12 @@ def coapObserve_revoked_handler(sender, terminated, signum, args=None, task_id=N
 
 
 @task
-def coapPut(rid, payload, timeout = RX_TIMEOUT, query=None):
+def coapPut(rid, payload=None, timeout = RX_TIMEOUT, query=None, inputfile=None):
     try:
         _r, uri = getResourceActive(rid)
         if query is not None:
             uri = addQuery(uri, query)        
-        p = coapRequest('put', uri, payload, timeout)
+        p = coapRequest('put', uri, payload, timeout, inputfile=inputfile)
         message = '' 
         code =''
         while True:
@@ -260,8 +264,13 @@ def coapPut(rid, payload, timeout = RX_TIMEOUT, query=None):
         return 'Resource not found'
     except HostNotActive as e:
         return 'Host ' + e.value + ' not active' 
-    except Exception as e:
-        print 'Exception Coap GET %s'  % e
+#    except Exception as e:
+#        print 'Exception Coap GET %s'  % e
+    except Exception, exc:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)  
+
 
 def isObs(s):
     splitted = s.split(';')
@@ -270,14 +279,16 @@ def isObs(s):
             return True
     return False
 
+DEFAULT_DISCOVERY_PATH = '/.well-known/core'
+
 @task()
-def coapDiscovery(host):
+def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
     print 'resource discovery: get well-Know on ip: ' + host
     Log.objects.create(type = 'discovery', message = host)
     
-    uri = 'coap://[' + host + ']/.well-known/core'
+    uri = 'coap://[' + host + ']' + path
     print uri
-    p = subprocess.Popen([COAP_CLIENT + ' -m get ' + uri], 
+    p = subprocess.Popen([COAP_CLIENT + ' -m get -b 64 ' + uri], 
                          stdin=subprocess.PIPE, 
                          stdout=subprocess.PIPE, 
                          shell=True)    
@@ -442,3 +453,59 @@ def updateDAGs():
     ns = Network.objects.all()
     for n in ns:
         DAGupdate(n.id)
+
+TRES_BASE = '/home/andrea/icsi/t-res/'
+tresClient = TRES_BASE + 'apps/tres/tools/bin/coap13-client'
+tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile' 
+tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py' 
+
+#${MYDIR}/tres-pf-compile ${MYDIR}/pmfeatures.py $2
+WAIT_TIMEOUT = 30
+@task
+def deployTres(t_res_task_id, t_res_resource_id):
+    
+    TResResource = Resource.objects.get(id=t_res_resource_id)
+    TResTask = TResT.objects.get(id=t_res_task_id)
+
+    #tresTaskUri = TResResource.getFullURI()+'/'+ TResTask.pf.name
+    
+    tresPfsource = str(TResTask.pf.sourcefile)
+    
+    compile_command = tresCompile + ' ' + tresPMfeat + ' ' + tresPfsource
+    p = subprocess.check_call([compile_command], 
+                         stdin=subprocess.PIPE, 
+                         stdout=subprocess.PIPE, 
+                         stderr=subprocess.PIPE,
+                         shell=True, cwd='/tmp/')
+
+
+    try:
+        newTask = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
+    except Resource.DoesNotExist:
+        newTask = Resource.objects.create(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
+
+    newTask.PUT()
+    
+
+
+    res = coapDiscovery.apply_async(args=[str(TResResource.host.ip6address), TResResource.uri], 
+                                    queue=TResResource.host.getQueue())
+    res.wait(WAIT_TIMEOUT)        
+    
+    res = coapDiscovery.apply_async(args=[str(TResResource.host.ip6address), TResResource.uri+'/'+ TResTask.pf.name], 
+                                    queue=TResResource.host.getQueue())
+    res.wait(WAIT_TIMEOUT) 
+
+    newIs = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/is')
+    newOd = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/od')
+    newPf = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/pf')
+    #newLo = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/lo')
+    
+    newPf.PUT(inputfile='/tmp/'+TResTask.pf.name+'.pyc')
+    print 'payload = ' + '   ' + '<'+ TResTask.output.getFullURI() +'>'
+    
+    newOd.PUT(payload='<'+ TResTask.output.getFullURI() +'>')
+
+    for inp in TResTask.inputS.all():
+        newIs.POST(payload='<'+ inp.getFullURI() +'>')
+
