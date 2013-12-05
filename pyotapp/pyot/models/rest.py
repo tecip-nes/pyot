@@ -164,15 +164,15 @@ class Resource(models.Model):
         res.wait(WAIT_TIMEOUT)
         return res.result
 
-    def PUT(self, payload=None, timeout=5, query=None):
+    def PUT(self, payload=None, timeout=5, query=None, inputfile=None):
         from pyot.tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
 
-    def POST(self, payload=None, timeout=5, query=None):
+    def POST(self, payload=None, timeout=5, query=None, inputfile=None):
         from pyot.tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
     
