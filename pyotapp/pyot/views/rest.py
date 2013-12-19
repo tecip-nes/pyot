@@ -51,23 +51,6 @@ def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
     time.sleep(interval)
 
 
-#@login_required
-def req(request):
-    if request.method == 'GET':
-        try:
-            addr = request.GET['addr']
-            method = request.GET['id']
-            payload = request.GET['pd']
-        except Exception as _e:
-            response = 'Bad request'
-            return HttpResponse(response)        
-        
-        response = 'you requested method ' + method + ', to address ' + addr + ', with payload ' + payload
-        return HttpResponse(response)
-    else:
-        response = 'Bad request'
-        return HttpResponse(response)
-
 #@staff_member_required
 def startServer(request, wid):
     try:
@@ -419,7 +402,7 @@ def opRes(request):
             res = r.POST(payload)
         else:
             return HttpResponse('Method unsupported')
-        out = str(res)
+        out = "%s %s" % (res.code, res.content)
         return HttpResponse(out)
     except Exception as e:
         return HttpResponse('Error, exception %s' % e)  

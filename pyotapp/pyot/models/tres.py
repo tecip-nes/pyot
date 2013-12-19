@@ -69,7 +69,7 @@ TRES_STATES = (
 class TResT(models.Model):
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
     inputS = models.ManyToManyField(Resource)
-    output = models.ForeignKey(Resource, related_name='OutputDestination')#TODO null=True
+    output = models.ForeignKey(Resource, related_name='OutputDestination', null=True)
     TResResource = models.ForeignKey(Resource, null=True, related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES, default='CREATED')
      
@@ -94,17 +94,20 @@ class TResT(models.Model):
         
          
     def uninstall(self): 
-        #clear tres resource
-        #self.TResResource.remove(TResResource)
+        from pyot.tasks import uninstallTres
+        res = uninstallTres.apply_async(args=[self.id, self.TResResource.id], queue=self.TResResource.host.getQueue())
+        res.wait()        
         self.state='CLEARED'
         self.save()
+        return res.result
             
     def start(self):
         #send POST to TResResource
         Pf = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name)
-        Pf.POST()
+        r = Pf.POST()
         self.state='RUNNING' 
         self.save()
+        return r
          
     def stop(self):
         Pf = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name)
@@ -118,3 +121,11 @@ class TResT(models.Model):
     def getLastOutput(self):
         lo = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name+'/lo')
         return lo
+    
+    def getInputSource(self):
+        _is = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name+'/is')
+        return _is
+    
+    def getOutputDestination(self):
+        _od = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name+'/od')
+        return _od    

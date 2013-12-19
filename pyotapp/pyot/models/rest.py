@@ -53,10 +53,43 @@ METHOD_CHOICES = (
     (u'DELETE', u'DELETE'), 
 )
 
+#CoAP Method result code
+
+CREATED ='2.01'
+DELETED = '2.02' 
+VALID = '2.03'
+CHANGED = '2.04'
+CONTENT = '2.05'
+NOT_ALLOWED = '4.04'
+BAD_REQUEST = '4.00'
+UNAUTHORIZED ='4.01'
+BAD_OPTION = '4.02'
+FORBIDDEN = '4.03'
+NOT_FOUND = '4.04'
+METHOD_NOT_ALLOWED = '4.05'
+INTERNAL_SERVER_ERROR = '5.00'
+NOT_IMPLEMENTED = '5.01'
+
+DEFAULT_DISCOVERY_PATH = '/.well-known/core'
 
 CELERY_DEFAULT_QUEUE = 'celery'
 
 
+class Response(object):
+    code = None
+    content = None
+    def __init__(self, code="", content=""):
+        self.code = code
+        self.content = content
+    def getCode(self):
+        return self.code
+    def getContent(self):
+        return self.content
+    def __unicode__(self):
+        return u"%s - %s" % (self.code, self.content)
+    def __str__(self):
+        return u"%s - %s" % (self.code, self.content)
+    
 class Network(models.Model):
     objects = IPNetworkQuerySet.as_manager()
     network = IPNetworkField()
@@ -131,11 +164,11 @@ class Host(models.Model):
         res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
-    def DISCOVER(self):
+    def DISCOVER(self, path=DEFAULT_DISCOVERY_PATH):
         if self.active == False:
             return u'Host %s Not Active' % (str(self.ip6address))
         from pyot.tasks import coapDiscovery
-        res = coapDiscovery.apply_async(args=[str(self.ip6address)], queue=self.getQueue())
+        res = coapDiscovery.apply_async(args=[str(self.ip6address), path], queue=self.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
     class Meta:
@@ -147,7 +180,9 @@ class Resource(models.Model):
     timeadded = models.DateTimeField(auto_now_add=True, blank=True) 
     extra = models.CharField(max_length=30, blank=True, default='' )
     obs = models.BooleanField(default = False)
-    
+    rt = models.CharField(max_length=30, blank=True, null=True )
+    title = models.CharField(max_length=30, blank=True, null=True )
+    ct = models.CharField(max_length=3, blank=True, null=True )
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address) 
 
@@ -164,15 +199,21 @@ class Resource(models.Model):
         res.wait(WAIT_TIMEOUT)
         return res.result
 
-    def PUT(self, payload=None, timeout=5, query=None, inputfile=None):
+    def PUT(self, payload=None, timeout=5, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
 
-    def POST(self, payload=None, timeout=5, query=None, inputfile=None):
+    def POST(self, payload=None, timeout=5, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPost
         res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
+        res.wait(WAIT_TIMEOUT)
+        return res.result
+
+    def DELETE(self, payload=None, timeout=5, query=None):
+        from pyot.tasks import coapDelete
+        res = coapDelete.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         res.wait(WAIT_TIMEOUT)
         return res.result
     
@@ -181,14 +222,14 @@ class Resource(models.Model):
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
-    def asyncPOST(self,payload=None, timeout=5, query=None):
+    def asyncPOST(self,payload=None, timeout=5, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
     
-    def asyncPUT(self,payload=None, timeout=5, query=None):
+    def asyncPUT(self,payload=None, timeout=5, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
     
     def OBSERVE(self, duration, handler, renew =False): #TODO handler
@@ -295,7 +336,7 @@ class EventHandlerMsg(EventHandler):
         return u"{meta}".format(meta=self.description)     
     def action(self):
         logging.debug('ACTION')
-        from Events import sendMsg 
+        from pyot.Events import sendMsg 
         if (self.activationCount == self.max_activations):
             logging.debug('max activations reached')
             return

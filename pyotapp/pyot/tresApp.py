@@ -32,6 +32,7 @@ class TResPF(object):
         
         if type(fileRef) is not file:
             raise Exception('A file type is required')
+        #TODO: copy file in media folder
         self.pf = TResProcessing.objects.create(name=name, 
                                          description=description,
                                          version=version,
@@ -39,6 +40,8 @@ class TResPF(object):
     
     @classmethod
     def fromSource(cls, sourceString, name, description=None, version=None):
+        if name[-3:] != '.py':
+            name += '.py'
         with open(MEDIA_ROOT + scriptFolder + name, 'w') as newFile:
             newFile.write(sourceString)
             newFile.flush()
@@ -52,7 +55,7 @@ class TResPF(object):
 
 class TResTask(object):
     task = None
-    def __init__(self, TresPf, inputS, output):
+    def __init__(self, TresPf, inputS, output=None):
         #First check if input resources are observable
         for inp in inputS:
             if inp.obs==False:
@@ -80,3 +83,8 @@ class TResTask(object):
         return self.task.getStatus()
     def getLastOutput(self):
         return self.task.getLastOutput()
+    def getInputSource(self):
+        return self.task.getInputSource()
+    def getOutputDestination(self):
+        return self.task.getOutputDestination()    
+    

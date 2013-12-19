@@ -61,6 +61,8 @@ unsigned int obs_seconds = 30;	/* default observe time */
 coap_tick_t obs_wait = 0;	/* timeout for current subscription */
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
+#define BUF_SIZE 200
+
 
 coap_list_t *
 new_option_node(unsigned short key, unsigned int length, unsigned char *data);
@@ -72,7 +74,7 @@ set_timeout(coap_tick_t *timer, const unsigned int seconds) {
 }
 
 int
-append_to_output(const unsigned char *data, size_t len) {
+append_to_output(char *data, size_t len) {
   size_t written;
 
   if (!file) {
@@ -276,7 +278,6 @@ check_token(coap_pdu_t *received) {
     memcmp(received->hdr->token, the_token.s, the_token.length) == 0;
 }
 
-#define PRINTHEADERRESPONSE()      fprintf(stdout, "%d.%02d ", (received->hdr->code >> 5), received->hdr->code & 0x1F)
 
 void
 message_handler(struct coap_context_t  *ctx, 
@@ -293,6 +294,7 @@ message_handler(struct coap_context_t  *ctx,
   size_t len;
   unsigned char *databuf;
   coap_tid_t tid;
+  char b[BUF_SIZE];  
 
 #ifndef NDEBUG
   if (LOG_DEBUG <= coap_get_log_level()) {
@@ -337,22 +339,28 @@ message_handler(struct coap_context_t  *ctx,
     block_opt = get_block(received, &opt_iter);
     if (!block_opt) {
       /* There is no block option set, just read the data and we are done. */
-      if (coap_get_data(received, &len, &databuf))					//TODO: NO BLOCK
-	PRINTHEADERRESPONSE();
-	append_to_output(databuf, len);
-        fprintf(stdout, "\n");
-	//fprintf(stdout, "\n0.00\n");
+      if (coap_get_data(received, &len, &databuf)){	
+
+        int l = snprintf(b, BUF_SIZE, "%d.%02d ", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        append_to_output(b, l);
+        append_to_output(databuf, len);
+        append_to_output("\n", strlen("\n"));
+
+        } else {
+        int l = snprintf(b, BUF_SIZE, "%d.%02d\n", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        append_to_output(b, l);
+        }
     } else {
       unsigned short blktype = opt_iter.type;
 
-      /* TODO: check if we are looking at the correct block number */			//TODO: BLOCKS
+      /* TODO: check if we are looking at the correct block number */
       if (coap_get_data(received, &len, &databuf)){
-	PRINTHEADERRESPONSE();
-	append_to_output(databuf, len);
-	fprintf(stdout, "\n");
+        int l = snprintf(b, BUF_SIZE, "%d.%02d ", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        append_to_output(b, l);
+        append_to_output(databuf, len);
+        append_to_output("\n", strlen("\n"));
 
 	}
-
       if (COAP_OPT_BLOCK_MORE(block_opt)) {
 	/* more bit is set */
 	debug("found the M bit, block size is %u, block nr. %u\n",
@@ -396,13 +404,12 @@ message_handler(struct coap_context_t  *ctx,
 	/* create pdu with request for next block */
 	pdu = coap_new_request(ctx, method, optlist); /* first, create bare PDU w/o any option  */
 	if ( pdu ) {
-          /*
-	  // finally add updated block option from response, clear M bit 
-	  // blocknr = (blocknr & 0xfffffff7) + 0x10; 
+
+	  /* finally add updated block option from response, clear M bit */
+	  /* blocknr = (blocknr & 0xfffffff7) + 0x10; */
 	  debug("query block %d\n", (COAP_OPT_BLOCK_NUM(block_opt) + 1));
 	  coap_add_option(pdu, blktype, coap_encode_var_bytes(buf, 
 	      (block.num << 4) | block.m << 3 | block.szx), buf);
-          */
 
 	  if (received->hdr->type == COAP_MESSAGE_CON)
 	    tid = coap_send_confirmed(ctx, remote, pdu);
@@ -428,17 +435,18 @@ message_handler(struct coap_context_t  *ctx,
 
     /* check if an error was signaled and output payload if so */
     if (COAP_RESPONSE_CLASS(received->hdr->code) >= 4) {
-      fprintf(stdout, "%d.%02d\n", 
-	      (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        int l = snprintf(b, BUF_SIZE, "%d.%02d\n", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        append_to_output(b, l);
       if (coap_get_data(received, &len, &databuf)) {
-      fprintf(stderr, " ");
 	while(len--)
 	  fprintf(stderr, "%c", *databuf++);
       }
-      fprintf(stderr, "\n");
     }
-    
-  }
+        else {
+        int l = snprintf(b, BUF_SIZE, "%d.%02d \n", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+        append_to_output(b, l);
+        }     
+  } 
 
   /* finally send new request, if needed */
   if (pdu && coap_send(ctx, remote, pdu) == COAP_INVALID_TID) {

@@ -21,36 +21,32 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from models.rpl import *
-
-#import matplotlib.pyplot as plt
 import networkx as nx
-#import matplotlib.image as mpimg
 
-
-def searchHost(eui, network):
-    from models import Host
-    h = Host.objects.filter(kqueue=network)
-    for i in h:
-        if i.ip6address.exploded[20:].replace(':','') == eui:
-            return i.ip6address.exploded[-5:]
-    return '6LBR'
 
 def DAGupdate(Net):
-    from models import Resource, RplGraph, Network
+    from pyot.models.rest import Resource, Network
+    from pyot.models.rpl import  RplGraph 
     G=nx.DiGraph(directed=True)
 
     parents = Resource.objects.filter(uri='/rplinfo/parents', host__active=True, host__kqueue=Net)
     import json
     for p in parents:
         print 'Searching parents for resource: ', p
-        pNumber = p.GET()
+        r = p.GET()
+        if r.code != CONTENT:
+            continue
+        pNumber = r.content
         #print 'Searching parents for resource: ', p, pNumber
         
         for index in range(int(pNumber)):
-            prefix = p.GET(query='index='+str(index))
+            r = p.GET(query='index='+str(index))
+            if r.code != CONTENT:
+                continue
+            prefix = r.content
             l = json.loads(prefix)
             pa = searchHost(l['eui'], Net)
-            G.add_edge(p.host.ip6address.exploded[-5:], pa)
+            G.add_edge(shortName(p.host), pa)
     graph = RplGraph.objects.create(graph=G, net=Net)
     return graph
 

@@ -42,15 +42,16 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-#include "rplinfo/rplinfo.h"
+#include "../rplinfo/rplinfo.h"
+#include "../common/pyot.h"
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
-#define REST_RES_PUSHING 0
-#define REST_RES_EVENT 1
+#define REST_RES_PUSHING 1
+#define REST_RES_EVENT 0
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 1
@@ -59,11 +60,6 @@
 #define REST_RES_RADIO 0
 #define REST_RES_RPLINFO 1
 
-
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
 
 #include "erbium.h"
 
@@ -115,25 +111,6 @@
 #error "CoAP version defined by WITH_COAP not implemented"
 #endif
 
-
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]",(lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3],(lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
-
-
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 1) /* rd server */
-
-#define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT+1)
-#define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
-
-#define TOGGLE_INTERVAL 10
 
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
@@ -592,12 +569,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
-/* if static routes are used rather than RPL */
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-  set_global_address();
-  configure_routing();
-#endif
-
   /* Initialize the REST engine. */
   rest_init_engine();
 
@@ -658,8 +629,8 @@ PROCESS_THREAD(rest_server_example, ev, data)
   coap_receiver_init();
 
 
-  int wait_time = getRandUint(30);
-  int base_wait = 15;
+  int wait_time = getRandUint(MAX_WAITING);
+  int base_wait = BASE_WAITING;
 
   etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
 
@@ -673,37 +644,29 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   while(1) {
     PROCESS_YIELD();
-    //PROCESS_WAIT_EVENT();
     if (etimer_expired(&et)) {
-      printf("--Sending msg to rd...\n");
+      //printf("--Sending msg to rd...\n");
 
-      /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-      coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0 );
+      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
 
-      PRINT6ADDR(&server_ipaddr);
-      PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+      //PRINT6ADDR(&server_ipaddr);
+      //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-      COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+      coap_transaction_t *transaction;
 
-      printf("Done--\n");
+      request->mid = coap_get_mid();
+      if ((transaction = coap_new_transaction(request->mid, &server_ipaddr, REMOTE_PORT)))
+      {
+        transaction->packet_len = coap_serialize_message(request, transaction->packet);
+        coap_send_transaction(transaction);
+      }
+
+      //printf("Done--\n");
 
       etimer_reset(&et);
-
-#if PLATFORM_HAS_BUTTON
-    } else if (ev == sensors_event && data == &button_sensor) {
-      printf("button--\n");
-#if REST_RES_EVENT
-      /* Call the event_handler for this application-specific event. */
-      event_event_handler(&resource_event);
-#endif
-#if REST_RES_SEPARATE && WITH_COAP>3
-      /* Also call the separate response example handler. */
-      separate_finalize_handler();
-#endif
-    }
-#endif /* PLATFORM_HAS_BUTTON */
+     }
   } /* while (1) */
 
   PROCESS_END();
