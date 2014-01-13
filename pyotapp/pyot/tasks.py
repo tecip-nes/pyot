@@ -356,14 +356,6 @@ def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
     except Exception as e:
         print 'Exception Coap Discovery: %s'  % e
 
-def updateModTrace(sender):
-    try:
-        m = ModificationTrace.objects.get(className=sender)
-        m.lastModified=datetime.now()
-        m.save()
-    except ObjectDoesNotExist:
-        ModificationTrace.objects.create(className=sender)  
-
 import traceback
 
 @task
@@ -393,7 +385,6 @@ def coapRdServer(prefix = ''):
                 h = Host.objects.get(ip6address=ipAddr)
                 h.lastSeen=datetime.now()
                 if (h.active == False):
-                    updateModTrace('Host')
                     h.DISCOVER()
                 h.active = True
                 h.keepAliveCount += 1
@@ -406,7 +397,6 @@ def coapRdServer(prefix = ''):
                 h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount = 1)
                 h.save()  
                 h.DISCOVER()
-                updateModTrace('Host')
             #if rxr.message.payload == 'up':
             #    l = Log(type = 'registration', message = ipAddr)
             #    l.save()
@@ -437,7 +427,6 @@ def checkConnectedHosts():
                 print 'cleaning host: ' + str(i.ip6address)
                 i.active=False
                 i.save()
-                updateModTrace('Host')
                 l = Log(type = 'clean', message = i)
                 l.save()
         return None        

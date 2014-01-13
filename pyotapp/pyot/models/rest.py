@@ -239,14 +239,6 @@ class Resource(models.Model):
     class Meta:
         app_label = 'pyot'
         
-class ModificationTrace(models.Model):
-    lastModified = models.DateTimeField(auto_now_add=True, blank=True) 
-    className = models.CharField(max_length=10, blank=True)
-    def __unicode__(self):
-        return u"{c} - {l}".format(c=self.className, l=self.lastModified) 
-    class Meta:
-        app_label = 'pyot'
-                
 class EventHandler(models.Model):
     description = models.CharField(max_length=100)
     activationCount = models.IntegerField(default=0)

@@ -43,7 +43,5 @@ wsgiref
 zope.interface
 librabbitmq
 six
-sse
-django-sse
 ipaddr
 pycurl

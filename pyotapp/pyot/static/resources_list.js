@@ -46,17 +46,11 @@ $('#sform').submit(function (){
 });
 
 function reloadTable(){
-	$('#resourcetable').flexReload();	
+	$('#resourcetable').flexReload();
+	setTimeout("reloadTable()",5000);	
 }
 
-$(document).ready(function() {
-    var source = new EventSource('/pushUpdate/Host');
-
-    source.addEventListener("pushUpdate", function(e) {
-        if (e.data == 'T')
-                reloadTable();
-    });
-});
+reloadTable();
 
 function makeList(grid){
 	var items = $('.trSelected',grid);
@@ -74,14 +68,6 @@ function opSelection(com, itemList){
 	}
 	window.location.href = Url+'?'+"id=" + itemList;
 	
-//	$.ajax({
-//		type: "GET",
-//		url: Url,
-//		data: "id=" + itemList,
-//		success: function(msg){
-//		setFeedback(msg);
-//	}
-//	});	
 }
 
 function act(com, grid){
@@ -108,14 +94,3 @@ function gotoRes(id){
 	var Url = "/resource/"+id;
 	window.location.href = Url;
 }
-
-/*
-$("#lista").smartupdater({
-	url : "{% url filelist %}"
-	}, function (data) {
-		document.getElementById("lista").innerHTML=data;
-	}
-);
-$("#lista").smartupdater("setTimeout",{{ refresh_js }});
- */
-

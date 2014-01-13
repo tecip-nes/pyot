@@ -45,6 +45,7 @@ Database creation:
 ```sh
 cd pyotapp
 ./manage.py syncdb
+./manage.py loaddata auth.json
 ```
 
 Running the application

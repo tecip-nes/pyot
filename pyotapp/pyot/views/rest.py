@@ -41,14 +41,14 @@ from django.core.paginator import Paginator
 #from django.contrib.auth.decorators import login_required
 #from django.contrib.admin.views.decorators import staff_member_required
 #from django.utils.decorators import method_decorator   
-from django_sse.views import BaseSseView
+#from django_sse.views import BaseSseView
 import time 
 
 
-SSE_UPDATE_INTERVAL = 0.5
+#SSE_UPDATE_INTERVAL = 0.5
 
-def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
-    time.sleep(interval)
+#def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
+#    time.sleep(interval)
 
 
 #@staff_member_required
@@ -229,30 +229,19 @@ def resourcePage(request, rid):
     c, t = resObj.getTemplate(request)
     return render(request, t, c)
 
-class resourceStatus(BaseSseView):
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(resourceStatus, self).dispatch(*args, **kwargs)    
-    def iterator(self):
-        while True:
-            try:
-                rid =self.kwargs['rid']
-                r = Resource.objects.get(id=rid)
-                if r.host.active == True:
-                    status = "CONNECTED"
-                    self.sse.add_message("resStatus", status)
-                    SSE_SLEEP()
-                    yield                    
-                else:
-                    status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime(TFMT)
-                    self.sse.add_message("resStatus", status)
-                    SSE_SLEEP()
-                    yield                  
-            except Resource.DoesNotExist:
-                resp = 'The resource with id= ' + str(rid) + ' does not exist anymore' 
-                self.sse.add_message("resStatus", resp)
-                SSE_SLEEP()
-                yield 
+def resourceStatus(request, rid):
+    try:
+        #rid =self.kwargs['rid']
+        r = Resource.objects.get(id=rid)
+        if r.host.active == True:
+            status = "CONNECTED"
+        else:
+            status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime(TFMT)
+        return HttpResponse(status)
+    except Resource.DoesNotExist:
+        resp = 'The resource with id= ' + str(rid) + ' does not exist anymore' 
+        return HttpResponse(resp)
+
                
 #@login_required 
 def obsList(request):
@@ -286,75 +275,47 @@ def obsList(request):
 #@staff_member_required
 def settings(request):
     return render(request,'settings.htm')
+"""
+def obsLast(request, rid):
+    baseTime = datetime.now()
+    try:
+        s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
+        a = []
+        for i in s:
+            a.append(i['id'])
+            logging.debug(i)
+        maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
+        lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
+        if lastMsg.timeadded > baseTime:
+            r = lastMsg.payload
+            return HttpResponse(r)
+        elif lastMsg.timeadded + timedelta(seconds=2) < datetime.now():     
+            r = 'none'
+            return HttpResponse(r)    
+    except ObjectDoesNotExist, MultipleObjectsReturned:
+        r = 'none' 
+        return HttpResponse(r)   
+    except Exception as e:
+        logging.error(e) 
+        r = 'none' 
+        return HttpResponse(r) 
 
-class pushUpdate(BaseSseView):
-    '''
-    triggers update on resource/host tables
-    '''
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(pushUpdate, self).dispatch(*args, **kwargs)    
-    
-    def iterator(self):
-        baseTime = datetime.now()
-        while True:
-            cid = self.kwargs['className']
-            try:
-                t = ModificationTrace.objects.get(className=cid)
-                if t.lastModified > baseTime:
-                    baseTime = t.lastModified
-                    self.sse.add_message("pushUpdate", "T")
-                    SSE_SLEEP()
-                    yield
-                else:
-                    self.sse.add_message("pushUpdate", "F")
-                    SSE_SLEEP()
-                    yield                                           
-            except ObjectDoesNotExist, MultipleObjectsReturned:
-                self.sse.add_message("pushUpdate", "F")
-                SSE_SLEEP()
-                yield                         
+"""
+def obsLast(request, rid):
+    try:
+        s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
+        a = []
+        for i in s:
+            a.append(i['id'])
+            logging.debug(i)
+        
+        maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
+        lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
+        r = lastMsg.payload
+    except ObjectDoesNotExist, MultipleObjectsReturned:
+        r = 'none'    
+    return HttpResponse(r) #TODO da controllare la query
 
-
-class obsLast(BaseSseView):
-    '''
-    Stream observe values (only if new values arrived)
-    '''   
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(obsLast, self).dispatch(*args, **kwargs)    
-    def iterator(self):
-        baseTime = datetime.now()
-        while True:
-            rid = self.kwargs['rid']
-            try:
-                s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
-                a = []
-                for i in s:
-                    a.append(i['id'])
-                    logging.debug(i)
-                maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
-                lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
-                if lastMsg.timeadded > baseTime:
-                    r = lastMsg.payload
-                    self.sse.add_message("obsLast", r)
-                    SSE_SLEEP(1)
-                    yield
-                elif lastMsg.timeadded + timedelta(seconds=2) < datetime.now():     
-                    r = 'none'    
-                    self.sse.add_message("obsLast", r)   
-                    SSE_SLEEP(1)
-                    yield
-                else:
-                    SSE_SLEEP(1)
-                    yield                
-            except ObjectDoesNotExist, MultipleObjectsReturned:
-                r = 'none'    
-                self.sse.add_message("obsLast", r)
-                SSE_SLEEP()
-                yield    
-            except Exception as e:
-                logging.error(e)  
 
 
 #@login_required 

@@ -27,7 +27,7 @@ function setOpacity(value) {
 	document.getElementById('placeholder').style.filter = 'alpha(opacity=' + value*10 + ')';
 }
 
-
+/*
 $(document).ready(function() {
     var arr = [];
     var t=0;
@@ -55,10 +55,43 @@ $(document).ready(function() {
 		}
 		);
     });
-});
+});*/
+
+var arr = [];
+var t=0;
+
+function updatePlot(){
+	$.ajax({
+		type: "GET",
+		url: '/obsLast/'+rid+'/',
+		success: function(d){
+		        if (d =='none'){
+			        setTimeout("updatePlot()",1000);
+         			return;
+         		}
+		        arr.push(([t , parseInt(d)]));	
+         		t++;
+         
+		        $.plot(placeholder,[{
+			        label: "Data",
+			        data: arr,
+			        lines: { show: true }
+		        }],
+		        {
+			        yaxis: {
+			        min: 0
+		                }
+		        }
+		        );
+		setTimeout("updatePlot()",1000);        
+		}
+
+		});
+		//setTimeout("updatePlot()",1000);
+}
 
 
-
+updatePlot();
 
 $("#subList").smartupdater({
 	url : '/subList/'+rid+'/'}, function (data) {
