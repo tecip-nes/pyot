@@ -74,6 +74,8 @@ make connect-router-cooja
 
 Open 127.0.0.1:8000 in a web browser (tested with Chrome), enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
+./manage.py shell_plus --notebook
+
 Macroprogramming tests
 --------------
 Folder *pyotapp/appsTesting/macroprogramming* contains a couple of example scripts which can be executed to test macroprogramming. The scripts provide a **toggle-All** test, toggling all the leds of all nodes in the IoT network with two different semantics. While *toggleAllSerial.py* toggles the leds.. serially, *toggleAllParallel.py* exploits Celery concurrency feature to dispatch all the tasks in parallel, then waits for all the transactions to complete.

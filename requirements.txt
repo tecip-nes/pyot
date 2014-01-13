@@ -45,3 +45,5 @@ librabbitmq
 six
 ipaddr
 pycurl
+networkx
+netifaces

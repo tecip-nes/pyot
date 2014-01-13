@@ -28,7 +28,7 @@ PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 config = RawConfigParser()
 config.read(PROJECT_PATH + '/settings.ini')
 
-LOCAL_DB = False
+LOCAL_DB = True
 WEB_APPLICATION_SERVER = False
 
 if socket.gethostname() == 'andrea-lab':
@@ -69,7 +69,7 @@ CLEANUP_TASK_PERIOD = 30
 CLEANUP_TIME = 90
 RECOVERY_PERIOD = 30
 
-WORKER_RECOVERY = False
+WORKER_RECOVERY = True
 SUBSCRIPTION_RECOVERY = True
 
 TFMT = "%Y-%m-%d %H:%M:%S" #global format for time strings
@@ -188,17 +188,6 @@ MIDDLEWARE_CLASSES = (
 )
 
 INTERNAL_IPS = ('127.0.0.1',)
-DEBUG_TOOLBAR_PANELS = (
-    'debug_toolbar.panels.version.VersionDebugPanel',
-    'debug_toolbar.panels.timer.TimerDebugPanel',
-    'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
-    'debug_toolbar.panels.headers.HeaderDebugPanel',
-    'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
-    'debug_toolbar.panels.template.TemplateDebugPanel',
-    'debug_toolbar.panels.sql.SQLDebugPanel',
-    'debug_toolbar.panels.signals.SignalDebugPanel',
-    'debug_toolbar.panels.logger.LoggingPanel',
-)
 
 ROOT_URLCONF = 'urls'
 
