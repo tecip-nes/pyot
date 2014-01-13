@@ -28,11 +28,11 @@ from exceptions import NotImplementedError
 from model_utils.managers import InheritanceManager
 #from django.core.exceptions import ObjectDoesNotExist
 import base64
-from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
+from fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
 from settings import TFMT
 from celery.task.control import revoke 
 from pyot.utils import get_celery_worker_status
-#from pyot.models.rpl import RplGraph
+
 
 
 caching = True
@@ -334,7 +334,7 @@ class EventHandlerMsg(EventHandler):
     
     def __unicode__(self):
         return u"{meta}".format(meta=self.description)     
-    def action(self):
+    def action(self, msg=None):
         logging.debug('ACTION')
         from pyot.Events import sendMsg 
         if (self.activationCount == self.max_activations):
@@ -342,6 +342,24 @@ class EventHandlerMsg(EventHandler):
             return
         self.activationCount += 1
         self.result  = sendMsg(self.msg)   
+        self.save()
+    class Meta:
+        app_label = 'pyot'
+
+class EventHandlerTres(EventHandler):
+    from tres import TResT
+    #msg = models.ForeignKey(CoapMsg)
+    task = models.ForeignKey(TResT)
+    def __unicode__(self):
+        return u"{meta}".format(meta=self.description)     
+    def action(self, msg):
+        print 'ACTION, activating tres'
+        if (self.activationCount == self.max_activations):
+            logging.debug('max activations reached')
+            return
+        self.task.runPf(msg.payload)
+        self.activationCount += 1
+        #self.result  = sendMsg(self.msg)   
         self.save()
     class Meta:
         app_label = 'pyot'

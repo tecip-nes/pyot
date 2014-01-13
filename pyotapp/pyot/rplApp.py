@@ -21,6 +21,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from models.rpl import *
+from models.rest import *
 import networkx as nx
 
 

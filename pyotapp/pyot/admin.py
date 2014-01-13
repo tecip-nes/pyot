@@ -39,7 +39,7 @@ admin.site.register(ModificationTrace)
 admin.site.register(TResProcessing)
 admin.site.register(TResT)
 admin.site.register(RplGraph)
-
+admin.site.register(EmulatorState)
 # Define an inline admin descriptor for UserProfile model
 # which acts a bit like a singleton
 class UserProfileInline(admin.StackedInline):

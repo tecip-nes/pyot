@@ -34,6 +34,17 @@
 /******************************************************************************/
 /*                     T-Res example common configuration                     */
 /******************************************************************************/
+#ifdef RF_CHANNEL
+#undef RF_CHANNEL
+#endif /* RF_CHANNEL */
+#define RF_CHANNEL              20 
+
+#ifdef CC2420_CONF_CHANNEL
+#undef CC2420_CONF_CHANNEL
+#endif
+#define CC2420_CONF_CHANNEL 20
+
+
 
 /* Use csma/ca */
 #undef NETSTACK_CONF_MAC

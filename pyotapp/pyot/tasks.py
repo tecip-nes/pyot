@@ -258,13 +258,13 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
             m = m.rstrip() 
             if m.isdigit(): 
                 print 'Observe update from ' + uri + ': ' + m
-                CoapMsg.objects.create(resource=r, method='GET', code=code, payload=m, sub = s) 
+                m = CoapMsg.objects.create(resource=r, method='GET', code=code, payload=m, sub = s) 
 
                 if s.handler is not None:
                     print 'handling event!'
                     h = EventHandler.objects.filter(id = int(handler)).select_subclasses()
                     for i in h:
-                        i.action() 
+                        i.action(m) 
         print 'subscription ended...'                
         if renew:
             print 'renewing sub'
@@ -273,15 +273,18 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
         return 'Resource not found'
     except HostNotActive as e:
         return 'Host ' + e.value + ' not active' 
+    
     except Exception, exc:
-        print 'Exception COAP OBSERVE %s' % exc
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)      
         if s is not None:
             s.active=False
             s.save()
             print 'Subscription closed'        
         coapObserve.retry(exc=exc, countdown=10)        
     finally:
-        if s is not None and SUBSCRIPTION_RECOVERY == False:
+        if s is not None:
             s.active=False
             s.save()
             print 'Subscription closed'
@@ -581,3 +584,5 @@ def uninstallTres(t_res_task_id, t_res_resource_id):
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         print ''.join('!! ' + line for line in lines)  
         return 'Error uninstalling ' + TResTask.pf.name
+    
+    

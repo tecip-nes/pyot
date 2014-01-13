@@ -410,7 +410,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Photosynthetic and solar light (supports JSON)\";rt=\"LightSensor\"");
+RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light (json)\";rt=\"LightSensor\"");
 void
 light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {

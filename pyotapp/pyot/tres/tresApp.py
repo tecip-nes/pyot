@@ -54,37 +54,59 @@ class TResPF(object):
         return self.pf.__unicode__()
 
 class TResTask(object):
-    task = None
+    taskId = None
     def __init__(self, TresPf, inputS, output=None):
         #First check if input resources are observable
         for inp in inputS:
             if inp.obs==False:
                 raise Exception('Input resources must be observable')          
         #Then create task object
-        self.task = TResT.objects.create(pf = TresPf.pf, output = output)
+        task = TResT.objects.create(pf = TresPf.pf, output = output)
+        self.taskId = task.id
         for inp in inputS:
-            self.task.inputS.add(inp)
-        self.task.save()
+            task.inputS.add(inp)
+        task.save()
 
     def getTaskObject(self):
-        return self.task    
+        return TResT.objects.get(id=self.taskId)
 
     def __repr__(self):
-        return self.task.__unicode__()
+        t = self.getTaskObject()
+        return t.__unicode__()
     def deploy(self,TResResource):
-        return self.task.deploy(TResResource)
+        t = self.getTaskObject()
+        return t.deploy(TResResource)
     def uninstall(self):   
-        return self.task.uninstall()
+        t = self.getTaskObject()
+        return t.uninstall()
     def start(self):
-        return self.task.start()
+        t = self.getTaskObject()
+        return t.start()
     def stop(self):
-        return self.task.stop()
+        t = self.getTaskObject()
+        return t.stop()
     def getStatus(self):
-        return self.task.getStatus()
+        t = self.getTaskObject()
+        return t.getStatus()
     def getLastOutput(self):
-        return self.task.getLastOutput()
+        t = self.getTaskObject()
+        return t.getLastOutput()
     def getInputSource(self):
-        return self.task.getInputSource()
+        t = self.getTaskObject()
+        return t.getInputSource()
     def getOutputDestination(self):
-        return self.task.getOutputDestination()    
+        t = self.getTaskObject()
+        return t.getOutputDestination()    
+    def emulate(self, duration=None):  
+        t = self.getTaskObject()
+        return t.emulate(duration)    
+    def runPf(self, inp):   
+        t = self.getTaskObject()
+        return t.runPf(inp)
+    def getEmuLastOutput(self):
+        t = self.getTaskObject()
+        return t.getEmuLastOutput() 
+    def getEmuResult(self):
+        t = self.getTaskObject()
+        return t.getEmuResult()  
     
