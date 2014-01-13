@@ -1,4 +1,4 @@
-CONTIKI=/home/andrea/icsi/t-res
+#CONTIKI=/home/andrea/icsi/t-res
 
 include $(CONTIKI)/Makefile.include
 

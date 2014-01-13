@@ -46,4 +46,10 @@ six
 ipaddr
 pycurl
 networkx
-netifaces
+netifaces 
+jinja2 
+pyzmq 
+tornado 
+ipython
+pygraphviz
+matplotlib

@@ -24,7 +24,7 @@ export CONTIKI PATH_TO_CONTIKI_ROOT
 
 Installing general requirements:
 ```sh
-sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev
+sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev
 ```
 
 Install python requirements, using virtualenv is reccomended
