@@ -82,7 +82,7 @@ AUTOSTART_PROCESSES(&tres_process);
 /*                          Fake Actuator Resoruce                            */
 /*----------------------------------------------------------------------------*/
 RESOURCE(actuator, METHOD_GET | METHOD_POST | METHOD_PUT, "actuator",
-         "title=\"A fake generic actuator\";rt=\"Text\"");
+        "title=\"actuator\";rt=\"Text\"");
 
 /*----------------------------------------------------------------------------*/
 void

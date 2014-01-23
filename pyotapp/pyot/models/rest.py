@@ -37,14 +37,16 @@ from pyot.utils import get_celery_worker_status
 
 caching = True
 defaultCachingInterval = 60
-defaultCaching =  {'light':15, 
+defaultCaching =  {'/sensors/light':15, 
                    'temp': 120, 
                    'baro': 180 } 
 
 KEEPALIVEPERIOD = 10
-WAIT_TIMEOUT = 30
+WAIT_TIMEOUT = 10
 
-cachingUri = ['light','temp','baro']
+COAP_REQ_TIMEOUT = 15
+
+cachingUri = ['/sensors/light','temp','baro']
 
 METHOD_CHOICES = (
     (u'GET', u'GET'),
@@ -103,6 +105,14 @@ class Network(models.Model):
     def startRD(self):
         from pyot.tasks import coapRdServer
         r = coapRdServer.apply_async(args=[str(self.network)], queue=self.hostname)
+        """
+        add.apply_async((2, 2), retry=True, retry_policy={
+                'max_retries': 3,
+                'interval_start': 0,
+                'interval_step': 0.2,
+                'interval_max': 0.2,
+            })
+        """   
         self.pid = r.task_id
         self.save()
         return r
@@ -162,14 +172,14 @@ class Host(models.Model):
     def PING(self, count=3):
         from pyot.tasks import pingHost
         res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
     def DISCOVER(self, path=DEFAULT_DISCOVERY_PATH):
         if self.active == False:
             return u'Host %s Not Active' % (str(self.ip6address))
         from pyot.tasks import coapDiscovery
         res = coapDiscovery.apply_async(args=[str(self.ip6address), path], queue=self.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
     class Meta:
         app_label = 'pyot'
@@ -196,38 +206,38 @@ class Resource(models.Model):
                 return value
         from pyot.tasks import coapGet
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
 
-    def PUT(self, payload=None, timeout=5, query=None, inputfile=None, block=None):
+    def PUT(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPut
         res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
 
-    def POST(self, payload=None, timeout=5, query=None, inputfile=None, block=None):
+    def POST(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPost
         res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
 
-    def DELETE(self, payload=None, timeout=5, query=None):
+    def DELETE(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None):
         from pyot.tasks import coapDelete
         res = coapDelete.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
     
-    def asyncGET(self,payload=None, timeout=5, query=None):
+    def asyncGET(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None):
         from pyot.tasks import coapGet
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
-    def asyncPOST(self,payload=None, timeout=5, query=None, inputfile=None, block=None):
+    def asyncPOST(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPost
         res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
     
-    def asyncPUT(self,payload=None, timeout=5, query=None, inputfile=None, block=None):
+    def asyncPUT(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
         from pyot.tasks import coapPut
         res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
@@ -319,7 +329,7 @@ def getLastResponse(resource):
     msgs = CoapMsg.objects.filter(resource__id=resource.id, timeadded__gte=start).exclude(method='PUT').order_by('-id')
     if msgs.count() == 0:
         return None
-    return msgs[0].payload
+    return Response(code = msgs[0].code, content=msgs[0].payload)
     
 class EventHandlerMsg(EventHandler):
     msg = models.ForeignKey(CoapMsg)

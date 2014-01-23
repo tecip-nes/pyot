@@ -34,6 +34,9 @@ LOG_CHOICES = (
     (u'clean', u'clean'),
     (u'discovery', u'discovery'),
     (u'ghost', u'ghost'),
+    (u'RdRetry', u'RdRetry'),    
+    (u'RdRec', u'RdRec'), 
+    (u'SubRec', u'SubRec'),         
 )
 
 

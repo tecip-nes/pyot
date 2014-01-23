@@ -9,6 +9,7 @@ if (hostid != ''){
 		            {display: 'Id', name : 'id', width : 40, sortable : false, align: 'left'}, 
 		            {display: 'Uri', name : 'timeadded', width : 200, sortable : false, align: 'left'},
 		            {display: 'Host', name : 'response', width : 180, sortable : false, align: 'left'},
+		            {display: 'Title', name : 'title', width : 120, sortable : false, align: 'left'},		            
 		            ],
 		            buttons : [
 		                       {name: 'Details', bclass: 'delete', onpress : act},

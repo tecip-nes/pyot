@@ -208,7 +208,7 @@ def resourceList(request):
     for i in filteredResList:
         Id = str(i.id)
         uriLink = '<div class="fake_link" onclick = "gotoRes('+ Id +');">' + i.uri + '</div >'
-        sub = [Id, uriLink, str(i.host.ip6address)]
+        sub = [Id, uriLink, str(i.host.ip6address), i.title]
         dic = {'id': Id, 'cell': sub}
         l.append(dic)
     json_dict = {
@@ -275,32 +275,7 @@ def obsList(request):
 #@staff_member_required
 def settings(request):
     return render(request,'settings.htm')
-"""
-def obsLast(request, rid):
-    baseTime = datetime.now()
-    try:
-        s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
-        a = []
-        for i in s:
-            a.append(i['id'])
-            logging.debug(i)
-        maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
-        lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
-        if lastMsg.timeadded > baseTime:
-            r = lastMsg.payload
-            return HttpResponse(r)
-        elif lastMsg.timeadded + timedelta(seconds=2) < datetime.now():     
-            r = 'none'
-            return HttpResponse(r)    
-    except ObjectDoesNotExist, MultipleObjectsReturned:
-        r = 'none' 
-        return HttpResponse(r)   
-    except Exception as e:
-        logging.error(e) 
-        r = 'none' 
-        return HttpResponse(r) 
 
-"""
 def obsLast(request, rid):
     try:
         s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()

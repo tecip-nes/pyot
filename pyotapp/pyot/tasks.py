@@ -34,12 +34,12 @@ import subprocess, os, signal
 from rplApp import DAGupdate
 import urllib
 from netifaces import interfaces, ifaddresses, AF_INET6
+import random
 
-RX_TIMEOUT = 5
+RX_TIMEOUT = 20
 COAP_PATH = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
 COAP_CLIENT = COAP_PATH + 'coap-client'
 RD_SERVER = COAP_PATH + 'rd'
-COAP_DEFAULT_TIMEOUT = 5
 DEFAULT_OBS_TIMEOUT = 30
 TERM_CODE = '0.00'
 saveMessageToDB = True
@@ -65,6 +65,9 @@ def getFullUri(r):
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None, block=64):
+    #sl = (random.random()*1000)/1000
+    #time.sleep(sl)
+    #print 'delay ', sl
     if method not in allowedMethods:
         raise Exception('Method not allowed')
     if observe and method is not 'get':
@@ -317,16 +320,16 @@ def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
                          stdout=subprocess.PIPE, 
                          shell=True)    
     message = '' 
-    while True:
-        response = p.stdout.readline()
-        if isTermCode(response):
-            break
-        print 'response= ' + response 
-        _code, m = parseResponse(response)
-        message = message + m
-        message = message.rstrip('\n')
-    splittedRes = message.split(',')
     try:
+        while True:
+            response = p.stdout.readline()
+            if isTermCode(response):
+                break
+            print 'response= ' + response 
+            _code, m = parseResponse(response)
+            message = message + m
+            message = message.rstrip('\n')
+        splittedRes = message.split(',')
         h = Host.objects.get(ip6address=host)
         resList = []
         for link in splittedRes:
@@ -358,7 +361,7 @@ def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
 
 import traceback
 
-@task
+@task(max_retries=None)
 def coapRdServer(prefix = ''):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix 
     print 'id = ' + str(coapRdServer.request.id)
@@ -366,7 +369,8 @@ def coapRdServer(prefix = ''):
         print 'coapRdServer retry #' + str(coapRdServer.request.retries) 
         n = Network.objects.get(network=prefix)
         n.pid=str(coapRdServer.request.id)
-        n.save()  
+        n.save() 
+        Log.objects.create(type = 'RdRetry', message = prefix)         
     rdIp = prefix[:-3] +'1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
@@ -380,26 +384,32 @@ def coapRdServer(prefix = ''):
         while True:
             response = rd.stdout.readline().strip()
             ipAddr= response.split(']')[0].split('[')[1]
-            print 'RD server, message from: ' + ipAddr 
+            time = response.split()[1]
+            print 'RD server, message from: ' + ipAddr + ' time = ' + time
             try:
                 h = Host.objects.get(ip6address=ipAddr)
                 h.lastSeen=datetime.now()
-                if (h.active == False):
-                    h.DISCOVER()
                 h.active = True
-                h.keepAliveCount += 1
+                if int(time) < h.keepAliveCount:
+                    Log.objects.create(type = 'registration', message = ipAddr)
+                h.keepAliveCount = int(time)
                 h.save()
                 tmp = Resource.objects.filter(host=h)
                 if len(tmp) == 0:
                     print 'The host has no resources.'
-                    h.DISCOVER()   
+                    try:
+                        h.DISCOVER()
+                    except Exception:
+                        pass
             except ObjectDoesNotExist: #the host does not exists, create a new Host
                 h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount = 1)
-                h.save()  
-                h.DISCOVER()
-            #if rxr.message.payload == 'up':
-            #    l = Log(type = 'registration', message = ipAddr)
-            #    l.save()
+                h.save()
+                try:  
+                    h.DISCOVER()
+                except Exception:
+                    pass
+                Log.objects.create(type = 'registration', message = ipAddr)
+
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
@@ -465,11 +475,12 @@ if WORKER_RECOVERY:
             if network.isConnected() == False:
                 continue
             print network.hostname
-            if network.pid is not None:
+            if network.pid is not None and network.pid != '':
                 rdTaskObj = TaskMeta.objects.get(task_id=network.pid)
                 print 'RD status = ' + rdTaskObj.status
                 if rdTaskObj.status == 'FAILURE':
                     network.startRD()
+                    Log.objects.create(type = 'RdRec', message = network.hostname)    
                     
             subSet = Subscription.objects.filter(active=True,
                                                  resource__host__kqueue=network)
@@ -482,6 +493,7 @@ if WORKER_RECOVERY:
                         sub.resource.OBSERVE(duration=sub.duration,
                                              handler=sub.handler,
                                              renew=sub.renew)
+                        Log.objects.create(type = 'SubRec', message = network.hostname)                         
                 except TaskMeta.DoesNotExist:
                     pass
 

@@ -155,7 +155,7 @@ class TResT(models.Model):
         self.TResResource=TResResource
         self.save()
         res = deployTres.apply_async(args=[self.id, TResResource.id], queue=TResResource.host.getQueue())
-        res.wait(WAIT_TIMEOUT)
+        res.wait()
         return res.result
         
          

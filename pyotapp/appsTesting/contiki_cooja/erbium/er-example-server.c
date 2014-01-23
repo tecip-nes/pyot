@@ -57,7 +57,7 @@
 #define REST_RES_TOGGLE 1
 #define REST_RES_LIGHT 0
 #define REST_RES_BATTERY 0
-#define REST_RES_RADIO 0
+#define REST_RES_RADIO 1
 #define REST_RES_RPLINFO 1
 
 
@@ -131,73 +131,12 @@ client_chunk_handler(void *response)
 }
 
 
-/******************************************************************************/
-#if REST_RES_CHUNKS
-/*
- * For data larger than REST_MAX_CHUNK_SIZE (e.g., stored in flash) resources must be aware of the buffer limitation
- * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
- * the byte offset where to continue is provided to the handler as int32_t pointer.
- * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
- * (The offset for CoAP's blockwise transfer can go up to 2'147'481'600 = ~2047 M for block size 2048 (reduced to 1024 in observe-03.)
- */
-RESOURCE(chunks, METHOD_GET, "test/chunks", "title=\"Blockwise demo\";rt=\"Data\"");
-
-#define CHUNKS_TOTAL    2050
-
-void
-chunks_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  int32_t strpos = 0;
-
-  /* Check the offset for boundaries of the resource data. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
-    /* A block error message should not exceed the minimum block size (16). */
-
-    const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
-  }
-
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while (strpos<preferred_size)
-  {
-    strpos += snprintf((char *)buffer+strpos, preferred_size-strpos+1, "|%ld|", *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if (strpos > preferred_size)
-  {
-    strpos = preferred_size;
-  }
-
-  /* Truncate if above CHUNKS_TOTAL bytes. */
-  if (*offset+(int32_t)strpos > CHUNKS_TOTAL)
-  {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-
-  REST.set_response_payload(response, buffer, strpos);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    *offset = -1;
-  }
-}
-#endif
-
-
 int getRandUint(unsigned int mod){
   return (unsigned int)(rand() % mod);
 }
 
 /******************************************************************************/
-#if REST_RES_PUSHING
+#if REST_RES_PUSHING //  && !defined (PLATFORM_HAS_LIGHT)
 /*
  * Example for a periodic resource.
  * It takes an additional period parameter, which defines the interval to call [name]_periodic_handler().
@@ -314,57 +253,6 @@ sub_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
 
 /******************************************************************************/
 #if defined (PLATFORM_HAS_LEDS)
-/******************************************************************************/
-#if REST_RES_LEDS
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
-
-void
-leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  size_t len = 0;
-  const char *color = NULL;
-  const char *mode = NULL;
-  uint8_t led = 0;
-  int success = 1;
-
-  if ((len=REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
-
-    if (strncmp(color, "r", len)==0) {
-      led = LEDS_RED;
-    } else if(strncmp(color,"g", len)==0) {
-      led = LEDS_GREEN;
-    } else if (strncmp(color,"b", len)==0) {
-      led = LEDS_BLUE;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
-    PRINTF("mode %s\n", mode);
-
-    if (strncmp(mode, "on", len)==0) {
-      leds_on(led);
-    } else if (strncmp(mode, "off", len)==0) {
-      leds_off(led);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
-
-/******************************************************************************/
 #if REST_RES_TOGGLE
 
 static uint8_t toggle_status = 0;
@@ -410,7 +298,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light (json)\";rt=\"LightSensor\"");
+PERIODIC_RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light\";obs", 20*CLOCK_SECOND);
 void
 light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -426,7 +314,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
 
     REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
+  }/*
   else if (num && (accept[0]==REST.type.APPLICATION_XML))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_XML);
@@ -440,7 +328,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'light':{'photosynthetic':%u,'solar':%u}}", light_photosynthetic, light_solar);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  }
+  }*/
   else
   {
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
@@ -448,6 +336,34 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     REST.set_response_payload(response, msg, strlen(msg));
   }
 }
+
+void
+light_periodic_handler(resource_t *r)
+{
+  uint16_t light_photosynthetic = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
+  uint16_t light_solar = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);	
+  static uint16_t obs_counter = 0;
+  
+  static char content[11];
+
+  
+  //REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  //snprintf((char *)content, LIGHT_SIZE, "%u;%u", light_photosynthetic, light_solar);
+
+  //REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));  
+  ++obs_counter;
+
+  //PRINTF("TICK %u for /%s\n", obs_counter, r->url);
+
+  /* Build notification. */
+  coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
+  coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0 );
+  coap_set_payload(notification, content, snprintf(content, sizeof(content), "%u", light_photosynthetic));
+
+  /* Notify the registered observers with the given message type, observe option, and payload. */
+  REST.notify_subscribers(r, obs_counter, notification);
+}
+
 #endif /* PLATFORM_HAS_LIGHT */
 
 /******************************************************************************/
@@ -582,7 +498,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if REST_RES_CHUNKS
   rest_activate_resource(&resource_chunks);
 #endif
-#if REST_RES_PUSHING
+#if REST_RES_PUSHING  //&& !defined (PLATFORM_HAS_LIGHT)
   rest_activate_periodic_resource(&periodic_resource_pushing);
 #endif
 #if defined (PLATFORM_HAS_BUTTON) && REST_RES_EVENT
@@ -608,7 +524,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif /* PLATFORM_HAS_LEDS */
 #if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
   SENSORS_ACTIVATE(light_sensor);
-  rest_activate_resource(&resource_light);
+  rest_activate_periodic_resource(&periodic_resource_light);
 #endif
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
@@ -634,6 +550,8 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
 
+  static int time=0;
+  static char content[12];
   while(1) {
     PROCESS_YIELD();
     //PROCESS_WAIT_EVENT();
@@ -650,7 +568,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
       coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
-
+      coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
       //PRINT6ADDR(&server_ipaddr);
       //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
