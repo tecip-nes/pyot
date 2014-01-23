@@ -1,1 +1,1 @@
-[{"pk": 1, "model": "pyot.network", "fields": {"timeadded": "2013-10-07T11:26:50.828", "hostname": "cooja", "pid": "", "network": "aaaa::/64"}}]
+[{"pk": 1, "model": "pyot.network", "fields": {"timeadded": "2013-10-07T11:26:50.828", "hostname": "celery@cooja", "pid": "", "network": "bbbb::/64"}}, {"pk": 2, "model": "pyot.network", "fields": {"timeadded": "2014-01-16T09:48:43.164", "hostname": "celery@rasp", "pid": "", "network": "aaaa::/64"}}]

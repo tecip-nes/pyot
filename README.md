@@ -44,8 +44,7 @@ make
 Database creation:
 ```sh
 cd pyotapp
-./manage.py syncdb
-./manage.py loaddata auth.json
+./manage.py syncdb --noinput && ./manage.py loaddata auth.json
 ```
 
 Running the application
@@ -58,7 +57,7 @@ cd pyotapp
 
 Start celery workers in another terminal:
 ```sh
-./manage.py celeryd -B -s celery -E -l INFO -c 30 -n cooja -Q cooja,celery,periodic
+./manage.py celeryd -s celery -E -l INFO -c 30 -n celery@cooja -Q celery@cooja,celery --without-heartbeat --without-gossip
 ```
 
 Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
