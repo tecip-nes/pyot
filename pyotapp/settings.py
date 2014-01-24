@@ -40,6 +40,7 @@ DEBUG = True
 if socket.gethostname() == 'pyot-vcr':
     WEB_APPLICATION_SERVER = True
     DEBUG = True
+    LOCAL_DB = False
 TEMPLATE_DEBUG = DEBUG
 
 RABBIT_PORT = 5672
@@ -64,7 +65,7 @@ ADMINS = (
 ALLOWED_HOSTS = []
 
 
-CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
+
 CLEANUP_TASK_PERIOD = 30
 CLEANUP_TIME = 90
 RECOVERY_PERIOD = 30
@@ -184,7 +185,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 INTERNAL_IPS = ('127.0.0.1',)
@@ -203,7 +203,18 @@ djcelery.setup_loader()
 
 #rabbitMQ config
 BROKER_URL = SERVER_ADDRESS
-BROKER_PORT = RABBIT_PORT
+
+CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'},
+                 'pyot.tasks.recoveryWorkers': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
+
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+CELERYD_MAX_TASKS_PER_CHILD=1
+CELERYD_TIMER_PRECISION=0.1
+CELERYD_PREFETCH_MULTIPLIER=1
+
+BROKER_HEARTBEAT=0
+
+CELERY_ENABLE_UTC=True
 
 CELERY_DISABLE_RATE_LIMITS = True
 
@@ -218,7 +229,6 @@ INSTALLED_APPS = (
     'djcelery',
     'django_evolution',
     'registration',
-    'debug_toolbar',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
