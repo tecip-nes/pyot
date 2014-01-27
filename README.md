@@ -63,7 +63,7 @@ Start celery workers in another terminal:
 Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
 ```sh
 cd pyotapp/appsTesting/contiki_cooja
-make TARGET=cooja server-rd.csc
+make TARGET=cooja erbium-server.csc
 ```
 
 Start tunslip, open another terminal and type:
