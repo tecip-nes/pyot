@@ -544,7 +544,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* receives all CoAP messages */
   coap_receiver_init();
 
-
+  /*
   int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
 
@@ -585,7 +585,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
       etimer_reset(&et);
      }
-  } /* while (1) */
+  }*/ /* while (1) */
 
   PROCESS_END();
 }
