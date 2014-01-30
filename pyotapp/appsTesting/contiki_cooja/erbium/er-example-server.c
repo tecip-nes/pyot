@@ -112,6 +112,8 @@
 #endif
 
 
+#define RD_ANNOUNCE 0
+
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
 
@@ -544,7 +546,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* receives all CoAP messages */
   coap_receiver_init();
 
-  /*
+#if RD_ANNOUNCE
   int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
 
@@ -585,7 +587,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
       etimer_reset(&et);
      }
-  }*/ /* while (1) */
-
+  } /* while (1) */
+#endif
   PROCESS_END();
 }
