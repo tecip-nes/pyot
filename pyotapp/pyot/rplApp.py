@@ -34,6 +34,15 @@ def DAGupdate(Net):
     import json
     for p in parents:
         print 'Searching parents for resource: ', p
+        #with the current implementation nodes have only one parent
+        r = p.GET(query='index=1')
+        if r.code != CONTENT:
+            continue
+        prefix = r.content
+        l = json.loads(prefix)
+        pa = searchHost(l['eui'], Net)
+        G.add_edge(shortName(p.host), pa)        
+        '''
         r = p.GET()
         if r.code != CONTENT:
             continue
@@ -48,6 +57,7 @@ def DAGupdate(Net):
             l = json.loads(prefix)
             pa = searchHost(l['eui'], Net)
             G.add_edge(shortName(p.host), pa)
+        '''   
     graph = RplGraph.objects.create(graph=G, net=Net)
     return graph
 
