@@ -23,7 +23,8 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.db import models
 import errno
-from networkx import *
+from networkx import to_agraph
+from networkx.algorithms import ancestors, descendants, shortest_path_length
 import os
 import pickle
 from django.db.models.query import QuerySet
@@ -42,8 +43,12 @@ def searchHost(eui, network):
     h = Host.objects.filter(kqueue=network)
     for i in h:
         if i.ip6address.exploded[20:].replace(':','') == eui:
-            return i.ip6address.exploded[-5:]
+            return shortName(i)
     return '6LBR'
+
+
+#find node from host
+
 
 def make_sure_path_exists(path):
     try:
@@ -85,8 +90,6 @@ class RplGraph(models.Model):
                         A.nodes()[A.nodes().index(s)].attr['color'] = color
                     except Exception:
                             pass                    
-        
-        
         ts = self.timeadded.strftime(fmt)
         #TODO: assicurare la presenza della directory
         dir_ = BASE_PATH +self.net.hostname + '/'
@@ -95,4 +98,29 @@ class RplGraph(models.Model):
         A.layout(prog='dot') 
         A.draw(path, format='png')
         return path   
-    
+
+    def find_node_from_host(self, host):
+        nodes = self.graph.nodes()
+        for n in nodes:
+            if shortName(host) == n:
+                return n
+        
+    def get_ancestors(self, host):
+        node = self.find_node_from_host(host)
+        if node:
+            return ancestors(self.graph, node)
+        else:
+            return []
+
+    def get_descendants(self, host):
+        node = self.find_node_from_host(host)
+        if node:
+            return descendants(self.graph, node)  
+        else:
+            return []
+        
+    def get_shortest_path_length(self, host):
+        node = self.find_node_from_host(host)   
+        if node in self.graph.nodes():     
+            return shortest_path_length(self.graph, node, '6LBR')
+
