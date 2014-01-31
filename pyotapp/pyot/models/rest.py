@@ -167,7 +167,7 @@ class Host(models.Model):
             return CELERY_DEFAULT_QUEUE
     
     def __unicode__(self):
-        return u"%s Network: %s" % (self.ip6address, self.kqueue)
+        return u"%s" % (self.ip6address)
 
     def PING(self, count=3):
         from pyot.tasks import pingHost
