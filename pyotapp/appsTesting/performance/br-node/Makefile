@@ -1,21 +1,24 @@
-CONTIKI_PROJECT=border-router
+CONTIKI_PROJECT=br-node
 all: $(CONTIKI_PROJECT) 
 
-ifndef TARGET
-  TARGET = wismote
-endif
-
-#CONTIKI=/home/andrea/icsi/t-res
+#CONTIKI= ../../contiki-2.7
 
 WITH_UIP6=1
 UIP_CONF_IPV6=1
-CFLAGS+= -DUIP_CONF_IPV6_RPL
+UIP_CONF_RPL=0
+
+${info INFO: compiling with CoAP-08}
+CFLAGS += -DWITH_COAP=7
+CFLAGS += -DREST=coap_rest_implementation
+CFLAGS += -DUIP_CONF_TCP=0
 
 #linker optimizations
 SMALL=1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-bridge.c
+PROJECTDIRS += ../common
+PROJECT_SOURCEFILES += static-routing.c
 
 #Simple built-in webserver is the default.
 #Override with make WITH_WEBSERVER=0 for no webserver.
@@ -29,7 +32,7 @@ PROJECT_SOURCEFILES += slip-bridge.c
 #of the slip connection. Large MSS together with low baud rates without flow
 #control will overrun the transmit buffer when the style sheet is requested.
 
-WITH_WEBSERVER=1
+WITH_WEBSERVER=0
 ifeq ($(WITH_WEBSERVER),1)
 CFLAGS += -DWEBSERVER=1
 PROJECT_SOURCEFILES += httpd-simple.c
@@ -44,11 +47,16 @@ endif
 
 include $(CONTIKI)/Makefile.include
 
+br-node: $(PMFEATURES_H) $(SOURCE_IMG) $(SOURCE_NAT) border-router
+
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 
 connect-router:	$(CONTIKI)/tools/tunslip6
-	sudo $(CONTIKI)/tools/tunslip6 $(PREFIX)
+	#sudo $(CONTIKI)/tools/tunslip6 $(PREFIX)
+	$(CONTIKI)/tools/tunslip6 $(PREFIX)
 
 connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 $(PREFIX)
+
+CLEAN += rm *.wismote

@@ -31,22 +31,10 @@
 #ifndef __PROJECT_ROUTER_CONF_H__
 #define __PROJECT_ROUTER_CONF_H__
 
-/******************************************************************************/
-/*                  T-Res example border router configuration                 */
-/******************************************************************************/
-
 #include "common-conf.h"
 
 #ifndef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
-#endif
-
-#ifndef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM          4
-#endif
-
-#ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    140
 #endif
 
 #ifndef UIP_CONF_RECEIVE_WINDOW
@@ -56,5 +44,11 @@
 #ifndef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
+
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM          20
+#endif
+
+#define BR_NODE
 
 #endif /* __PROJECT_ROUTER_CONF_H__ */

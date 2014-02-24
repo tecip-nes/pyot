@@ -35,28 +35,6 @@
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
 
-// disable RPL if you use static router
-#undef UIP_CONF_IPV6_RPL
-#define UIP_CONF_IPV6_RPL 0
-
-// disable periodic neighbor discovery
-#define UIP_NO_PERIODIC_DS6 1
-
-// compress all ipv6 packets
-#undef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
-#define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
-
-#define UIP_CONF_ND6_SEND_RA 0
-#define UIP_CONF_ND6_SEND_NA 0
-
-/* Disable ACK mechanism */
-#undef NULLRDC_CONF_802154_AUTOACK
-#define NULLRDC_CONF_802154_AUTOACK 0
-
-/* AUTOACK */
-#undef CC2520_CONF_AUTOACK
-#define CC2520_CONF_AUTOACK 0
-
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
 #define REST_MAX_CHUNK_SIZE    64

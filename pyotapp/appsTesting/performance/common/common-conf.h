@@ -44,10 +44,6 @@
 #endif
 #define CC2420_CONF_CHANNEL 22
 
-/* wismote id */
-#undef NODE_ID
-#define NODE_ID 4
-
 /* Use csma/ca */
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     csma_driver
@@ -71,5 +67,24 @@
 /* compress all ipv6 packets */
 #undef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
+
+// disable RPL if you use static router
+#undef UIP_CONF_IPV6_RPL
+#define UIP_CONF_IPV6_RPL 0
+
+// disable periodic neighbor discovery
+#define UIP_NO_PERIODIC_DS6 1
+
+#define UIP_CONF_ND6_SEND_RA 0
+#define UIP_CONF_ND6_SEND_NA 0
+
+/* Disable ACK mechanism */
+#undef NULLRDC_CONF_802154_AUTOACK
+#define NULLRDC_CONF_802154_AUTOACK 0
+
+#undef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS   5
+#undef UIP_CONF_MAX_ROUTES
+#define UIP_CONF_MAX_ROUTES            20
 
 #endif /* __COMMON_CONF_H__ */

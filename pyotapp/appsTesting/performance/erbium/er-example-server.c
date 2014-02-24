@@ -113,7 +113,7 @@
 
 
 uip_ipaddr_t server_ipaddr;
-//static struct etimer et;
+static struct etimer et;
 
 /* Example URIs that can be queried. */
 #define NUMBER_OF_URLS 2
@@ -539,7 +539,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rplinfo_activate_resources();
 #endif
 
-  //static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
+  static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);
 
   /* receives all CoAP messages */

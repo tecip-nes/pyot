@@ -77,9 +77,10 @@ void set_global_address(void) {
 static void add_route_ext(int dest, int next) {
   PRINTF("add route ext %d %d\n", dest, next);
     uip_ipaddr_t ipaddr_dest, ipaddr_next;
-    uip_ip6addr(&ipaddr_dest, 0xaaaa, 0, 0, 0, 0, 0, 0, dest);
 
-    uip_ip6addr(&ipaddr_next, 0xfe80, 0, 0, 0, 0x200, 0, 0, next);
+    uip_ip6addr(&ipaddr_dest, 0xaaaa, 0, 0, 0, 0, 0, 0, dest);
+    uip_ip6addr_u8(&ipaddr_next, 0xfe, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                               0x2, 0x12, 0x74, next, 0x0, next, next, next);
 
     uip_ds6_route_add(&ipaddr_dest, 128, &ipaddr_next);
 }
@@ -88,8 +89,10 @@ void add_route(int dest, int next) {
   PRINTF("add route %d %d\n", dest, next);
   uip_ipaddr_t ipaddr_dest, ipaddr_next;
 
-  uip_ip6addr(&ipaddr_dest, 0xaaaa, 0, 0, 0, 0x0200, 0, 0, dest);
-  uip_ip6addr(&ipaddr_next, 0xfe80, 0, 0, 0, 0x0200, 0, 0, next);
+  uip_ip6addr_u8(&ipaddr_dest, 0xaa, 0xaa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                             0x2, 0x12, 0x74, dest, 0x0, dest, dest, dest);
+  uip_ip6addr_u8(&ipaddr_next, 0xfe, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                             0x2, 0x12, 0x74, next, 0x0, next, next, next);
 
   uip_ds6_route_add(&ipaddr_dest, 128, &ipaddr_next);
 }
@@ -97,9 +100,10 @@ void add_route(int dest, int next) {
 void add_nbr(int nbr) {
   PRINTF("add nbr %d\n", nbr);
   uip_ipaddr_t ipaddr_nbr;
-  uip_lladdr_t lladdr = {{0,0,0,0,0,0,0,nbr}};
+  uip_lladdr_t lladdr = {{0,0x12,0x74,nbr,0,nbr,nbr,nbr}};
 
-  uip_ip6addr(&ipaddr_nbr, 0xfe80, 0, 0, 0, 0x0200, 0, 0, nbr);
+  uip_ip6addr_u8(&ipaddr_nbr, 0xfe, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                             0x2, 0x12, 0x74, nbr, 0x0, nbr, nbr, nbr);
 
   uip_ds6_nbr_add(&ipaddr_nbr, &lladdr, 0, NBR_REACHABLE);
 }
@@ -112,7 +116,7 @@ void configure_routing(void) {
   printf("configure_routing, node_id=%d, node_rank %d\n", node_id, node_rank);
 
   for (i = 0; i < NODES_IN_MAP; i++) {
-printf("i: %d, val: %d\n", i, nbr_map[node_rank-1][i]);
+    printf("i: %d, val: %d\n", i, nbr_map[node_rank-1][i]);
     if (nbr_map[node_rank-1][i]) {
       add_nbr(i+1);
     }
