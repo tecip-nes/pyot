@@ -28,7 +28,8 @@ PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 config = RawConfigParser()
 config.read(PROJECT_PATH + '/settings.ini')
 
-LOCAL_DB = True
+LOCAL_DB = config.getboolean('database', 'DATABASE_LOCAL')
+
 WEB_APPLICATION_SERVER = False
 
 if socket.gethostname() == 'andrea-lab':
@@ -59,6 +60,8 @@ ADMINS = (
     ('Andrea', 'a.azzara@sssup.it'),
 )
 '''
+
+TRES_BASE = config.get('tres', 'TRES_BASE')
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -310,11 +313,3 @@ IPYTHON_ARGUMENTS = [
     '--ext', 'pyot.notebook_extension',
     '--debug',    "--ip='*'",
 ]
-
-
-
-# Monkeypatch python not to print "Broken Pipe" errors to stdout.
-import SocketServer
-from wsgiref import handlers
-SocketServer.BaseServer.handle_error = lambda *args, **kwargs: None
-handlers.BaseHandler.log_exception = lambda *args, **kwargs: None

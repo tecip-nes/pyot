@@ -1,5 +1,6 @@
 all: er-example-server 
 # use this target explicitly if requried: er-plugtest-server
+CONTIKI=/home/andrea/icsi/t-res
 #CONTIKI=/home/andrea/contiki
 PROJECTDIRS += ../rplinfo
 PROJECTDIRS += ../common
@@ -9,12 +10,10 @@ PROJECT_SOURCEFILES += rplinfo.c
 # configure CoAP implementation (3|7|12|13) (er-coap-07 also supports CoAP draft 08)
 WITH_COAP=13
 
-
 # for some platforms
 UIP_CONF_IPV6=1
 # IPv6 make config disappeared completely
 CFLAGS += -DUIP_CONF_IPV6=1
-
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 

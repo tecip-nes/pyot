@@ -179,7 +179,7 @@ class Host(models.Model):
             return u'Host %s Not Active' % (str(self.ip6address))
         from pyot.tasks import coapDiscovery
         res = coapDiscovery.apply_async(args=[str(self.ip6address), path], queue=self.getQueue())
-        res.wait()
+        res.wait(timeout=COAP_REQ_TIMEOUT)
         return res.result
     class Meta:
         app_label = 'pyot'
@@ -215,10 +215,16 @@ class Resource(models.Model):
         res.wait()
         return res.result
 
-    def POST(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+    def POST(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None, index=0):
         from pyot.tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
-        res.wait()
+        #start = datetime.now()
+        res = coapPost.apply_async(args=[self.host.ip6address, self.uri, payload, timeout, query, inputfile, block, index], queue=self.host.getQueue())
+        res.wait(timeout=15)
+        #end = datetime.now()
+        #diff = str(end-start)+'\n'
+        #f = open('outresult1', 'a')
+        #f.write(diff)
+        #f.close()
         return res.result
 
     def DELETE(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None):
@@ -232,9 +238,9 @@ class Resource(models.Model):
         res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
-    def asyncPOST(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+    def asyncPOST(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None, index=0):
         from pyot.tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
+        res = coapPost.apply_async(args=[self.host.ip6address, self.uri, payload, timeout, query, inputfile, block, index], queue=self.host.getQueue())
         return res
     
     def asyncPUT(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):

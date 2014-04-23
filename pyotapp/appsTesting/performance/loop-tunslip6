@@ -1,0 +1,6 @@
+#!/bin/bash
+while : 
+do
+  /home/andrea/icsi/t-res/tools/tunslip6 -a localhost dddd::1/64
+  sleep 1
+done

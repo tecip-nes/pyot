@@ -1,6 +1,6 @@
 '''
-Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it) 
-and Consorzio Nazionale Interuniversitario per le Telecomunicazioni 
+Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it)
+and Consorzio Nazionale Interuniversitario per le Telecomunicazioni
 (http://www.cnit.it).
 
 This file is part of PyoT, an IoT Django-based Macroprogramming Environment.
@@ -9,12 +9,12 @@ PyoT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-  
+
 PyoT is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,13 +28,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 import random, time, sys
 from djcelery.models import TaskMeta
-from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME
-from settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY
+from settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, SERVER_ADDRESS
+from settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY, TRES_BASE
 import subprocess, os, signal
 from rplApp import DAGupdate
 import urllib
 from netifaces import interfaces, ifaddresses, AF_INET6
 import random
+import traceback
 
 RX_TIMEOUT = 20
 COAP_PATH = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
@@ -50,7 +51,7 @@ def checkIp(ipAddress):
     for ifaceName in interfaces():
         addresses = [i['addr'] for i in ifaddresses(ifaceName).setdefault(AF_INET6, [{'addr':'No IP addr'}] )]
         #print '%s: %s' % (ifaceName, ', '.join(addresses))
-        #print ifaceName, addresses 
+        #print ifaceName, addresses
         if ipAddress in addresses:
             return True
     return False
@@ -65,7 +66,7 @@ def getFullUri(r):
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None, block=64):
-    #sl = (random.random()*1000)/1000
+    #sl = (random.random()*3000)/1000
     #time.sleep(sl)
     #print 'delay ', sl
     if method not in allowedMethods:
@@ -74,7 +75,8 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
         raise Exception('Observe works only with -get- method')
 
     print method + ' ' + uri
-    
+    #sys.stdout.flush()
+
     req = COAP_CLIENT + ' -m '+  method
     if block:
         req = req + '  -b %s ' % str(block)
@@ -86,14 +88,14 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
     if payload:
         req = req + ' -e ' + urllib.quote(payload, '')
     if inputfile:
-        req = req + ' -f ' + inputfile   
+        req = req + ' -f ' + inputfile
 
     req = req + ' ' + uri
 
-    p = subprocess.Popen([req], 
-                         stdin=subprocess.PIPE, 
-                         stdout=subprocess.PIPE, 
-                         shell=True)    
+    p = subprocess.Popen([req],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         shell=True)
     return p
 
 class HostNotActive(Exception):
@@ -121,63 +123,85 @@ def isTermCode(response):
         return False
 
 def parseResponse(response):
-    code = response[0:4]  
+    code = response[0:4]
     return code, response[5:]
 
 
-
+#import datetime
 def addQuery(uri, query):
     return uri + '?' + query
 
 @task
-def coapPost(rid, payload, timeout = RX_TIMEOUT, query=None, inputfile=None, block=None):
+def coapPost(ip6address, uri, payload, timeout = RX_TIMEOUT, query=None, inputfile=None, block=None, index=0):
     try:
-        _r, uri = getResourceActive(rid)
+        #st=0.0
+        #if index == 2 or index == 4:
+        #    st = 0.0
+        #if index == 3 or index == 5:
+        #    st = 0.25
+        #if index == 6:
+        #    st = 0.5
+        #if index == 7:
+        #    st = 0.6
+        st = (float(index)*0.2)
+        time.sleep(st)
+        print st
+        #start = datetime.now()
+        #_r, uri = getResourceActive(rid)
+        #end = datetime.now()
+        #diff = end-start
+        #print 'first query', diff
         if query is not None:
             uri = addQuery(uri, query)
-        p = coapRequest('post', uri, payload, timeout, inputfile, block=block)
-        message = '' 
+        fulluri = 'coap://[' + str(ip6address) + ']' + str(uri)
+        #start = datetime.now()
+        p = coapRequest('post', fulluri, payload, timeout, inputfile, block=block)
+        message = ''
         code = ''
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
-                #CoapMsg.objects.create(resource=r, method='POST', code=code, payload=message) 
+                #end = datetime.now()
+                #diff = end-start
+                #print 'myout '+ str(diff)
+                #CoapMsg.objects.create(resource=r, method='POST', code=code, payload=message)
                 return Response(code, message)
-            print 'response= ' + response 
+            print 'response= ' + response
+            #sys.stdout.flush()
             code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
-        return 'Host ' + e.value + ' not active' 
+        return 'Host ' + e.value + ' not active'
     except Exception as e:
-        print 'Exception Coap POST %s'  % e        
+        print 'Exception Coap POST %s'  % e
 
 @task
 def coapGet(rid, payload, timeout = RX_TIMEOUT, query=None, block=None):
     try:
         r, uri = getResourceActive(rid)
         if query is not None:
-            uri = addQuery(uri, query)        
+            uri = addQuery(uri, query)
         p = coapRequest('get', uri, payload, timeout, block=block)
         code =''
-        message = '' 
+        message = ''
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
                 if saveMessageToDB:
-                    CoapMsg.objects.create(resource=r, method='GET', code=code, payload=message) 
+                    CoapMsg.objects.create(resource=r, method='GET', code=code, payload=message)
                 return Response(code, message)
-            print 'response= ' + response 
+            print 'response= ' + response
             code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
-        
+
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
-        return 'Host ' + e.value + ' not active' 
+        return 'Host ' + e.value + ' not active'
     except Exception as e:
         print 'Exception Coap GET %s'  % e
 
@@ -186,58 +210,58 @@ def coapPut(rid, payload=None, timeout = RX_TIMEOUT, query=None, inputfile=None,
     try:
         _r, uri = getResourceActive(rid)
         if query is not None:
-            uri = addQuery(uri, query)        
+            uri = addQuery(uri, query)
         p = coapRequest('put', uri, payload, timeout, inputfile=inputfile, block=block)
-        message = '' 
+        message = ''
         code =''
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
                 return Response(code, message)
-            print 'response= ' + response 
+            print 'response= ' + response
             code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
-        return 'Host ' + e.value + ' not active' 
+        return 'Host ' + e.value + ' not active'
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)  
+        print ''.join('!! ' + line for line in lines)
 
 @task
 def coapDelete(rid, payload=None, timeout = RX_TIMEOUT, query=None):
     try:
         _r, uri = getResourceActive(rid)
         if query is not None:
-            uri = addQuery(uri, query)        
+            uri = addQuery(uri, query)
         p = coapRequest('delete', uri, payload, timeout)
-        message = '' 
+        message = ''
         code =''
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
                 return Response(code, message)
-            print 'response= ' + response 
+            print 'response= ' + response
             code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
-        return 'Host ' + e.value + ' not active' 
+        return 'Host ' + e.value + ' not active'
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines) 
+        print ''.join('!! ' + line for line in lines)
 
 @task
 def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEOUT, handler=None, renew=False):
     if coapObserve.request.retries > 1:
-        print 'coapObserve retry #' + str(coapObserve.request.retries) + '  rid=' + str(rid)    
-    
+        print 'coapObserve retry #' + str(coapObserve.request.retries) + '  rid=' + str(rid)
+
     s = None
     try:
         r, uri = getResourceActive(rid)
@@ -255,20 +279,20 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
-                break 
-            
+                break
+
             code, m = parseResponse(response)
-            m = m.rstrip() 
-            if m.isdigit(): 
+            m = m.rstrip()
+            if m.isdigit():
                 print 'Observe update from ' + uri + ': ' + m
-                m = CoapMsg.objects.create(resource=r, method='GET', code=code, payload=m, sub = s) 
+                m = CoapMsg.objects.create(resource=r, method='GET', code=code, payload=m, sub = s)
 
                 if s.handler is not None:
                     print 'handling event!'
                     h = EventHandler.objects.filter(id = int(handler)).select_subclasses()
                     for i in h:
-                        i.action(m) 
-        print 'subscription ended...'                
+                        i.action(m)
+        print 'subscription ended...'
         if renew:
             print 'renewing sub'
             coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())      
@@ -278,17 +302,17 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
-        return 'Host ' + e.value + ' not active' 
-    
+        return 'Host ' + e.value + ' not active'
+
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)      
+        print ''.join('!! ' + line for line in lines)
         if s is not None:
             s.active=False
             s.save()
-            print 'Subscription closed'        
-        coapObserve.retry(exc=exc, countdown=10)        
+            print 'Subscription closed'
+        coapObserve.retry(exc=exc, countdown=10)
     finally:
         if s is not None:
             s.active=False
@@ -315,20 +339,20 @@ def isObs(s):
 def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
     print 'resource discovery: get well-Know on ip: ' + host
     Log.objects.create(type = 'discovery', message = host)
-    
+
     uri = 'coap://[' + host + ']' + path
     print uri
-    p = subprocess.Popen([COAP_CLIENT + ' -m get -b 64 ' + uri], 
-                         stdin=subprocess.PIPE, 
-                         stdout=subprocess.PIPE, 
-                         shell=True)    
-    message = '' 
+    p = subprocess.Popen([COAP_CLIENT + ' -m get -b 64 ' + uri],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         shell=True)
+    message = ''
     try:
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
                 break
-            print 'response= ' + response 
+            print 'response= ' + response
             _code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
@@ -347,43 +371,41 @@ def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
                 if part.startswith('title="'):
                     title = part[6:].strip('"')
                 if part.startswith('rt="'):
-                    rt = part[4:].strip('"')                    
+                    rt = part[4:].strip('"')
                 if part.startswith('ct='):
-                    ct = part[3:]     
+                    ct = part[3:]
             if resUri != '':
                 try:
                     Resource.objects.get(uri=resUri,host=h)
                 except ObjectDoesNotExist:   #the resource is not registered, create a new record
                     #print 'Creating resource ' + resUri
                     Resource.objects.create(uri=resUri,host=h, obs = obs, title=title, ct=ct, rt=rt)
-        return resList    
+        return resList
     except ObjectDoesNotExist:
         return 'Host not found'
     except Exception as e:
         print 'Exception Coap Discovery: %s'  % e
 
-import traceback
-
 @task(max_retries=None)
 def coapRdServer(prefix = ''):
-    print 'starting Coap Resource Directory Server, prefix= ' + prefix 
+    print 'starting Coap Resource Directory Server, prefix= ' + prefix
     print 'id = ' + str(coapRdServer.request.id)
     if coapRdServer.request.retries > 0:
-        print 'coapRdServer retry #' + str(coapRdServer.request.retries) 
+        print 'coapRdServer retry #' + str(coapRdServer.request.retries)
         n = Network.objects.get(network=prefix)
         n.pid=str(coapRdServer.request.id)
-        n.save() 
-        Log.objects.create(type = 'RdRetry', message = prefix)         
+        n.save()
+        Log.objects.create(type = 'RdRetry', message = prefix)
     rdIp = prefix[:-3] +'1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
     try:
-        coapRdServer.update_state(state="PROGRESS") 
-        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A ' + rdIp], 
-                              stdin=subprocess.PIPE, 
-                              stdout=subprocess.PIPE, 
+        coapRdServer.update_state(state="PROGRESS")
+        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A ' + rdIp],
+                              stdin=subprocess.PIPE,
+                              stdout=subprocess.PIPE,
                               shell=True)
- 
+
         while True:
             response = rd.stdout.readline().strip()
             ipAddr= response.split(']')[0].split('[')[1]
@@ -407,7 +429,7 @@ def coapRdServer(prefix = ''):
             except ObjectDoesNotExist: #the host does not exists, create a new Host
                 h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount = 1)
                 h.save()
-                try:  
+                try:
                     h.DISCOVER()
                 except Exception:
                     pass
@@ -416,16 +438,16 @@ def coapRdServer(prefix = ''):
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)  
-        coapRdServer.update_state(state="ERROR")  
+        print ''.join('!! ' + line for line in lines)
+        coapRdServer.update_state(state="ERROR")
         coapRdServer.retry(exc=exc, countdown=5)
     finally:
         n = Network.objects.get(network=prefix)
         n.pid=None
         n.save()
-        
+
         print 'finally, killing subprocesses...'
-        if rd is not None: 
+        if rd is not None:
             if os.path.exists("/proc/"+str(rd.pid)):
                 os.kill(rd.pid, signal.SIGTERM)
         print '...done.'
@@ -442,9 +464,9 @@ def checkConnectedHosts():
                 i.save()
                 l = Log(type = 'clean', message = i)
                 l.save()
-        return None        
+        return None
     except Exception:
-        pass    
+        pass
 
 @task
 def pingHost(hostId, count=3):
@@ -455,10 +477,10 @@ def pingHost(hostId, count=3):
     r = Host.objects.get(id=hostId)
     ipAddress = str(r.ip6address)
     cmd = cmdPre + ipAddress + cmdPost
-    p = subprocess.Popen(cmd, 
-                         shell=True, 
-                         stdin=subprocess.PIPE, 
-                         stdout=subprocess.PIPE, 
+    p = subprocess.Popen(cmd,
+                         shell=True,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     return stdout + stderr
@@ -470,7 +492,7 @@ if WORKER_RECOVERY:
         Recoveries lost workers status:
         Useful in case a worker node resets. When the node connects again
         the function tries to restart a lost RD server and possible active
-        subscriptions. 
+        subscriptions.
         """
         networks = Network.objects.all()
         #TaskMeta.objects.filter(status=states.SUCCESS).delete()
@@ -483,8 +505,8 @@ if WORKER_RECOVERY:
                 print 'RD status = ' + rdTaskObj.status
                 if rdTaskObj.status == 'FAILURE':
                     network.startRD()
-                    Log.objects.create(type = 'RdRec', message = network.hostname)    
-                    
+                    Log.objects.create(type = 'RdRec', message = network.hostname)
+
             subSet = Subscription.objects.filter(active=True,
                                                  resource__host__kqueue=network)
             for sub in subSet:
@@ -496,7 +518,7 @@ if WORKER_RECOVERY:
                         sub.resource.OBSERVE(duration=sub.duration,
                                              handler=sub.handler,
                                              renew=sub.renew)
-                        Log.objects.create(type = 'SubRec', message = network.hostname)                         
+                        Log.objects.create(type = 'SubRec', message = network.hostname)
                 except TaskMeta.DoesNotExist:
                     pass
 
@@ -507,70 +529,94 @@ def updateDAGs():
     for n in ns:
         DAGupdate(n.id)
 
-TRES_BASE = '/home/andrea/icsi/t-res/'
-tresClient = TRES_BASE + 'apps/tres/tools/bin/coap13-client'
-tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile' 
-tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py' 
+tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile'
+tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py'
 tmpDir = '/tmp/'
-#${MYDIR}/tres-pf-compile ${MYDIR}/pmfeatures.py $2
 
 @task
 def deployTres(t_res_task_id, t_res_resource_id):
-    
+
+    totalTime = 0
+
     TResResource = Resource.objects.get(id=t_res_resource_id)
     TResTask = TResT.objects.get(id=t_res_task_id)
 
     #tresTaskUri = TResResource.getFullURI()+'/'+ TResTask.pf.name
-    
-    tresPfsource = str(TResTask.pf.sourcefile)
-    
-    compile_command = tresCompile + ' ' + tresPMfeat + ' ' + tresPfsource
-    p = subprocess.check_call([compile_command], 
-                         stdin=subprocess.PIPE, 
-                         stdout=subprocess.PIPE, 
+
+    basename = os.path.basename(str(TResTask.pf.sourcefile))
+    uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + basename
+    outFile = tmpDir + basename
+
+    urllib.urlretrieve(uri, filename=outFile)
+
+    compile_command = tresCompile + ' ' + tresPMfeat + ' ' + outFile
+    p = subprocess.check_call([compile_command],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
                          shell=True, cwd=tmpDir)
 
-    fname = os.path.split(tresPfsource)[1]
+    start = datetime.now()
+    end = datetime.now()
+    diff = end-start
+
+    fname = os.path.split(outFile)[1]
 
     try:
         newTask = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
     except Resource.DoesNotExist:
         newTask = Resource.objects.create(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
 
+    start = datetime.now()
     r = newTask.PUT()
+    end = datetime.now()
+    diff1 = end-start
     print 'first put result = '+ r.code
     if r.code != CREATED:
         newTask.delete()
         return 'Error creating new resource: ' + '/tasks/' + TResTask.pf.name
-        
-    TResResource.host.DISCOVER(TResResource.uri)
-    TResResource.host.DISCOVER(TResResource.uri+'/'+ TResTask.pf.name)    
 
+    start = datetime.now()
+    TResResource.host.DISCOVER(TResResource.uri)
+    TResResource.host.DISCOVER(TResResource.uri+'/'+ TResTask.pf.name)
+    end = datetime.now()
+    diff2 = end-start
     newIs = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/is')
     newOd = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/od')
     newPf = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/pf')
-    
-    #print tmpDir + fname+'c'
 
+    #print tmpDir + fname+'c'
+    start = datetime.now()
     r =  newPf.PUT(inputfile=tmpDir + fname+'c', block=64)
+    end = datetime.now()
+    diff3 = end-start
     print 'PF put result = '+ r.code
-    
+
     if r.code != CHANGED:
         return 'Error uploading processing function.'
-    
+
     if TResTask.output:
         r = newOd.PUT(payload='<'+ TResTask.output.getFullURI() +'>')
         print 'OD put result = '+ r.code
         if r.code != CHANGED:
-            return 'Error updating OD resource'   
+            return 'Error updating OD resource'
     for inp in TResTask.inputS.all():
+        start = datetime.now()
         r = newIs.POST(payload='<'+ inp.getFullURI() +'>')
         print 'IS put result = '+ r.code
+        end = datetime.now()
+        diff4 = end-start
         if r.code != CHANGED:
-            return 'Error updating OD resource'   
-        
-    return 'Tres Task ' + str(TResTask) + ' Installed'        
+            return 'Error updating OD resource'
+
+    totalTime = str(diff1 + diff2 + diff3 + diff4)
+    tot = totalTime+'\n'
+
+    f = open('tres_local', 'a')
+    f.write(tot)
+    f.close()
+
+    return 'Tres Task ' + str(TResTask) + ' Installed'
 
 @task
 def uninstallTres(t_res_task_id, t_res_resource_id):
@@ -586,7 +632,6 @@ def uninstallTres(t_res_task_id, t_res_resource_id):
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)  
+        print ''.join('!! ' + line for line in lines)
         return 'Error uninstalling ' + TResTask.pf.name
-    
-    
+
