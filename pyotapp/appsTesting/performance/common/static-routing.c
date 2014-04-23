@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "static-routing.h"
 #include "static-routing-map.h"
+#include "pyot.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -69,7 +70,7 @@ void set_global_address(void) {
   uip_ipaddr_t ipaddr;
 
   printf("Set global address\n");
-  uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
+  uip_ip6addr(&ipaddr, HEXPREFIX, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 }
@@ -78,7 +79,7 @@ static void add_route_ext(int dest, int next) {
   PRINTF("add route ext %d %d\n", dest, next);
     uip_ipaddr_t ipaddr_dest, ipaddr_next;
 
-    uip_ip6addr(&ipaddr_dest, 0xaaaa, 0, 0, 0, 0, 0, 0, dest);
+    uip_ip6addr(&ipaddr_dest, HEXPREFIX, 0, 0, 0, 0, 0, 0, dest);
     uip_ip6addr_u8(&ipaddr_next, 0xfe, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                                0x2, 0x12, 0x74, next, 0x0, next, next, next);
 
@@ -89,7 +90,7 @@ void add_route(int dest, int next) {
   PRINTF("add route %d %d\n", dest, next);
   uip_ipaddr_t ipaddr_dest, ipaddr_next;
 
-  uip_ip6addr_u8(&ipaddr_dest, 0xaa, 0xaa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+  uip_ip6addr_u8(&ipaddr_dest, HEXSUBPREFIX, HEXSUBPREFIX, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                              0x2, 0x12, 0x74, dest, 0x0, dest, dest, dest);
   uip_ip6addr_u8(&ipaddr_next, 0xfe, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                              0x2, 0x12, 0x74, next, 0x0, next, next, next);

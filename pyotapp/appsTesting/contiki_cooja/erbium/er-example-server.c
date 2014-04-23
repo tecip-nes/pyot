@@ -50,14 +50,14 @@
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
-#define REST_RES_PUSHING 1
+#define REST_RES_PUSHING 0
 #define REST_RES_EVENT 0
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 1
-#define REST_RES_LIGHT 0
-#define REST_RES_BATTERY 0
-#define REST_RES_RADIO 1
+#define REST_RES_LIGHT 1
+#define REST_RES_BATTERY 1
+#define REST_RES_RADIO 0
 #define REST_RES_RPLINFO 1
 
 
@@ -73,11 +73,10 @@
 #if defined (PLATFORM_HAS_LIGHT)
 #include "dev/light-sensor.h"
 #endif
+
+
 #if defined (PLATFORM_HAS_BATTERY)
 #include "dev/battery-sensor.h"
-#endif
-#if defined (PLATFORM_HAS_SHT11)
-#include "dev/sht11-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_RADIO)
 #include "dev/radio-sensor.h"
@@ -112,7 +111,7 @@
 #endif
 
 
-#define RD_ANNOUNCE 0
+#define RD_ANNOUNCE 1
 
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
@@ -223,35 +222,6 @@ event_event_handler(resource_t *r)
 }
 #endif /* PLATFORM_HAS_BUTTON */
 
-/******************************************************************************/
-#if REST_RES_SUB
-/*
- * Example for a resource that also handles all its sub-resources.
- * Use REST.get_url() to multiplex the handling of the request depending on the Uri-Path.
- */
-RESOURCE(sub, METHOD_GET | HAS_SUB_RESOURCES, "test/path", "title=\"Sub-resource demo\"");
-
-void
-sub_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-
-  const char *uri_path = NULL;
-  int len = REST.get_url(request, &uri_path);
-  int base_len = strlen(resource_sub.url);
-
-  if (len==base_len)
-  {
-	snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Request any sub-resource of /%s", resource_sub.url);
-  }
-  else
-  {
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, ".%.*s", len-base_len, uri_path+base_len);
-  }
-
-  REST.set_response_payload(response, buffer, strlen((char *)buffer));
-}
-#endif
 
 /******************************************************************************/
 #if defined (PLATFORM_HAS_LEDS)
@@ -261,11 +231,12 @@ static uint8_t toggle_status = 0;
 #define STATUS_SIZE 4
 
 /* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_POST | METHOD_GET, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
+RESOURCE(toggle, METHOD_POST | METHOD_GET | METHOD_PUT, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
 void
 toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-
+  const char *mode = NULL;
+  size_t len = 0;  
   rest_resource_flags_t method = REST.get_method_type(request);
 
   switch(method){
@@ -281,10 +252,24 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 	  REST.set_response_payload(response, buffer, strlen((char *)buffer));
 	  break;
   }
-  case METHOD_POST:{
-	  toggle_status ^= 1;
-	  leds_toggle(LEDS_RED);
-      snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "toggled");
+  case METHOD_POST:case METHOD_PUT:{
+          if ((len=REST.get_query_variable(request, "mode", &mode))) {
+              printf("query ");
+            if (strncmp(mode, "on", len)==0) {
+              printf("led on\n");
+	      toggle_status = 1;
+              leds_on(LEDS_RED);            
+            } else if (strncmp(mode, "off", len)==0) {
+              printf("led off\n");
+	      toggle_status = 0;
+              leds_off(LEDS_RED);
+            }          
+          }
+          else{
+	    toggle_status ^= 1;
+	    leds_toggle(LEDS_ALL);
+	  }  
+          snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "ok");
 	  REST.set_response_payload(response, buffer, strlen((char *)buffer));
 	  break;
   }
@@ -300,7 +285,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-PERIODIC_RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light\";obs", 20*CLOCK_SECOND);
+PERIODIC_RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light\";obs", 10*CLOCK_SECOND);
 void
 light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -334,7 +319,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   else
   {
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain, application/xml, and application/json";
+    const char *msg = "no";
     REST.set_response_payload(response, msg, strlen(msg));
   }
 }
@@ -387,7 +372,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 
     REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
   }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  /*else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d}", battery);
@@ -399,7 +384,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
-  }
+  }*/
 }
 #endif /* PLATFORM_HAS_BATTERY */
 
@@ -466,7 +451,7 @@ radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 
 
 
-PROCESS(rest_server_example, "Erbium Example Server");
+PROCESS(rest_server_example, "Er");
 AUTOSTART_PROCESSES(&rest_server_example);
 
 PROCESS_THREAD(rest_server_example, ev, data)
@@ -565,7 +550,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   while(1) {
     PROCESS_YIELD();
     if (etimer_expired(&et)) {
-      //printf("--Sending msg to rd...\n");
+      printf("Sending msg to rd...");
 
       coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
@@ -583,7 +568,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
         coap_send_transaction(transaction);
       }
 
-      //printf("Done--\n");
+      printf("Done\n");
 
       etimer_reset(&et);
      }

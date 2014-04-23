@@ -21,6 +21,7 @@
 
 #include "prefix.h"
 #define HEXPREFIX PPCAT(0x, PREFIX)
+#define HEXSUBPREFIX PPCAT(0x, SUBPREFIX)
 #define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, HEXPREFIX, 0, 0, 0, 0, 0, 0, 1) /* rd server */
 
 //#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xbbbb, 0, 0, 0, 0, 0, 0, 1) /* rd server */

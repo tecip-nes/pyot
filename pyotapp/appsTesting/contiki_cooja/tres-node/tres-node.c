@@ -42,7 +42,7 @@
 #include "erbium.h"
 #include "tres.h"
 #include "pm.h"
-#include "../rplinfo/rplinfo.h"
+//#include "../rplinfo/rplinfo.h"
 #include "../common/pyot.h"
 
 /*----------------------------------------------------------------------------*/
@@ -141,17 +141,19 @@ PROCESS_THREAD(tres_process, ev, data)
   rest_init_engine();
   tres_init();
   rest_activate_resource(&resource_actuator);
-  rplinfo_activate_resources();
+  //rplinfo_activate_resources();
   
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);
 
   /* receives all CoAP messages */
   coap_receiver_init();
-
+  
   int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
-
+  
+  static int g_time=0;
+  static char content[12];
   etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
 
   while(1) {
@@ -170,6 +172,7 @@ PROCESS_THREAD(tres_process, ev, data)
       coap_set_header_uri_path(request, service_urls[1]);
 
 
+      coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", g_time++));
       //PRINT6ADDR(&server_ipaddr);
       //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 

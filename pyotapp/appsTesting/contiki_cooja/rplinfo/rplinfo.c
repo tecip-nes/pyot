@@ -139,7 +139,7 @@ uint16_t create_parent_msg(char *buf, rpl_parent_t *parent, uint8_t preferred)
 }
 
 
-RESOURCE(parents, METHOD_GET, "rplinfo/parents", "title=\"RPL parent info\";rt=\"Data\"");
+RESOURCE(parents, METHOD_GET, "rplinfo/parents", "title=\"RPL\";rt=\"Data\"");
 
 static volatile uint8_t cur_neigh_entry;
 static volatile uint8_t entry_char_skip;
@@ -148,7 +148,7 @@ void
 parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 
-printf("Parents handlers\n");
+//printf("Parents handlers\n");
   int32_t strpos = 0;
   uip_ds6_route_t *r;
   volatile uint8_t i;

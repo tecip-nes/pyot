@@ -42,7 +42,7 @@ CFLAGS += -DWEBSERVER=2
 endif
 
 ifeq ($(PREFIX),)
- PREFIX = aaaa::1/64
+ PREFIX = dddd::1/64
 endif
 
 include $(CONTIKI)/Makefile.include

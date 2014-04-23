@@ -30,5 +30,5 @@
 
 #define TOGGLE_INTERVAL 10
 
-#define BASE_WAITING 15
-#define MAX_WAITING 30
+#define BASE_WAITING 5
+#define MAX_WAITING 5

@@ -2,9 +2,9 @@ ifndef TARGET
   TARGET = wismote
 endif
 
-PROJECTDIRS += ../rplinfo
+#PROJECTDIRS += ../rplinfo
 PROJECTDIRS += ../common
-PROJECT_SOURCEFILES += rplinfo.c
+#PROJECT_SOURCEFILES += rplinfo.c
 
 WITH_COAP=13
 

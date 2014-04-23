@@ -1,1 +1,2 @@
-#define PREFIX aaaa
+#define PREFIX dddd
+#define SUBPREFIX dd
