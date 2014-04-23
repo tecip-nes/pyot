@@ -31,14 +31,10 @@
 
 #ifndef __PROJECT_ERBIUM_CONF_H__
 #define __PROJECT_ERBIUM_CONF_H__
-
+#include "common-conf.h"
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
 
-/* Disabling RDC for demo purposes. Core updates often require more memory. */
-/* For projects, optimize memory and enable RDC again. */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
@@ -74,15 +70,12 @@
 
 /* Save some memory for the sky platform. */
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     20
+#define UIP_CONF_DS6_NBR_NBU     30
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   20
+#define UIP_CONF_MAX_ROUTES   30
 
 /* Reduce 802.15.4 frame queue to save RAM. */
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM       12
-
-#undef SICSLOWPAN_CONF_FRAG
-#define SICSLOWPAN_CONF_FRAG	1
 
 #endif /* __PROJECT_ERBIUM_CONF_H__ */

@@ -22,8 +22,8 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from django.conf.urls import patterns, include, url
 from pyot.Forms import CustomRegistrationForm
-from registration.backends.default.views import RegistrationView
-import registration.backends.default.urls as regUrls
+#from registration.backends.default.views import RegistrationView
+#import registration.backends.default.urls as regUrls
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -42,13 +42,12 @@ urlpatterns = patterns('',
     url(r'^resources', pyot.views.resources, name='resources'),
     url(r'^connectivity', pyot.views.pingPage, name='connectivity'),
     url(r'^resourceList', pyot.views.resourceList),
-    url(r'^pushUpdate/(?P<className>[A-Za-z]+)', pyot.views.pushUpdate.as_view()), 
     url(r'^resource/(?P<rid>\d*)', pyot.views.resourcePage),
-    url(r'^resourceStatus/(?P<rid>\d*)', pyot.views.resourceStatus.as_view()),
+    url(r'^resourceStatus/(?P<rid>\d*)', pyot.views.resourceStatus),
     url(r'^opRes', pyot.views.opRes),
     url(r'^observe', pyot.views.observe),
     url(r'^obsList', pyot.views.obsList),
-    url(r'^obsLast/(?P<rid>\d*)/', pyot.views.obsLast.as_view()),
+    url(r'^obsLast/(?P<rid>\d*)/', pyot.views.obsLast),
     url(r'^subList/(?P<rid>\d*)/', pyot.views.subList),
     url(r'^remHandler/(?P<hid>\d*)/', pyot.views.remHandler),
     url(r'^cancelSub/', pyot.views.cancelSub),
@@ -58,8 +57,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^startPing/(?P<hid>\d*)', pyot.views.startPing),
-    url(r'^accounts/register/$', RegistrationView.as_view(form_class=CustomRegistrationForm), {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
-    (r'^accounts/', include('registration.backends.default.urls')), 
+    #url(r'^accounts/register/$', RegistrationView.as_view(form_class=CustomRegistrationForm), {'backend': 'registration.backends.default.DefaultBackend','form_class': CustomRegistrationForm}, name='registration_register'),
+    #(r'^accounts/', include('registration.backends.default.urls')), 
     url(r'^', include('django.contrib.auth.urls')),    
     url(r'^login/$', 'django.contrib.auth.views.login',name="my_login"),
     url(r'^myaccount', 'pyot.views.myaccount', name='myaccount'), 
@@ -72,4 +71,7 @@ import os, settings
 urlpatterns += patterns('',
             url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
     )
+urlpatterns += patterns('',
+            url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
+            )
 

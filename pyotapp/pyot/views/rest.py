@@ -23,96 +23,33 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 from django.shortcuts import HttpResponse, render
 from django.http import HttpResponseBadRequest
-from tasks import *
-from models import *
+from pyot.tasks import *
+from pyot.models import *
 from celery.task.control import revoke 
 from django.template import Context
-from resourceRepr import getRenderer
+from pyot.resourceRepr import getRenderer
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from Forms import *
+from pyot.Forms import *
 from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
-from django.utils import simplejson
+import json
 from datetime import datetime, timedelta
 from celery.result import AsyncResult
-from utils import *
+from pyot.utils import *
 from django.core.paginator import Paginator
 #from django.contrib.auth.decorators import login_required
 #from django.contrib.admin.views.decorators import staff_member_required
 #from django.utils.decorators import method_decorator   
-from django.contrib.auth import logout
-from django_sse.views import BaseSseView
+#from django_sse.views import BaseSseView
 import time 
 
-SSE_UPDATE_INTERVAL = 0.5
 
-def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
-    time.sleep(interval)
+#SSE_UPDATE_INTERVAL = 0.5
 
-def home(request):
-    return render(request,'home.htm')
+#def SSE_SLEEP(interval=SSE_UPDATE_INTERVAL):
+#    time.sleep(interval)
 
-def contacts(request):
-    if request.method == 'POST': # If the form has been submitted...
-        form = ContactForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            subject = form.cleaned_data['subject']
-            message = form.cleaned_data['message']
-            
-            sender = form.cleaned_data['sender']
-            mess = 'Sender is ' + sender + '\n' + message            
-            mail_admins(subject, mess, fail_silently=False, connection=None, html_message=None)
-            return HttpResponseRedirect('/thanks/') # Redirect after POST
-    else:
-        form = ContactForm() # An unbound form
-
-    return render(request, 'contacts.htm', {
-        'form': form,
-    })
-
-    return render(request,'contacts.htm')
-
-#@login_required
-def cam(request):
-    return render(request,'cam.htm')
-
-#@login_required
-def myaccount(request):
-    return render(request,'account.html')
-
-
-#@login_required
-def deleteUser(request):
-    return render(request,'deleteuser.htm')
-
-#@login_required
-def confirmDeleteUser(request):
-    request.user.delete()
-    logout(request)
-    return render(request,'home.htm')
-
-
-#@staff_member_required
-def settings(request):
-    return render(request,'settings.htm')
-
-#@login_required
-def req(request):
-    if request.method == 'GET':
-        try:
-            addr = request.GET['addr']
-            method = request.GET['id']
-            payload = request.GET['pd']
-        except Exception as _e:
-            response = 'Bad request'
-            return HttpResponse(response)        
-        
-        response = 'you requested method ' + method + ', to address ' + addr + ', with payload ' + payload
-        return HttpResponse(response)
-    else:
-        response = 'Bad request'
-        return HttpResponse(response)
 
 #@staff_member_required
 def startServer(request, wid):
@@ -188,8 +125,8 @@ def getServerStatus(request):
         'total': 1,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)  
-    return HttpResponse(json) 
+    j = json.dumps(json_dict)  
+    return HttpResponse(j) 
    
             
 #@login_required         
@@ -226,8 +163,8 @@ def hostsList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json) 
+    j = json.dumps(json_dict)        
+    return HttpResponse(j) 
 
 #@login_required 
 def resources(request):
@@ -271,7 +208,7 @@ def resourceList(request):
     for i in filteredResList:
         Id = str(i.id)
         uriLink = '<div class="fake_link" onclick = "gotoRes('+ Id +');">' + i.uri + '</div >'
-        sub = [Id, uriLink, str(i.host.ip6address)]
+        sub = [Id, uriLink, str(i.host.ip6address), i.title]
         dic = {'id': Id, 'cell': sub}
         l.append(dic)
     json_dict = {
@@ -279,8 +216,8 @@ def resourceList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json)   
+    j = json.dumps(json_dict)        
+    return HttpResponse(j)   
 
 #@login_required
 def resourcePage(request, rid):
@@ -292,30 +229,19 @@ def resourcePage(request, rid):
     c, t = resObj.getTemplate(request)
     return render(request, t, c)
 
-class resourceStatus(BaseSseView):
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(resourceStatus, self).dispatch(*args, **kwargs)    
-    def iterator(self):
-        while True:
-            try:
-                rid =self.kwargs['rid']
-                r = Resource.objects.get(id=rid)
-                if r.host.active == True:
-                    status = "CONNECTED"
-                    self.sse.add_message("resStatus", status)
-                    SSE_SLEEP()
-                    yield                    
-                else:
-                    status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime(TFMT)
-                    self.sse.add_message("resStatus", status)
-                    SSE_SLEEP()
-                    yield                  
-            except Resource.DoesNotExist:
-                resp = 'The resource with id= ' + str(rid) + ' does not exist anymore' 
-                self.sse.add_message("resStatus", resp)
-                SSE_SLEEP()
-                yield 
+def resourceStatus(request, rid):
+    try:
+        #rid =self.kwargs['rid']
+        r = Resource.objects.get(id=rid)
+        if r.host.active == True:
+            status = "CONNECTED"
+        else:
+            status = "DISCONNECTED, last seen on: " + r.host.lastSeen.strftime(TFMT)
+        return HttpResponse(status)
+    except Resource.DoesNotExist:
+        resp = 'The resource with id= ' + str(rid) + ' does not exist anymore' 
+        return HttpResponse(resp)
+
                
 #@login_required 
 def obsList(request):
@@ -342,78 +268,29 @@ def obsList(request):
         'total': p.count,
         'rows': l
         }
-    json = simplejson.dumps(json_dict)        
-    return HttpResponse(json)
+    j = json.dumps(json_dict)        
+    return HttpResponse(j)
 
 
-class pushUpdate(BaseSseView):
-    '''
-    triggers update on resource/host tables
-    '''
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(pushUpdate, self).dispatch(*args, **kwargs)    
-    
-    def iterator(self):
-        baseTime = datetime.now()
-        while True:
-            cid = self.kwargs['className']
-            try:
-                t = ModificationTrace.objects.get(className=cid)
-                if t.lastModified > baseTime:
-                    baseTime = t.lastModified
-                    self.sse.add_message("pushUpdate", "T")
-                    SSE_SLEEP()
-                    yield
-                else:
-                    self.sse.add_message("pushUpdate", "F")
-                    SSE_SLEEP()
-                    yield                                           
-            except ObjectDoesNotExist, MultipleObjectsReturned:
-                self.sse.add_message("pushUpdate", "F")
-                SSE_SLEEP()
-                yield                         
+#@staff_member_required
+def settings(request):
+    return render(request,'settings.htm')
 
+def obsLast(request, rid):
+    try:
+        s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
+        a = []
+        for i in s:
+            a.append(i['id'])
+            logging.debug(i)
+        
+        maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
+        lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
+        r = lastMsg.payload
+    except ObjectDoesNotExist, MultipleObjectsReturned:
+        r = 'none'    
+    return HttpResponse(r) #TODO da controllare la query
 
-class obsLast(BaseSseView):
-    '''
-    Stream observe values (only if new values arrived)
-    '''   
-    #@method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(obsLast, self).dispatch(*args, **kwargs)    
-    def iterator(self):
-        baseTime = datetime.now()
-        while True:
-            rid = self.kwargs['rid']
-            try:
-                s = Subscription.objects.filter(resource__id = rid, active = True).values('id').iterator()
-                a = []
-                for i in s:
-                    a.append(i['id'])
-                    logging.debug(i)
-                maxID = CoapMsg.objects.filter(resource=rid, sub__in=a).aggregate(Max('id'))
-                lastMsg = CoapMsg.objects.get(resource=rid, id = maxID['id__max'])
-                if lastMsg.timeadded > baseTime:
-                    r = lastMsg.payload
-                    self.sse.add_message("obsLast", r)
-                    SSE_SLEEP(1)
-                    yield
-                elif lastMsg.timeadded + timedelta(seconds=2) < datetime.now():     
-                    r = 'none'    
-                    self.sse.add_message("obsLast", r)   
-                    SSE_SLEEP(1)
-                    yield
-                else:
-                    SSE_SLEEP(1)
-                    yield                
-            except ObjectDoesNotExist, MultipleObjectsReturned:
-                r = 'none'    
-                self.sse.add_message("obsLast", r)
-                SSE_SLEEP()
-                yield    
-            except Exception as e:
-                logging.error(e)  
 
 
 #@login_required 
@@ -461,7 +338,7 @@ def opRes(request):
             res = r.POST(payload)
         else:
             return HttpResponse('Method unsupported')
-        out = str(res)
+        out = "%s %s" % (res.code, res.content)
         return HttpResponse(out)
     except Exception as e:
         return HttpResponse('Error, exception %s' % e)  
@@ -572,16 +449,4 @@ def pingPage(request):
     c = {'hosts': hosts}
     return render(request, template, c)       
 
-   
-''' 
-#TODO: broadcast shutdown
-#@staff_member_required     
-def shutdown(request):
-    try:
-        stopAllSubs()
-        #stop coap server
-        stopServer(request)
-        return HttpResponse('All processes are stopping')
-    except Exception as e:
-        return HttpResponse('Error, exception %s' % e)
-'''       
+

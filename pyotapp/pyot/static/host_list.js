@@ -40,23 +40,13 @@ $('#sform').submit(function (){
 	return false;
 });
 
-
-$(document).ready(function() {
-    var source = new EventSource('/pushUpdate/Host');
-
-    source.addEventListener("pushUpdate", function(e) {
-        if (e.data == 'T')
-                $('#hoststable').flexReload();
-    });
-});
-
-
-
-/*
 function reloadTable(){
     $('#hoststable').flexReload();
-    setTimeout("reloadTable()",10000);
-}*/
+    setTimeout("reloadTable()",5000);
+}
+
+
+reloadTable();
 
 function makeList(grid){
     var items = $('.trSelected',grid);

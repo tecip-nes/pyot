@@ -15,7 +15,6 @@
 	var currentSt = "CON";
 
 	function setStatus(msg){
-		//$("#resStatus").html(msg);
 		if (msg.substring(0, 3) != currentSt){
 
 			if (msg.substring(0, 3) == "DIS"){
@@ -32,13 +31,17 @@
 	}
 	
 	
-        $(document).ready(function() {
-            var source = new EventSource('/resourceStatus/{{ rid }}');
-
-            source.addEventListener("resStatus", function(e) {
-                 setStatus(e.data);
-            });
-        });	
+	function updateStatus(){
+		$.ajax({
+			type: "GET",
+			url: '/resourceStatus/{{ rid }}',
+			success: function(res){
+				setStatus(res);
+				setTimeout("updateStatus()",2000);
+			}
+			});
+	}
+	$(document).ready(function(){updateStatus();}) 
 	
 	</script> 
 

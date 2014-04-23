@@ -1,0 +1,6 @@
+#!/bin/bash
+while : 
+do
+  ./tunslip6 -a localhost aaaa::1/64
+  sleep 1
+done

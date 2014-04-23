@@ -26,24 +26,27 @@ import logging
 from datetime import datetime, timedelta
 from exceptions import NotImplementedError
 from model_utils.managers import InheritanceManager
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
 #from django.core.exceptions import ObjectDoesNotExist
 import base64
-from fields import IPNetworkField,  IPNetworkQuerySet, IPAddressField
+from fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
 from settings import TFMT
 from celery.task.control import revoke 
-from utils import get_celery_worker_status
+from pyot.utils import get_celery_worker_status
+
+
 
 caching = True
 defaultCachingInterval = 60
-defaultCaching =  {'light':15, 
+defaultCaching =  {'/sensors/light':15, 
                    'temp': 120, 
                    'baro': 180 } 
 
 KEEPALIVEPERIOD = 10
+WAIT_TIMEOUT = 10
 
-cachingUri = ['light','temp','baro']
+COAP_REQ_TIMEOUT = 15
+
+cachingUri = ['/sensors/light','temp','baro']
 
 METHOD_CHOICES = (
     (u'GET', u'GET'),
@@ -52,45 +55,64 @@ METHOD_CHOICES = (
     (u'DELETE', u'DELETE'), 
 )
 
-LOG_CHOICES = (
-    (u'registration', u'registration'),
-    (u'clean', u'clean'),
-    (u'discovery', u'discovery'),
-    (u'ghost', u'ghost'),
-)
+#CoAP Method result code
+
+CREATED ='2.01'
+DELETED = '2.02' 
+VALID = '2.03'
+CHANGED = '2.04'
+CONTENT = '2.05'
+NOT_ALLOWED = '4.04'
+BAD_REQUEST = '4.00'
+UNAUTHORIZED ='4.01'
+BAD_OPTION = '4.02'
+FORBIDDEN = '4.03'
+NOT_FOUND = '4.04'
+METHOD_NOT_ALLOWED = '4.05'
+INTERNAL_SERVER_ERROR = '5.00'
+NOT_IMPLEMENTED = '5.01'
+
+DEFAULT_DISCOVERY_PATH = '/.well-known/core'
 
 CELERY_DEFAULT_QUEUE = 'celery'
 
-class UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, related_name='profile')
-    organization = models.CharField(max_length=50, blank=False)
-    def save(self, *args, **kwargs):
-        try:
-            existing = UserProfile.objects.get(user=self.user)
-            self.id = existing.id #force update instead of insert
-        except UserProfile.DoesNotExist:
-            pass 
-        models.Model.save(self, *args, **kwargs)
 
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
-
+class Response(object):
+    code = None
+    content = None
+    def __init__(self, code="", content=""):
+        self.code = code
+        self.content = content
+    def getCode(self):
+        return self.code
+    def getContent(self):
+        return self.content
+    def __unicode__(self):
+        return u"%s - %s" % (self.code, self.content)
+    def __str__(self):
+        return u"%s - %s" % (self.code, self.content)
+    
 class Network(models.Model):
     objects = IPNetworkQuerySet.as_manager()
     network = IPNetworkField()
     hostname = models.CharField(max_length=30)
     pid = models.CharField(max_length=100, null=True, blank=True)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
-    
+
     def __unicode__(self):
         return u"%s - %s" % (self.network, self.hostname)
     
     def startRD(self):
-        from tasks import coapRdServer
+        from pyot.tasks import coapRdServer
         r = coapRdServer.apply_async(args=[str(self.network)], queue=self.hostname)
+        """
+        add.apply_async((2, 2), retry=True, retry_policy={
+                'max_retries': 3,
+                'interval_start': 0,
+                'interval_step': 0.2,
+                'interval_max': 0.2,
+            })
+        """   
         self.pid = r.task_id
         self.save()
         return r
@@ -109,6 +131,12 @@ class Network(models.Model):
         except KeyError:
             return False
 
+    def rplDagUpdate(self):
+        from pyot.rplApp import DAGupdate
+        DAGupdate(self)
+        
+    class Meta:
+        app_label = 'pyot'
     
 class Host(models.Model):
     ip6address = IPAddressField()
@@ -139,78 +167,87 @@ class Host(models.Model):
             return CELERY_DEFAULT_QUEUE
     
     def __unicode__(self):
-        return u"%s Network: %s" % (self.ip6address, self.kqueue)
+        return u"%s" % (self.ip6address)
 
     def PING(self, count=3):
-        from tasks import pingHost
+        from pyot.tasks import pingHost
         res =  pingHost.apply_async(args=[self.id, count], queue=self.getQueue())
         res.wait()
         return res.result
-    def DISCOVER(self):
+    def DISCOVER(self, path=DEFAULT_DISCOVERY_PATH):
         if self.active == False:
             return u'Host %s Not Active' % (str(self.ip6address))
-        from tasks import coapDiscovery
-        res = coapDiscovery.apply_async(args=[str(self.ip6address)], queue=self.getQueue())
+        from pyot.tasks import coapDiscovery
+        res = coapDiscovery.apply_async(args=[str(self.ip6address), path], queue=self.getQueue())
         res.wait()
         return res.result
-
+    class Meta:
+        app_label = 'pyot'
+        
 class Resource(models.Model):
     uri = models.CharField(max_length=39)
     host = models.ForeignKey(Host)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True) 
     extra = models.CharField(max_length=30, blank=True, default='' )
     obs = models.BooleanField(default = False)
-    
+    rt = models.CharField(max_length=30, blank=True, null=True )
+    title = models.CharField(max_length=30, blank=True, null=True )
+    ct = models.CharField(max_length=3, blank=True, null=True )
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address) 
+
+    def getFullURI(self):
+        return 'coap://['+str(self.host.ip6address)+']'+self.uri
         
-    def GET(self, payload=None, timeout=5):
+    def GET(self, payload=None, timeout=5, query=None):
         if caching == True:
             value = getLastResponse(self) 
             if value != None:
                 return value
-        from tasks import coapGet
-        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+        from pyot.tasks import coapGet
+        res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         res.wait()
         return res.result
 
-    def PUT(self, payload=None, timeout=5):
-        from tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+    def PUT(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+        from pyot.tasks import coapPut
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         res.wait()
         return res.result
 
-    def POST(self, payload=None, timeout=5):
-        from tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+    def POST(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+        from pyot.tasks import coapPost
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile], queue=self.host.getQueue())
+        res.wait()
+        return res.result
+
+    def DELETE(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None):
+        from pyot.tasks import coapDelete
+        res = coapDelete.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
         res.wait()
         return res.result
     
-    def asyncGET(self,payload=None, timeout=5):
-        from tasks import coapGet
-        res = coapGet.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+    def asyncGET(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None):
+        from pyot.tasks import coapGet
+        res = coapGet.apply_async(args=[self.id, payload, timeout, query], queue=self.host.getQueue())
         return res
 
-    def asyncPOST(self,payload=None, timeout=5):
-        from tasks import coapPost
-        res = coapPost.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+    def asyncPOST(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+        from pyot.tasks import coapPost
+        res = coapPost.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
     
-    def asyncPUT(self,payload=None, timeout=5):
-        from tasks import coapPut
-        res = coapPut.apply_async(args=[self.id, payload, timeout], queue=self.host.getQueue())
+    def asyncPUT(self,payload=None, timeout=COAP_REQ_TIMEOUT, query=None, inputfile=None, block=None):
+        from pyot.tasks import coapPut
+        res = coapPut.apply_async(args=[self.id, payload, timeout, query, inputfile, block], queue=self.host.getQueue())
         return res
     
     def OBSERVE(self, duration, handler, renew =False): #TODO handler
-        from tasks import coapObserve
+        from pyot.tasks import coapObserve
         res = coapObserve.apply_async(kwargs={'rid':self.id, 'duration':duration, 'handler':handler, 'renew': renew}, queue=self.host.getQueue())
         return res
-
-class ModificationTrace(models.Model):
-    lastModified = models.DateTimeField(auto_now_add=True, blank=True) 
-    className = models.CharField(max_length=10, blank=True)
-    def __unicode__(self):
-        return u"{c} - {l}".format(c=self.className, l=self.lastModified) 
+    class Meta:
+        app_label = 'pyot'
         
 class EventHandler(models.Model):
     description = models.CharField(max_length=100)
@@ -227,7 +264,9 @@ class EventHandler(models.Model):
                                                                                              activationCount=self.activationCount,
                                                                                                 max_activations=self.max_activations,
                                                                                                 active=self.active) 
-
+    class Meta:
+        app_label = 'pyot'
+        
 class Subscription(models.Model):
     resource = models.ForeignKey(Resource)
     duration = models.IntegerField(default = 15)
@@ -248,7 +287,9 @@ class Subscription(models.Model):
         revoke(self.pid, terminate=True)
         self.active = False
         self.save()    
-            
+    class Meta:
+        app_label = 'pyot'
+                    
 class CoapMsg(models.Model):
     resource = models.ForeignKey(Resource)
     method = models.CharField(max_length=10, blank=False, choices=METHOD_CHOICES)
@@ -268,7 +309,9 @@ class CoapMsg(models.Model):
                                                           method=self.method,
                                                           payload=self.payload,
                                                           t=self.timeadded.strftime(TFMT))      
-    
+    class Meta:
+        app_label = 'pyot'
+            
 def getLastResponse(resource):
     '''
     Caching mechanism: try to find a recent value received from the resource
@@ -286,28 +329,39 @@ def getLastResponse(resource):
     msgs = CoapMsg.objects.filter(resource__id=resource.id, timeadded__gte=start).exclude(method='PUT').order_by('-id')
     if msgs.count() == 0:
         return None
-    return msgs[0].payload
+    return Response(code = msgs[0].code, content=msgs[0].payload)
     
 class EventHandlerMsg(EventHandler):
     msg = models.ForeignKey(CoapMsg)
     
     def __unicode__(self):
         return u"{meta}".format(meta=self.description)     
-    def action(self):
+    def action(self, msg=None):
         logging.debug('ACTION')
-        from Events import sendMsg 
+        from pyot.Events import sendMsg 
         if (self.activationCount == self.max_activations):
             logging.debug('max activations reached')
             return
         self.activationCount += 1
         self.result  = sendMsg(self.msg)   
         self.save()
+    class Meta:
+        app_label = 'pyot'
 
-class Log(models.Model):
-    type = models.CharField(max_length=30, choices=LOG_CHOICES)
-    message = models.CharField(max_length=1024)
-    timeadded = models.DateTimeField(auto_now_add=True, blank=True)
+class EventHandlerTres(EventHandler):
+    from tres import TResT
+    #msg = models.ForeignKey(CoapMsg)
+    task = models.ForeignKey(TResT)
     def __unicode__(self):
-        return u"{t} {type} {message}".format(type=self.type, 
-                                              message=self.message, 
-                                              t=self.timeadded.strftime(TFMT))      
+        return u"{meta}".format(meta=self.description)     
+    def action(self, msg):
+        print 'ACTION, activating tres'
+        if (self.activationCount == self.max_activations):
+            logging.debug('max activations reached')
+            return
+        self.task.runPf(msg.payload)
+        self.activationCount += 1
+        #self.result  = sendMsg(self.msg)   
+        self.save()
+    class Meta:
+        app_label = 'pyot'

@@ -350,12 +350,24 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
 
+  size_t len=0;
+  unsigned char *databuf;
 
-
+  unsigned char strBuf[100];
+  
+  
   unsigned char s[100];
 
   coap_print_addr(peer, s, 100);
-  fprintf(stdout, "%s\n", s);
+
+  if (coap_get_data(request, &len, &databuf)){	
+    memcpy(strBuf, databuf, len);
+    strBuf[len]='\0';
+    fprintf(stdout, "%s %s\n", s, strBuf);
+  }else{
+    fprintf(stdout, "%s\n", s);
+  }
+
   fflush(stdout);
   coap_resource_t *r;
   coap_opt_iterator_t opt_iter;

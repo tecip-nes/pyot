@@ -42,7 +42,8 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include "../rplinfo/rplinfo.h"
+#include "../common/pyot.h"
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_HELLO 0
@@ -50,20 +51,15 @@
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
 #define REST_RES_PUSHING 1
-#define REST_RES_EVENT 1
+#define REST_RES_EVENT 0
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 1
 #define REST_RES_LIGHT 0
 #define REST_RES_BATTERY 0
-#define REST_RES_RADIO 0
+#define REST_RES_RADIO 1
+#define REST_RES_RPLINFO 1
 
-
-
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
 
 #include "erbium.h"
 
@@ -116,25 +112,6 @@
 #endif
 
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]",(lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3],(lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
-
-
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 1) /* rd server */
-
-#define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT+1)
-#define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
-
-#define TOGGLE_INTERVAL 10
-
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
 
@@ -154,73 +131,12 @@ client_chunk_handler(void *response)
 }
 
 
-/******************************************************************************/
-#if REST_RES_CHUNKS
-/*
- * For data larger than REST_MAX_CHUNK_SIZE (e.g., stored in flash) resources must be aware of the buffer limitation
- * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
- * the byte offset where to continue is provided to the handler as int32_t pointer.
- * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
- * (The offset for CoAP's blockwise transfer can go up to 2'147'481'600 = ~2047 M for block size 2048 (reduced to 1024 in observe-03.)
- */
-RESOURCE(chunks, METHOD_GET, "test/chunks", "title=\"Blockwise demo\";rt=\"Data\"");
-
-#define CHUNKS_TOTAL    2050
-
-void
-chunks_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  int32_t strpos = 0;
-
-  /* Check the offset for boundaries of the resource data. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
-    /* A block error message should not exceed the minimum block size (16). */
-
-    const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
-  }
-
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while (strpos<preferred_size)
-  {
-    strpos += snprintf((char *)buffer+strpos, preferred_size-strpos+1, "|%ld|", *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if (strpos > preferred_size)
-  {
-    strpos = preferred_size;
-  }
-
-  /* Truncate if above CHUNKS_TOTAL bytes. */
-  if (*offset+(int32_t)strpos > CHUNKS_TOTAL)
-  {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-
-  REST.set_response_payload(response, buffer, strpos);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    *offset = -1;
-  }
-}
-#endif
-
-
 int getRandUint(unsigned int mod){
   return (unsigned int)(rand() % mod);
 }
 
 /******************************************************************************/
-#if REST_RES_PUSHING
+#if REST_RES_PUSHING //  && !defined (PLATFORM_HAS_LIGHT)
 /*
  * Example for a periodic resource.
  * It takes an additional period parameter, which defines the interval to call [name]_periodic_handler().
@@ -296,15 +212,12 @@ event_event_handler(resource_t *r)
 
   PRINTF("TICK %u for /%s\n", event_counter, r->url);
 
-  printf("a");
   /* Build notification. */
   coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
   coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0 );
   coap_set_payload(notification, content, snprintf(content, sizeof(content), "%u", event_counter));
-  printf("b");
   /* Notify the registered observers with the given message type, observe option, and payload. */
   REST.notify_subscribers(r, event_counter, notification);
-  printf("c");
 }
 #endif /* PLATFORM_HAS_BUTTON */
 
@@ -340,57 +253,6 @@ sub_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
 
 /******************************************************************************/
 #if defined (PLATFORM_HAS_LEDS)
-/******************************************************************************/
-#if REST_RES_LEDS
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
-
-void
-leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  size_t len = 0;
-  const char *color = NULL;
-  const char *mode = NULL;
-  uint8_t led = 0;
-  int success = 1;
-
-  if ((len=REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
-
-    if (strncmp(color, "r", len)==0) {
-      led = LEDS_RED;
-    } else if(strncmp(color,"g", len)==0) {
-      led = LEDS_GREEN;
-    } else if (strncmp(color,"b", len)==0) {
-      led = LEDS_BLUE;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
-    PRINTF("mode %s\n", mode);
-
-    if (strncmp(mode, "on", len)==0) {
-      leds_on(led);
-    } else if (strncmp(mode, "off", len)==0) {
-      leds_off(led);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
-
-/******************************************************************************/
 #if REST_RES_TOGGLE
 
 static uint8_t toggle_status = 0;
@@ -436,7 +298,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Photosynthetic and solar light (supports JSON)\";rt=\"LightSensor\"");
+PERIODIC_RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light\";obs", 20*CLOCK_SECOND);
 void
 light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -452,7 +314,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
 
     REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
+  }/*
   else if (num && (accept[0]==REST.type.APPLICATION_XML))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_XML);
@@ -466,7 +328,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'light':{'photosynthetic':%u,'solar':%u}}", light_photosynthetic, light_solar);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  }
+  }*/
   else
   {
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
@@ -474,6 +336,34 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     REST.set_response_payload(response, msg, strlen(msg));
   }
 }
+
+void
+light_periodic_handler(resource_t *r)
+{
+  uint16_t light_photosynthetic = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
+  uint16_t light_solar = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);	
+  static uint16_t obs_counter = 0;
+  
+  static char content[11];
+
+  
+  //REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  //snprintf((char *)content, LIGHT_SIZE, "%u;%u", light_photosynthetic, light_solar);
+
+  //REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));  
+  ++obs_counter;
+
+  //PRINTF("TICK %u for /%s\n", obs_counter, r->url);
+
+  /* Build notification. */
+  coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
+  coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0 );
+  coap_set_payload(notification, content, snprintf(content, sizeof(content), "%u", light_photosynthetic));
+
+  /* Notify the registered observers with the given message type, observe option, and payload. */
+  REST.notify_subscribers(r, obs_counter, notification);
+}
+
 #endif /* PLATFORM_HAS_LIGHT */
 
 /******************************************************************************/
@@ -595,12 +485,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
-/* if static routes are used rather than RPL */
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-  set_global_address();
-  configure_routing();
-#endif
-
   /* Initialize the REST engine. */
   rest_init_engine();
 
@@ -614,7 +498,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if REST_RES_CHUNKS
   rest_activate_resource(&resource_chunks);
 #endif
-#if REST_RES_PUSHING
+#if REST_RES_PUSHING  //&& !defined (PLATFORM_HAS_LIGHT)
   rest_activate_periodic_resource(&periodic_resource_pushing);
 #endif
 #if defined (PLATFORM_HAS_BUTTON) && REST_RES_EVENT
@@ -640,7 +524,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif /* PLATFORM_HAS_LEDS */
 #if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
   SENSORS_ACTIVATE(light_sensor);
-  rest_activate_resource(&resource_light);
+  rest_activate_periodic_resource(&periodic_resource_light);
 #endif
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
@@ -650,6 +534,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
   SENSORS_ACTIVATE(radio_sensor);
   rest_activate_resource(&resource_radio);
 #endif
+#if REST_RES_RPLINFO
+  rplinfo_activate_resources();
+#endif
 
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);
@@ -657,43 +544,47 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* receives all CoAP messages */
   coap_receiver_init();
 
+
+  int wait_time = getRandUint(MAX_WAITING);
+  int base_wait = BASE_WAITING;
+
+  etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
+
+  static int time=0;
+  static char content[12];
+  while(1) {
+    PROCESS_YIELD();
+    //PROCESS_WAIT_EVENT();
+    if (etimer_expired(&et)) break;
+    }
+  etimer_reset(&et);
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 
   while(1) {
     PROCESS_YIELD();
-    //PROCESS_WAIT_EVENT();
     if (etimer_expired(&et)) {
-      printf("--Sending msg to rd...\n");
+      //printf("--Sending msg to rd...\n");
 
-      /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-      coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0 );
+      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
-      //const char msg[] = "Toggle!";
-      //coap_set_payload(request, (uint8_t *)msg, sizeof(msg)-1);
+      coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
+      //PRINT6ADDR(&server_ipaddr);
+      //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
-      PRINT6ADDR(&server_ipaddr);
-      PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+      coap_transaction_t *transaction;
 
-      COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+      request->mid = coap_get_mid();
+      if ((transaction = coap_new_transaction(request->mid, &server_ipaddr, REMOTE_PORT)))
+      {
+        transaction->packet_len = coap_serialize_message(request, transaction->packet);
+        coap_send_transaction(transaction);
+      }
 
-      printf("Done--\n");
+      //printf("Done--\n");
 
       etimer_reset(&et);
-
-#if PLATFORM_HAS_BUTTON
-    } else if (ev == sensors_event && data == &button_sensor) {
-      printf("button--\n");
-#if REST_RES_EVENT
-      /* Call the event_handler for this application-specific event. */
-      event_event_handler(&resource_event);
-#endif
-#if REST_RES_SEPARATE && WITH_COAP>3
-      /* Also call the separate response example handler. */
-      separate_finalize_handler();
-#endif
-    }
-#endif /* PLATFORM_HAS_BUTTON */
+     }
   } /* while (1) */
 
   PROCESS_END();

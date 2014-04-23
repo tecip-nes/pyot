@@ -24,7 +24,7 @@ export CONTIKI PATH_TO_CONTIKI_ROOT
 
 Installing general requirements:
 ```sh
-sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev
+sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev
 ```
 
 Install python requirements, using virtualenv is reccomended
@@ -44,7 +44,7 @@ make
 Database creation:
 ```sh
 cd pyotapp
-./manage.py syncdb
+./manage.py syncdb --noinput && ./manage.py loaddata auth.json
 ```
 
 Running the application
@@ -57,13 +57,13 @@ cd pyotapp
 
 Start celery workers in another terminal:
 ```sh
-./manage.py celeryd -B -s celery -E -l INFO -c 30 -n cooja -Q cooja,celery,periodic
+./manage.py celeryd -s celery -E -l INFO -c 30 -n celery@cooja -Q celery@cooja,celery --without-heartbeat --without-gossip
 ```
 
 Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
 ```sh
 cd pyotapp/appsTesting/contiki_cooja
-make TARGET=cooja server-rd.csc
+make TARGET=cooja erbium-server.csc
 ```
 
 Start tunslip, open another terminal and type:
@@ -72,6 +72,8 @@ make connect-router-cooja
 ```
 
 Open 127.0.0.1:8000 in a web browser (tested with Chrome), enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
+
+./manage.py shell_plus --notebook
 
 Macroprogramming tests
 --------------

@@ -43,7 +43,13 @@ wsgiref
 zope.interface
 librabbitmq
 six
-sse
-django-sse
 ipaddr
 pycurl
+networkx
+netifaces 
+jinja2 
+pyzmq 
+tornado 
+ipython
+pygraphviz
+matplotlib
