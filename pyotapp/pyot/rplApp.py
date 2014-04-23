@@ -35,9 +35,10 @@ def DAGupdate(Net):
     for p in parents:
         print 'Searching parents for resource: ', p
         #with the current implementation nodes have only one parent
-        r = p.GET(query='index=1')
+        r = p.GET(query='index=0')
         if r.code != CONTENT:
             continue
+        print r.content
         prefix = r.content
         l = json.loads(prefix)
         pa = searchHost(l['eui'], Net)

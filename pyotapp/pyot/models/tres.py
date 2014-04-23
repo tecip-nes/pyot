@@ -29,8 +29,10 @@ from django.core.validators import validate_slug
 import py_compile
 import pickle
 import base64
-from settings import TFMT
-
+from settings import TFMT, SERVER_ADDRESS, PROJECT_ROOT
+import urllib
+import sys, os
+   
 WAIT_TIMEOUT = 30
 
 scriptFolder = 'scripts/'
@@ -220,17 +222,26 @@ class TResT(models.Model):
             inp.OBSERVE(duration=duration, handler=h.id)
 
     def runPf(self, inp):
-        import sys
+     
+        tmpDir = '/tmp/'
+        basename = os.path.basename(str(self.pf.sourcefile))
+        outFile = tmpDir + basename          
+        try:
+            with open(outFile):
+                pass
+        except IOError:
+            uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + basename
+            urllib.urlretrieve(uri, filename=outFile)  
         self.emu.inp=inp
         self.emu.save()
         self.save()
         #from cStringIO import StringIO
-        sys.path.append('/home/andrea/pyot/pyotapp/pyot/tres')
+        sys.path.append(PROJECT_ROOT+'/pyot/tres')
         sys.argv = [self.id]
         #oldio = (sys.stdin, sys.stdout, sys.stderr)
         #sio = StringIO()
         #sys.stdout = sys.stderr = sio   
-        execfile(str(self.pf.sourcefile))
+        execfile(outFile)
         print '\n'
         #sys.stdin, sys.stdout, sys.stderr = oldio 
         #print sio.getvalue()        
