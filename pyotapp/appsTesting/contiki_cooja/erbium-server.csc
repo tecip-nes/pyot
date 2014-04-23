@@ -6,6 +6,7 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
+  <project EXPORT="discard">[APPS_DIR]/serial2pty</project>
   <simulation>
     <title>REST with RPL router</title>
     <speedlimit>1.0</speedlimit>
@@ -113,41 +114,13 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>-37.73518003173714</x>
-        <y>83.20545681975238</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
-        <id>4</id>
-      </interface_config>
-      <motetype_identifier>server</motetype_identifier>
-    </mote>
-    <mote>
-      <breakpoints />
-      <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>11.03077205705953</x>
-        <y>127.001630351729</y>
+        <x>3.5761042218294654</x>
+        <y>116.44085091848642</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
         se.sics.cooja.mspmote.interfaces.MspMoteID
         <id>5</id>
-      </interface_config>
-      <motetype_identifier>server</motetype_identifier>
-    </mote>
-    <mote>
-      <breakpoints />
-      <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>-29.659289876904566</x>
-        <y>113.02412816067263</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
-        <id>6</id>
       </interface_config>
       <motetype_identifier>server</motetype_identifier>
     </mote>
@@ -169,8 +142,8 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>5.750382340438234</x>
-        <y>94.07684741279623</y>
+        <x>27.80377468632717</x>
+        <y>98.42540365001376</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -211,8 +184,8 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>85.57745040936017</x>
-        <y>146.88074457900916</y>
+        <x>91.78967360538522</x>
+        <y>133.83507586735655</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -225,7 +198,7 @@
   <plugin>
     se.sics.cooja.plugins.SimControl
     <width>259</width>
-    <z>0</z>
+    <z>1</z>
     <height>179</height>
     <location_x>0</location_x>
     <location_y>0</location_y>
@@ -241,10 +214,10 @@
       <skin>se.sics.cooja.plugins.skins.AddressVisualizerSkin</skin>
       <skin>se.sics.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>se.sics.cooja.plugins.skins.GridVisualizerSkin</skin>
-      <viewport>3.2194593415119375 0.0 0.0 3.2194593415119375 297.48687785681085 83.12341477688003</viewport>
+      <viewport>3.863351209814325 0.0 0.0 3.863351209814325 174.584253428173 -18.251902267743958</viewport>
     </plugin_config>
     <width>804</width>
-    <z>1</z>
+    <z>0</z>
     <height>639</height>
     <location_x>227</location_x>
     <location_y>-4</location_y>
@@ -299,8 +272,6 @@
       <mote>6</mote>
       <mote>7</mote>
       <mote>8</mote>
-      <mote>9</mote>
-      <mote>10</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />

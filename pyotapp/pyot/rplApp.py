@@ -34,7 +34,7 @@ def DAGupdate(network):
     for parent in parents:
         print 'Searching parents for resource: ', parent
         #with the current implementation nodes have only one parent, index=0
-        r = parents.GET(query='index=0')
+        r = parent.GET(query='index=0')
         if r.code != CONTENT:
             continue
         print r.content

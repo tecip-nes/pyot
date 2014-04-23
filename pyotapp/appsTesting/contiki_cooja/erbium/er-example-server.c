@@ -56,7 +56,7 @@
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 1
 #define REST_RES_LIGHT 1
-#define REST_RES_BATTERY 1
+#define REST_RES_BATTERY 0
 #define REST_RES_RADIO 0
 #define REST_RES_RPLINFO 1
 
@@ -70,9 +70,9 @@
 #if defined (PLATFORM_HAS_LEDS)
 #include "dev/leds.h"
 #endif
-#if defined (PLATFORM_HAS_LIGHT)
+//#if defined (PLATFORM_HAS_LIGHT)
 #include "dev/light-sensor.h"
-#endif
+//#endif
 
 
 #if defined (PLATFORM_HAS_BATTERY)
@@ -283,7 +283,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 #endif /* PLATFORM_HAS_LEDS */
 
 /******************************************************************************/
-#if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
+//#if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
 PERIODIC_RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Light\";obs", 10*CLOCK_SECOND);
 void
@@ -351,7 +351,7 @@ light_periodic_handler(resource_t *r)
   REST.notify_subscribers(r, obs_counter, notification);
 }
 
-#endif /* PLATFORM_HAS_LIGHT */
+//#endif /* PLATFORM_HAS_LIGHT */
 
 /******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
@@ -509,10 +509,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_resource(&resource_toggle);
 #endif
 #endif /* PLATFORM_HAS_LEDS */
-#if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
+//#if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
   SENSORS_ACTIVATE(light_sensor);
   rest_activate_periodic_resource(&periodic_resource_light);
-#endif
+//#endif
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
@@ -556,8 +556,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
       coap_set_header_uri_path(request, service_urls[1]);
 
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
-      //PRINT6ADDR(&server_ipaddr);
-      //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
       coap_transaction_t *transaction;
 

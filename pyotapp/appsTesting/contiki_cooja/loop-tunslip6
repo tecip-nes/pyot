@@ -4,6 +4,6 @@ CONTIKI=/home/andrea/icsi/t-res
 
 while : 
 do
-  $CONTIKI/tools/tunslip6 -a localhost aaaa::1/64
+  $CONTIKI/tools/tunslip6 -a localhost bbbb::1/64
   sleep 1
 done

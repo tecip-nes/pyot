@@ -338,7 +338,7 @@ def isObs(s):
 @task()
 def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
     print 'resource discovery: get well-Know on ip: ' + host
-    Log.objects.create(type = 'discovery', message = host)
+    Log.objects.create(log_type = 'discovery', message = host)
 
     uri = 'coap://[' + host + ']' + path
     print uri
@@ -395,7 +395,7 @@ def coapRdServer(prefix = ''):
         n = Network.objects.get(network=prefix)
         n.pid=str(coapRdServer.request.id)
         n.save()
-        Log.objects.create(type = 'RdRetry', message = prefix)
+        Log.objects.create(log_type = 'RdRetry', message = prefix)
     rdIp = prefix[:-3] +'1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
@@ -416,7 +416,7 @@ def coapRdServer(prefix = ''):
                 h.lastSeen=datetime.now()
                 h.active = True
                 if int(time) < h.keepAliveCount:
-                    Log.objects.create(type = 'registration', message = ipAddr)
+                    Log.objects.create(log_type = 'registration', message = ipAddr)
                 h.keepAliveCount = int(time)
                 h.save()
                 tmp = Resource.objects.filter(host=h)
@@ -433,7 +433,7 @@ def coapRdServer(prefix = ''):
                     h.DISCOVER()
                 except Exception:
                     pass
-                Log.objects.create(type = 'registration', message = ipAddr)
+                Log.objects.create(log_type = 'registration', message = ipAddr)
 
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -462,7 +462,7 @@ def checkConnectedHosts():
                 print 'cleaning host: ' + str(i.ip6address)
                 i.active=False
                 i.save()
-                l = Log(type = 'clean', message = i)
+                l = Log(log_type = 'clean', message = i)
                 l.save()
         return None
     except Exception:
@@ -505,10 +505,10 @@ if WORKER_RECOVERY:
                 print 'RD status = ' + rdTaskObj.status
                 if rdTaskObj.status == 'FAILURE':
                     network.startRD()
-                    Log.objects.create(type = 'RdRec', message = network.hostname)
+                    Log.objects.create(log_type = 'RdRec', message = network.hostname)
 
             subSet = Subscription.objects.filter(active=True,
-                                                 resource__host__kqueue=network)
+                                                 resource__host__network=network)
             for sub in subSet:
                 try:
                     subTaskObj = TaskMeta.objects.get(task_id=sub.pid)
@@ -518,7 +518,7 @@ if WORKER_RECOVERY:
                         sub.resource.OBSERVE(duration=sub.duration,
                                              handler=sub.handler,
                                              renew=sub.renew)
-                        Log.objects.create(type = 'SubRec', message = network.hostname)
+                        Log.objects.create(log_type = 'SubRec', message = network.hostname)
                 except TaskMeta.DoesNotExist:
                     pass
 
