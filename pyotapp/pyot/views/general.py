@@ -23,8 +23,8 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 from django.shortcuts import render
 
 def home(request):
-    return render(request,'home.htm')
+    return render(request, 'home.htm')
 
 #@login_required
 def cam(request):
-    return render(request,'cam.htm')
+    return render(request, 'cam.htm')

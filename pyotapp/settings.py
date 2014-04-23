@@ -1,6 +1,6 @@
 '''
-Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it) 
-and Consorzio Nazionale Interuniversitario per le Telecomunicazioni 
+Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it)
+and Consorzio Nazionale Interuniversitario per le Telecomunicazioni
 (http://www.cnit.it).
 
 This file is part of PyoT, an IoT Django-based Macroprogramming Environment.
@@ -9,12 +9,12 @@ PyoT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-  
+
 PyoT is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -25,10 +25,10 @@ from ConfigParser import RawConfigParser
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-config = RawConfigParser()
-config.read(PROJECT_PATH + '/settings.ini')
+cfg = RawConfigParser()
+cfg.read(PROJECT_PATH + '/settings.ini')
 
-LOCAL_DB = config.getboolean('database', 'DATABASE_LOCAL')
+LOCAL_DB = cfg.getboolean('database', 'DATABASE_LOCAL')
 
 WEB_APPLICATION_SERVER = False
 
@@ -45,15 +45,15 @@ if socket.gethostname() == 'pyot-vcr':
 TEMPLATE_DEBUG = DEBUG
 
 RABBIT_PORT = 5672
-DB_SCHEMA =  config.get('database', 'DATABASE_NAME')
-SQL_USER = config.get('database', 'DATABASE_USERNAME')
-SQL_PWD = config.get('database', 'DATABASE_PASSWORD_USER')
+DB_SCHEMA = cfg.get('database', 'DATABASE_NAME')
+SQL_USER = cfg.get('database', 'DATABASE_USERNAME')
+SQL_PWD = cfg.get('database', 'DATABASE_PASSWORD_USER')
 SQL_PORT = ''
 
 if WEB_APPLICATION_SERVER:
     SERVER_ADDRESS = '127.0.0.1'
 else:
-    SERVER_ADDRESS = config.get('database', 'DATABASE_HOST')    
+    SERVER_ADDRESS = cfg.get('database', 'DATABASE_HOST')
 
 '''
 ADMINS = (
@@ -61,7 +61,7 @@ ADMINS = (
 )
 '''
 
-TRES_BASE = config.get('tres', 'TRES_BASE')
+TRES_BASE = cfg.get('tres', 'TRES_BASE')
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -208,16 +208,16 @@ djcelery.setup_loader()
 BROKER_URL = SERVER_ADDRESS
 
 CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'},
-                 'pyot.tasks.recoveryWorkers': {'queue': 'periodic'}} # dedicated queue for periodic tasks 
+                 'pyot.tasks.recoveryWorkers': {'queue': 'periodic'}} # dedicated queue for periodic tasks
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
-CELERYD_MAX_TASKS_PER_CHILD=1
-CELERYD_TIMER_PRECISION=0.1
-CELERYD_PREFETCH_MULTIPLIER=1
+CELERYD_MAX_TASKS_PER_CHILD = 1
+CELERYD_TIMER_PRECISION = 0.1
+CELERYD_PREFETCH_MULTIPLIER = 1
 
-BROKER_HEARTBEAT=0
+BROKER_HEARTBEAT = 0
 
-CELERY_ENABLE_UTC=True
+CELERY_ENABLE_UTC = True
 
 CELERY_DISABLE_RATE_LIMITS = True
 
@@ -255,7 +255,7 @@ logging.basicConfig(
     level = logging.DEBUG,
     format = '%(asctime)s %(levelname)s %(message)s',
 )
-'''
+
 
 LOGGING = {
     'version': 1,
@@ -274,7 +274,7 @@ LOGGING = {
         },
     }
 }
-
+'''
 
 LOGF = os.path.abspath(os.path.dirname(__file__)) + '/log/django.log'
 
@@ -292,7 +292,7 @@ LOGGING = {
         'null': {
             'level': 'DEBUG',
             'class':'django.utils.log.NullHandler',
-            }, 
+            },
         },
         'loggers': {
             'django.db' : {
@@ -304,7 +304,7 @@ LOGGING = {
             'handlers': ['file_logging'],
             'level': 'DEBUG',
             'propagate': True,
-        }, 
+        },
         }
 }
 

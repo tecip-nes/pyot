@@ -34,8 +34,8 @@ def user_created(sender, user, request, **kwargs):
     profile.save()
 
 def login_on_activation(sender, user, request, **kwargs):
-    user.backend='django.contrib.auth.backends.ModelBackend' 
-    login(request,user)
+    user.backend = 'django.contrib.auth.backends.ModelBackend' 
+    login(request, user)
 
 from registration.signals import user_registered, user_activated
 user_registered.connect(user_created)

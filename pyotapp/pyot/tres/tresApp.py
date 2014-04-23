@@ -1,6 +1,6 @@
 '''
-Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it) 
-and Consorzio Nazionale Interuniversitario per le Telecomunicazioni 
+Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it)
+and Consorzio Nazionale Interuniversitario per le Telecomunicazioni
 (http://www.cnit.it).
 
 This file is part of PyoT, an IoT Django-based Macroprogramming Environment.
@@ -9,12 +9,12 @@ PyoT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-  
+
 PyoT is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,15 +29,15 @@ class TResPF(object):
     pf = None
     def __init__(self, fileRef, name, description=None, version=None):
         "default constructor, file-based"
-        
+
         if type(fileRef) is not file:
             raise Exception('A file type is required')
         #TODO: copy file in media folder
-        self.pf = TResProcessing.objects.create(name=name, 
+        self.pf = TResProcessing.objects.create(name=name,
                                          description=description,
                                          version=version,
                                          sourcefile=os.path.abspath(fileRef.name))
-    
+
     @classmethod
     def fromSource(cls, sourceString, name, description=None, version=None):
         if name[-3:] != '.py':
@@ -46,10 +46,10 @@ class TResPF(object):
             newFile.write(sourceString)
             newFile.flush()
             return cls(newFile, name, description, version)
-        
+
     def getPfObject(self):
         return self.pf
-    
+
     def __repr__(self):
         return self.pf.__unicode__()
 
@@ -58,10 +58,10 @@ class TResTask(object):
     def __init__(self, TresPf, inputS, output=None):
         #First check if input resources are observable
         for inp in inputS:
-            if inp.obs==False:
-                raise Exception('Input resources must be observable')          
+            if inp.obs == False:
+                raise Exception('Input resources must be observable')
         #Then create task object
-        task = TResT.objects.create(pf = TresPf.pf, output = output)
+        task = TResT.objects.create(pf=TresPf.pf, output=output)
         self.taskId = task.id
         for inp in inputS:
             task.inputS.add(inp)
@@ -73,10 +73,10 @@ class TResTask(object):
     def __repr__(self):
         t = self.getTaskObject()
         return t.__unicode__()
-    def deploy(self,TResResource):
+    def deploy(self, TResResource):
         t = self.getTaskObject()
         return t.deploy(TResResource)
-    def uninstall(self):   
+    def uninstall(self):
         t = self.getTaskObject()
         return t.uninstall()
     def start(self):
@@ -96,17 +96,16 @@ class TResTask(object):
         return t.getInputSource()
     def getOutputDestination(self):
         t = self.getTaskObject()
-        return t.getOutputDestination()    
-    def emulate(self, duration=None):  
+        return t.getOutputDestination()
+    def emulate(self, duration=None):
         t = self.getTaskObject()
-        return t.emulate(duration)    
-    def runPf(self, inp):   
+        return t.emulate(duration)
+    def runPf(self, inp):
         t = self.getTaskObject()
         return t.runPf(inp)
     def getEmuLastOutput(self):
         t = self.getTaskObject()
-        return t.getEmuLastOutput() 
+        return t.getEmuLastOutput()
     def getEmuResult(self):
         t = self.getTaskObject()
-        return t.getEmuResult()  
-    
+        return t.getEmuResult()

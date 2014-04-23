@@ -1,6 +1,6 @@
 '''
-Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it) 
-and Consorzio Nazionale Interuniversitario per le Telecomunicazioni 
+Copyright (C) 2012,2013 Scuola Superiore Sant'Anna (http://www.sssup.it)
+and Consorzio Nazionale Interuniversitario per le Telecomunicazioni
 (http://www.cnit.it).
 
 This file is part of PyoT, an IoT Django-based Macroprogramming Environment.
@@ -9,37 +9,38 @@ PyoT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-  
+
 PyoT is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from models import *
-from datetime import datetime, timedelta
-from django.core.exceptions import ObjectDoesNotExist
+#from models import *
+#import pyotapp.pyot.models
+#from datetime import datetime, timedelta
+#from django.core.exceptions import ObjectDoesNotExist
 
 def get_celery_worker_status():
-    ERROR_KEY = "ERROR"
+    error_key = "ERROR"
     try:
         from celery.task.control import inspect
         insp = inspect()
         d = insp.stats()
         if not d:
-            d = { ERROR_KEY: 'No running Celery workers were found.' }
+            d = {error_key: 'No running Celery workers were found.'}
     except IOError as e:
         from errno import errorcode
         msg = "Error connecting to the backend: " + str(e)
         if len(e.args) > 0 and errorcode.get(e.args[0]) == 'ECONNREFUSED':
             msg += ' Check that the RabbitMQ server is running.'
-        d = { ERROR_KEY: msg }
+        d = {error_key: msg}
     except ImportError as e:
-        d = { ERROR_KEY: str(e)}
+        d = {error_key: str(e)}
     return d
 
 def clearTaskMeta():
@@ -47,13 +48,13 @@ def clearTaskMeta():
     TaskMeta.objects.filter(status=states.SUCCESS).delete()
 
 def get_statistics():
-    hosts = Host.objects.filter()
-    hostsactiveCount = Host.objects.filter(active=True).count()
-    Resources = Resource.objects.filter(host__active=True).exclude(uri ='.well-known')
+    #hosts = Host.objects.filter()
+    #hostsactiveCount = Host.objects.filter(active=True).count()
+    #resources = Resource.objects.filter(host__active=True).exclude(uri='.well-known')
 
-    hostcount = hosts.count()
-    
-    rescount = Resources.count()
+    #hostcount = hosts.count()
+
+    #rescount = resources.count()
 
     return {}
 '''
@@ -65,7 +66,7 @@ def get_statistics():
         startT = server.timeadded
         starttime = startT.strftime(TFMT)
         #server uptime
-        uptime = now - startT   
+        uptime = now - startT
         messub = CoapMsg.objects.exclude(sub=None).filter(timeadded__gte=startT)
         messubcount = messub.count()
 
@@ -92,16 +93,16 @@ def get_statistics():
             lastSeen = h.lastSeen
             keepaliveCount = h.keepAliveCount
 
-           
+
             if h.active == True:
                 expectedMessages = timealiveSecs / KEEPALIVEPERIOD
                 p = float(keepaliveCount)*100 / float(expectedMessages)
                 perc =  "%.2f" % p
             else:
                 expectedMessages = 'None'
-                perc = 'None'   
+                perc = 'None'
 
-           
+
 
 
             dic = {'ip': ip,
@@ -113,7 +114,7 @@ def get_statistics():
                   'kacount': keepaliveCount,
                   'expected': expectedMessages,
                   'perc': perc}
-            perHost.append(dic)  
+            perHost.append(dic)
         perSub = []
         subs = Subscription.objects.filter(active=True)
         for s in subs:
@@ -123,17 +124,17 @@ def get_statistics():
                   'period': s.period,
                   'thr': s.threshold,
                   'timeadded':s.timeadded.strftime(TFMT),
-                  'messcount': messcount} 
-            perSub.append(dic)         
-        #per resource /subscription count / expected 
+                  'messcount': messcount}
+            perSub.append(dic)
+        #per resource /subscription count / expected
         #excludeList = ['.well-known', 'mnt']
-        #Resources = Resource.objects.filter(host__active=True).exclude(uri__in=excludeList)   
+        #Resources = Resource.objects.filter(host__active=True).exclude(uri__in=excludeList)
 
-        d = {'starttime':starttime, 
+        d = {'starttime':starttime,
                     'uptime': uptime,
                     'timealiveSecs': timealiveSecs,
-                    'rescount': rescount, 
-                    'hostcount':hostcount, 
+                    'rescount': rescount,
+                    'hostcount':hostcount,
                     'hostsactiveCount': hostsactiveCount,
                     'msgsubs': messubcount,
                     'discoveries':discs,

@@ -2,7 +2,7 @@ import os
 import sys
 
 
-apache_configuration= os.path.dirname(__file__)
+apache_configuration = os.path.dirname(__file__)
 project = os.path.dirname(apache_configuration)
 workspace = os.path.dirname(project)
 sys.path.append(workspace)
