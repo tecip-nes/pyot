@@ -21,7 +21,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from django.template import Context
-from pyot.rest.models import EventHandler
+from pyot.models import EventHandler
 
 class GenericResource(object):
     template = 'resource.htm'
