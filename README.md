@@ -38,9 +38,9 @@ Database creation:
 ./install_db.sh
 ```
 
-Running the application
+How to run the application
 --------------
-Starting Django web application:
+Start the web application:
 ```sh
 cd pyotapp
 ./server_start.sh
@@ -66,7 +66,7 @@ Start tunslip, open another terminal and type:
 ./tunslip_start.sh
 ```
 
-Open 127.0.0.1:8000 in a web browser (tested with Chrome), enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
+Open a web browser (tested with Chrome) and visit http://127.0.0.1:8000. Enter "settings" page and start *RD server* on the Cooja worker node. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
 
 Real deployment

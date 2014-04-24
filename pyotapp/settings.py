@@ -82,7 +82,7 @@ AUTH_PROFILE_MODULE = 'pyot.UserProfile'
 
 #MANAGERS = ADMINS
 
-SQLITE_3 = os.path.join(PROJECT_PATH, 'db')
+SQLITE_3 = os.path.join(PROJECT_PATH, 'db.sqlite')
 
 if LOCAL_DB:
     DATABASES = {
