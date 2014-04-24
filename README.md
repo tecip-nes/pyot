@@ -24,27 +24,18 @@ export CONTIKI PATH_TO_CONTIKI_ROOT
 
 Installing general requirements:
 ```sh
-sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev
+sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev  libfreetype6-dev libpng12-dev
 ```
 
-Install python requirements, using virtualenv is reccomended
+Install python requirements, using virtualenv, and build libcoap and its examples:
 ```sh
-sudo pip install -r requirements.txt
-```
-
-Configure and build libcoap and its examples:
-```sh
-cd pyotapp/appsTesting/libcoap-4.0.1/
-./configure
-make
-cd examples
-make
+sudo pip install virtualenv
+./install_reqs.sh
 ```
 
 Database creation:
 ```sh
-cd pyotapp
-./manage.py syncdb --noinput && ./manage.py loaddata auth.json
+./install_db.sh
 ```
 
 Running the application
@@ -52,32 +43,31 @@ Running the application
 Starting Django web application:
 ```sh
 cd pyotapp
-./manage.py runserver
+./server_start.sh
 ```
 
-Start celery workers in another terminal:
+Start the worker node in another terminal:
 ```sh
-./manage.py celeryd -s celery -E -l INFO -c 30 -n celery@cooja -Q celery@cooja,celery --without-heartbeat --without-gossip
+./worker_start.sh
+```
+
+Optionally open a new terminal to start IPython Notebook interface:
+```sh
+./notebook_start.sh
 ```
 
 Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
 ```sh
-cd pyotapp/appsTesting/contiki_cooja
-make TARGET=cooja erbium-server.csc
+./cooja_start.sh
 ```
 
 Start tunslip, open another terminal and type:
 ```sh
-make connect-router-cooja
+./tunslip_start.sh
 ```
 
 Open 127.0.0.1:8000 in a web browser (tested with Chrome), enter "settings" page and start *RD server*. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
-./manage.py shell_plus --notebook
-
-Macroprogramming tests
---------------
-Folder *pyotapp/appsTesting/macroprogramming* contains a couple of example scripts which can be executed to test macroprogramming. The scripts provide a **toggle-All** test, toggling all the leds of all nodes in the IoT network with two different semantics. While *toggleAllSerial.py* toggles the leds.. serially, *toggleAllParallel.py* exploits Celery concurrency feature to dispatch all the tasks in parallel, then waits for all the transactions to complete.
 
 Real deployment
 --------------

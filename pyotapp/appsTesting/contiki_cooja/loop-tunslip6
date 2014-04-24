@@ -1,6 +1,4 @@
 #!/bin/bash
-#CONTIKI=/home/andrea/contiki
-CONTIKI=/home/andrea/icsi/t-res
 
 while : 
 do
