@@ -14,7 +14,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:22.301", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 541, 
         "location": "", 
         "active": true, 
@@ -27,7 +27,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:25.541", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 541, 
         "location": "", 
         "active": true, 
@@ -40,7 +40,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:27.788", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 542, 
         "location": "", 
         "active": true, 
@@ -53,7 +53,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:33.134", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 544, 
         "location": "", 
         "active": true, 
@@ -66,7 +66,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:36.676", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 545, 
         "location": "", 
         "active": true, 
@@ -79,7 +79,7 @@
     "model": "pyot.host", 
     "fields": {
         "timeadded": "2013-10-07T16:43:41.036", 
-        "kqueue": 1, 
+        "network": 1, 
         "keepAliveCount": 542, 
         "location": "", 
         "active": true, 
@@ -349,14 +349,6 @@
         "obs": false, 
         "uri": "/actuators/toggle", 
         "extra": ""
-    }
-},
-{
-    "pk": 1, 
-    "model": "pyot.modificationtrace", 
-    "fields": {
-        "className": "Host", 
-        "lastModified": "2013-10-07T16:43:42.521"
     }
 },
 {
@@ -2176,7 +2168,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7404:4:404", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:22.476"
     }
 },
@@ -2185,7 +2177,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7402:2:202", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:25.740"
     }
 },
@@ -2194,7 +2186,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7406:6:606", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:27.955"
     }
 },
@@ -2203,7 +2195,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7403:3:303", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:33.319"
     }
 },
@@ -2212,7 +2204,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7405:5:505", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:36.834"
     }
 },
@@ -2221,7 +2213,7 @@
     "model": "pyot.log", 
     "fields": {
         "message": "aaaa::212:7407:7:707", 
-        "type": "discovery", 
+        "log_type": "discovery", 
         "timeadded": "2013-10-07T16:43:41.199"
     }
 }
