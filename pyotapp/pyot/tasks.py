@@ -66,16 +66,12 @@ def getFullUri(r):
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None, block=64):
-    #sl = (random.random()*3000)/1000
-    #time.sleep(sl)
-    #print 'delay ', sl
     if method not in allowedMethods:
         raise Exception('Method not allowed')
     if observe and method is not 'get':
         raise Exception('Observe works only with -get- method')
 
     print method + ' ' + uri
-    #sys.stdout.flush()
 
     req = COAP_CLIENT + ' -m '+  method
     if block:
@@ -134,40 +130,20 @@ def addQuery(uri, query):
 @task
 def coapPost(ip6address, uri, payload, timeout = RX_TIMEOUT, query=None, inputfile=None, block=None, index=0):
     try:
-        #st=0.0
-        #if index == 2 or index == 4:
-        #    st = 0.0
-        #if index == 3 or index == 5:
-        #    st = 0.25
-        #if index == 6:
-        #    st = 0.5
-        #if index == 7:
-        #    st = 0.6
         st = (float(index)*0.2)
         time.sleep(st)
         print st
-        #start = datetime.now()
-        #_r, uri = getResourceActive(rid)
-        #end = datetime.now()
-        #diff = end-start
-        #print 'first query', diff
         if query is not None:
             uri = addQuery(uri, query)
         fulluri = 'coap://[' + str(ip6address) + ']' + str(uri)
-        #start = datetime.now()
         p = coapRequest('post', fulluri, payload, timeout, inputfile, block=block)
         message = ''
         code = ''
         while True:
             response = p.stdout.readline()
             if isTermCode(response):
-                #end = datetime.now()
-                #diff = end-start
-                #print 'myout '+ str(diff)
-                #CoapMsg.objects.create(resource=r, method='POST', code=code, payload=message)
                 return Response(code, message)
             print 'response= ' + response
-            #sys.stdout.flush()
             code, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
@@ -261,7 +237,6 @@ def coapDelete(rid, payload=None, timeout = RX_TIMEOUT, query=None):
 def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEOUT, handler=None, renew=False):
     if coapObserve.request.retries > 1:
         print 'coapObserve retry #' + str(coapObserve.request.retries) + '  rid=' + str(rid)
-
     s = None
     try:
         r, uri = getResourceActive(rid)
