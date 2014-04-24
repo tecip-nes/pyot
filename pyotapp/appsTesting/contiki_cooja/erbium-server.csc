@@ -9,7 +9,7 @@
   <project EXPORT="discard">[APPS_DIR]/serial2pty</project>
   <simulation>
     <title>REST with RPL router</title>
-    <speedlimit>1.0</speedlimit>
+    <speedlimit>2.0</speedlimit>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -114,20 +114,6 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>3.5761042218294654</x>
-        <y>116.44085091848642</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
-        <id>5</id>
-      </interface_config>
-      <motetype_identifier>server</motetype_identifier>
-    </mote>
-    <mote>
-      <breakpoints />
-      <interface_config>
-        se.sics.cooja.interfaces.Position
         <x>49.85716703221611</x>
         <y>117.37268439789017</y>
         <z>0.0</z>
@@ -142,8 +128,8 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>27.80377468632717</x>
-        <y>98.42540365001376</y>
+        <x>30.39220101800428</x>
+        <y>77.97683562976464</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -184,8 +170,8 @@
       <breakpoints />
       <interface_config>
         se.sics.cooja.interfaces.Position
-        <x>91.78967360538522</x>
-        <y>133.83507586735655</y>
+        <x>90.70253454608083</x>
+        <y>126.38040803212651</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -271,7 +257,6 @@
       <mote>5</mote>
       <mote>6</mote>
       <mote>7</mote>
-      <mote>8</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />
