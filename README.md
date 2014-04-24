@@ -3,7 +3,6 @@ PyoT
 
 PyoT is aA Web-Based Macroprogramming Interface for the IoT
 
-PyoT
   - Allows remote management of IoT-based networks
   - CoAP resources and 6LoWPAN nodes are abstracted as high-level Python objects
   - Provides a web interface to interact with CoAP resources
@@ -12,7 +11,7 @@ PyoT
   - Flexible event handling (automatic reaction when IoT resources send alarm notifications)
   - Asynchronous tasks performing communication with IoT nodes on PyoT Workers
 
-![Observe](https://raw.github.com/tecip-nes/pyot/master/screenshots/arch.png)
+<img src="https://raw.github.com/tecip-nes/pyot/master/screenshots/arch.png" alt="PyoT Architecture" width="500px" />
 
 PyoT comes with a Contiki Cooja simulation for local testing.
 
@@ -99,5 +98,7 @@ and configure SERVER_ADDRESS to the IP address of the Web application server.
 Screenshots
 --------------
 [Hosts](https://raw.github.com/tecip-nes/pyot/master/screenshots/hosts.png)
+
 [Observe](https://raw.github.com/tecip-nes/pyot/master/screenshots/observe.png)
+
 [Macroprogramming](https://raw.github.com/tecip-nes/pyot/master/screenshots/macroprogramming.png)
