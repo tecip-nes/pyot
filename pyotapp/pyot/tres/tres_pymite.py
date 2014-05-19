@@ -6,8 +6,8 @@ import importlib
 import pickle
 
 def getTaskObject():
-    return TResT.objects.get(id=sys.argv[0]) 
-       
+    return TResT.objects.get(id=sys.argv[0])
+
 def setOutput(out):
     task = getTaskObject()
     task.emu.output = str(out)
@@ -42,14 +42,14 @@ def getState(cl):
     importlib.import_module(module)
     c = cl()
     try:
-        return pickle.loads(task.emu._status) 
+        return pickle.loads(task.emu._status)
     except Exception, exc:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        #print ''.join('!! ' + line for line in lines)         
+        #print ''.join('!! ' + line for line in lines)
         task.emu.status = c
-        task.emu.save()        
-        return c      
+        task.emu.save()
+        return c
 
 def saveState(cli):
     task = getTaskObject()
@@ -63,12 +63,11 @@ def pop(def_val):
     except Exception, exc:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        #print ''.join('!! ' + line for line in lines)  
+        #print ''.join('!! ' + line for line in lines)
         return def_val
 
-def push(val): 
+def push(val):
     task = getTaskObject()
     task.emu.push(val)
     task.emu.save()
     task.save()
-    

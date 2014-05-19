@@ -39,6 +39,11 @@ SCRIPT_FOLDER = 'scripts/'
 
 
 class TResProcessing(models.Model):
+    """
+    Defines a T-Res processing function. It is directly connected to a 
+    python source file. The source file is verified 
+    automatically each time the model is saved. 
+    """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     name = models.CharField(max_length=10, validators=[validate_slug])
     description = models.CharField(max_length=500, blank=True, null=True)
@@ -75,6 +80,9 @@ TRES_STATES = (
 )
 
 class EmulatorState(models.Model):
+    """
+    Defines the state of an emulator instance (input/output/stack...)
+    """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     _inp = models.CharField(max_length=1000, blank=True, null=True)
     _status = models.CharField(max_length=1000, blank=True, null=True)
@@ -137,12 +145,19 @@ def init_stack(sender, instance, raw, **kwargs):
 post_save.connect(init_stack, sender=EmulatorState)
 
 class TResT(models.Model):
+    """
+    Defines a model for a T-Res task. A Task is defined by its processing
+    function, its input resources, and its output resources. A task 
+    may be instantiated on a TResResource, which is a common Resource object, 
+    or emulated on a PWN. In this case the state of the emulation is defined
+    by the emu field.
+    """
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
     inputS = models.ManyToManyField(Resource)
     output = models.ForeignKey(Resource, related_name='OutputDestination',
                                null=True)
     TResResource = models.ForeignKey(Resource, null=True,
-                                     related_name='TresResource')
+                                     related_name='TresResource') #TODO: we should be able to install a task on multiple nodes.
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
                              default='CREATED')
     emu = models.ForeignKey(EmulatorState, null=True)
@@ -153,13 +168,17 @@ class TResT(models.Model):
         return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output)
 
     def deploy(self, t_res_resource):
+        """
+        Installs the T-Res task on a T-Res resource. The installation is 
+        executed asynchronously by a PWN.
+        """
         from pyot.tasks import deployTres
 
         #if TResResource.isinstance(Resource) == False:
         #    raise Exception('TResResource must be a Resource')
         if t_res_resource.uri != '/tasks':
             raise Exception('TResResource must have /tasks uri')
-        self.TResResource = t_res_resource
+        self.TResResource = t_res_resource #FIXME only update if the installation is succesfull.
         self.save()
         res = deployTres.apply_async(args=[self.id, t_res_resource.id],
                                      queue=t_res_resource.host.getQueue())
@@ -168,12 +187,16 @@ class TResT(models.Model):
 
 
     def uninstall(self):
+        """
+        Uninstalls a T-Res task from a node.
+        """
         from pyot.tasks import uninstallTres
         res = uninstallTres.apply_async(args=[self.id, self.TResResource.id],
                                         queue=self.TResResource.host.getQueue())
         res.wait()
         self.state = 'CLEARED'
         self.save()
+        #TODO, update the TResResource field
         return res.result
 
     def start(self):
@@ -192,6 +215,9 @@ class TResT(models.Model):
         return r
 
     def stop(self):
+        """
+        Stops the execution of the T-Res Task.
+        """
         if self.state != 'RUNNING':
             return 'Task is not running'
         Pf = Resource.objects.get(host=self.TResResource.host,
@@ -204,28 +230,42 @@ class TResT(models.Model):
         return r
 
     def get_status(self):
+        """
+        Not implemented yet.
+        """
         raise NotImplementedError("Still to be implemented in T-Res")
 
 
     def getLastOutput(self):
+        """
+        Returns the last output resource reference. The resource can be
+        retrieved or observed.
+        """
         last_output = Resource.objects.get(host=self.TResResource.host,
                                            uri='/tasks/'+self.pf.name+'/lo')
         return last_output
 
     def getInputSource(self):
+        """
+        Returns the list of Input Source resources.
+        """
         _is = Resource.objects.get(host=self.TResResource.host,
                                    uri='/tasks/'+self.pf.name+'/is')
         return _is
 
     def getOutputDestination(self):
+        """
+        Returns the list of Output Destination resources.
+        """        
         _od = Resource.objects.get(host=self.TResResource.host,
                                    uri='/tasks/'+self.pf.name+'/od')
         return _od
 
     def emulate(self, duration=120):
         '''
-        -create an event handler for this task
-        -for each input resource start an ObserveTask with the new handler
+        Manages the emulation of the T-Res task for a defined period of time.
+        - create an event handler for this task
+        - for each input resource start an ObserveTask with the new handler
         '''
         from pyot.models.rest import EventHandlerTres
         state = EmulatorState.objects.create()
@@ -241,7 +281,12 @@ class TResT(models.Model):
             inp.OBSERVE(duration=duration, handler=h.id)
 
     def runPf(self, inp):
-
+        """
+        Runs the T-Res task on the PWN. This functino is used in the emulation 
+        phase. First the source file is retrieved from the VCR and saved in 
+        /tmp dir. If the file has been already downloaded we use that copy.
+        The parameter is the current input from an Input Source.
+        """
         tmp_dir = '/tmp/'
         basename = os.path.basename(str(self.pf.sourcefile))
         outFile = tmp_dir + basename
@@ -268,9 +313,15 @@ class TResT(models.Model):
         #self.emu.save()
 
     def getEmuLastOutput(self):
+        """
+        Returns the last output value of an emulation.
+        """
         try:
             return self.emu.output
         except:
             return None
     def getEmuResult(self):
+        """
+        Returns the result of a processing function 
+        """
         return self.emu.result

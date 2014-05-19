@@ -31,7 +31,6 @@ sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pi
 
 Install python requirements, using virtualenv, and build libcoap and its examples:
 ```sh
-sudo pip install virtualenv
 ./install_reqs.sh
 ```
 
