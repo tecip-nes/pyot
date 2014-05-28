@@ -80,10 +80,10 @@ ln -s $PYOT                     $DESKTOP/pyot
 
 ./install_db.sh
 
-echo -e "XKBMODEL=\"pc105\"\n" > /etc/default/keyboard
-echo -e "XKBLAYOUT=\"it\"\n" >> /etc/default/keyboard
-echo -e "XKBVARIANT=\"\"\n" >> /etc/default/keyboard
-echo -e "XKBOPTIONS=\"\"\n" >> /etc/default/keyboard
+#echo -e "XKBMODEL=\"pc105\"\n" > /etc/default/keyboard
+#echo -e "XKBLAYOUT=\"it\"\n" >> /etc/default/keyboard
+#echo -e "XKBVARIANT=\"\"\n" >> /etc/default/keyboard
+#echo -e "XKBOPTIONS=\"\"\n" >> /etc/default/keyboard
 
 GDMCONF=/etc/gdm/custom.conf
 echo -e "[daemon]" > $GDMCONF
