@@ -46,18 +46,6 @@
           "{{.Name}}",
           "--pae",
           "on"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--usb",
-          "on"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--usbehci",
-          "on"
         ]
       ],
       "virtualbox_version_file": ".vbox_version"
