@@ -22,14 +22,12 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from django.db import models
-import errno
+import errno, os, pickle
 from networkx import to_agraph
 from networkx.algorithms import ancestors, descendants, shortest_path_length
-import os
-import pickle
 from django.db.models.query import QuerySet
-from pyot.models.rest import Network, Host
 from django.conf import settings
+import rest
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 FMT = "%Y%m%d%H%M%S"
@@ -47,7 +45,8 @@ def search_host(eui, network):
     Returns the short name (short ip) address of a node in the network (the
     network uses the MAC address of the nodes).
     '''
-    hosts = Host.objects.filter(network=network)
+
+    hosts = rest.Host.objects.filter(network=network)
     for i in hosts:
         if i.ip6address.exploded[20:].replace(':', '') == eui:
             return short_name(i)
@@ -67,9 +66,10 @@ class RplGraph(models.Model):
     '''
     Representation of a RPL graph, based on networkX serialized objects.
     '''
+
     _graph = models.CharField(max_length=5000, blank=True, null=True)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
-    net = models.ForeignKey(Network)
+    net = models.ForeignKey(rest.Network)
     def set_data(self, graph):
         self._graph = pickle.dumps(graph)
     def get_data(self):
@@ -82,7 +82,6 @@ class RplGraph(models.Model):
         return u"Rpl graph for %s" % (self.net.hostname) #TODO: be more specific
 
     def getPNG(self, highlight_list=None, color='red'):
-
         A = to_agraph(self.graph)
 
         if highlight_list:

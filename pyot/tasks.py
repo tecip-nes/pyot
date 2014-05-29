@@ -273,10 +273,10 @@ def coapObserve(rid, payload = None, timeout= None, duration = DEFAULT_OBS_TIMEO
         print 'subscription ended...'
         if renew:
             print 'renewing sub'
-            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())      
+            coapObserve.apply_async(kwargs={'rid':rid, 'duration':duration, 'handler':handler, 'renew': renew}, queue=r.host.getQueue())
         else:
             s.active=False
-            s.save()                             
+            s.save()
     except ObjectDoesNotExist:
         return 'Resource not found'
     except HostNotActive as e:
@@ -314,7 +314,7 @@ def isObs(s):
 
 
 @task()
-def coapDiscovery(host, path=DEFAULT_DISCOVERY_PATH):
+def coapDiscovery(host, path):
     print 'resource discovery: get well-Know on ip: ' + host
     Log.objects.create(log_type = 'discovery', message = host)
 

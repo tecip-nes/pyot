@@ -108,7 +108,7 @@ class Network(models.Model):
 
     def startRD(self):
         from pyot.tasks import coapRdServer
-        rdServer = coapRdServer.apply_async(args=[str(self.network)], 
+        rdServer = coapRdServer.apply_async(args=[str(self.network)],
                                                   queue=self.hostname)
         """ possibly use this call to control all the parameters
         add.apply_async((2, 2), retry=True, retry_policy={

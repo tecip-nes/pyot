@@ -20,8 +20,9 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from models.rpl import RplGraph, search_host, short_name
-from models.rest import Resource, CONTENT
+from pyot.models.rpl import RplGraph, search_host, short_name
+from pyot.models.rest import Resource, CONTENT
+import json
 import networkx as nx
 
 
@@ -30,7 +31,6 @@ def DAGupdate(network):
 
     parents = Resource.objects.filter(uri='/rplinfo/parents',
                                       host__active=True, host__network=network)
-    import json
     for parent in parents:
         print 'Searching parents for resource: ', parent
         #with the current implementation nodes have only one parent, index=0
