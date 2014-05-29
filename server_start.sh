@@ -1,2 +1,2 @@
 #! /bin/bash
-venv/bin/python pyotapp/manage.py runserver
+venv/bin/python manage.py runserver

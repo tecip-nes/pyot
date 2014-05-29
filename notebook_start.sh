@@ -1,3 +1,3 @@
 #! /bin/bash
-cd pyotapp
-../venv/bin/python manage.py shell_plus --notebook
+cd examples
+../venv/bin/python ../manage.py shell_plus --notebook

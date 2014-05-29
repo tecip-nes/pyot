@@ -1,3 +1,3 @@
 #! /bin/bash
-cd pyotapp/appsTesting/contiki_cooja
+cd examples/contiki_cooja
 make TARGET=cooja erbium-server.csc

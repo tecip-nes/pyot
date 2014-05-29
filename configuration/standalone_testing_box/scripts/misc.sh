@@ -69,7 +69,7 @@ cd /home/vagrant
 PYOT=/home/vagrant/pyot
 DESKTOP=/home/vagrant/Desktop
 git clone https://github.com/tecip-nes/pyot.git
-cd $PYOT/pyotapp/appsTesting/libcoap-4.0.1/
+cd $PYOT/libcoap-4.0.1/
 ./configure
 make
 

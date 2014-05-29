@@ -41,7 +41,7 @@ import random
 import traceback
 
 RX_TIMEOUT = 20
-COAP_PATH = PROJECT_ROOT + '/appsTesting/libcoap-4.0.1/examples/'
+COAP_PATH = PROJECT_ROOT + '/../libcoap-4.0.1/examples/'
 COAP_CLIENT = COAP_PATH + 'coap-client'
 RD_SERVER = COAP_PATH + 'rd'
 DEFAULT_OBS_TIMEOUT = 30
