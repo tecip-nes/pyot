@@ -14,7 +14,7 @@ SHELL = /bin/sh
 MKDIR = mkdir
 ETAGS = /bin/false
 
-abs_builddir = /home/andrea/pyot/pyotapp/appsTesting/libcoap-4.0.1
+abs_builddir = /home/andrea/pyot/libcoap-4.0.1
 top_builddir = .
 package = libcoap-4.0.1
 

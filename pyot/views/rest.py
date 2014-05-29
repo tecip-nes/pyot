@@ -34,12 +34,8 @@ from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 import json
 from celery.result import AsyncResult
-from utils import *
+from pyot.utils import *
 from django.core.paginator import Paginator
-#from django.contrib.auth.decorators import login_required
-#from django.contrib.admin.views.decorators import staff_member_required
-#from django.utils.decorators import method_decorator
-#from django_sse.views import BaseSseView
 
 
 #@staff_member_required
@@ -191,7 +187,7 @@ def resourceList(request):
         return HttpResponse('')
     for i in hostidList:
         logging.debug('retrieving resource '+ i)
-    resObj = Resource.objects.filter(host__id__in=hostidList, 
+    resObj = Resource.objects.filter(host__id__in=hostidList,
                                      host__active=True) #eccezioni per la query
     p = Paginator(resObj, rp)
     filteredResList = p.page(page).object_list
@@ -388,11 +384,11 @@ def handlers(request):
                 res = Resource.objects.get(id=MsgForm.cleaned_data['Resource'].id)
             except ObjectDoesNotExist as e:
                 return HttpResponse(e)
-            m = CoapMsg.objects.create(resource=res, 
+            m = CoapMsg.objects.create(resource=res,
                                        method=MsgForm.cleaned_data['Method'],
                                        payload=MsgForm.cleaned_data['Payload'])
-            EventHandlerMsg.objects.create(msg=m, 
-                                           description=MsgForm.cleaned_data['Description'], 
+            EventHandlerMsg.objects.create(msg=m,
+                                           description=MsgForm.cleaned_data['Description'],
                                             max_activations=MsgForm.cleaned_data['MaxActivations'])
             logging.warning('MessageFormValid')
             c = getHandlerContext()

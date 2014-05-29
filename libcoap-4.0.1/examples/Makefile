@@ -13,7 +13,7 @@ VERSION:=4.0.1
 SHELL = /bin/sh
 MKDIR = mkdir
 
-abs_builddir = /home/andrea/pyot/pyotapp/appsTesting/libcoap-4.0.1/examples
+abs_builddir = /home/andrea/pyot/libcoap-4.0.1/examples
 top_builddir = ..
 top_srcdir = ..
 # files and flags
