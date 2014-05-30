@@ -525,5 +525,5 @@ def tresDownloadScript(filename):
     print 'downloading script'
     uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + filename
     print uri
-    outFile = tmpDir + filename
+    outFile = tmpDir + '/' + filename
     urllib.urlretrieve(uri, filename=outFile)

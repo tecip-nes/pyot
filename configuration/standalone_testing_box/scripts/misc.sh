@@ -6,6 +6,7 @@
 
 # Install some packages using apt-get
 export DEBIAN_FRONTEND=noninteractive
+add-apt-repository -y ppa:fkrull/deadsnakes
 apt-get update -q
 apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       -o Dpkg::Options::="--force-confold" \
@@ -36,9 +37,10 @@ apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       graphviz \
                       libgraphviz-dev  \
                       libfreetype6-dev \
-                      libpng12-dev
-
-
+                      libpng12-dev \
+                      python2.6 \
+                      python2.6-dev
+                        
 #apt-get -q -y dist-upgrade
 update-alternatives --set java /usr/lib/jvm/java-7-openjdk-i386/jre/bin/java
 # delete each xsession except gnome-classic.desktop
