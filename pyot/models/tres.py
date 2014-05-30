@@ -37,14 +37,11 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 TFMT = settings.TFMT
 SERVER_ADDRESS = settings.SERVER_ADDRESS
 PROJECT_ROOT = settings.PROJECT_ROOT
-TRES_BASE = settings.TRES_BASE
 tmpDir = settings.TRES_PWN_SCRIPT_TMP 
 
 WAIT_TIMEOUT = 30
 T_RES_TOOLS = settings.PROJECT_PATH + '/../t-res-tools/'
 SCRIPT_FOLDER = MEDIA_ROOT + 'scripts/'
-#tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile'
-#tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py'
 tresCompile = T_RES_TOOLS + 'tres-pf-compile'
 tresPMfeat = T_RES_TOOLS + 'tres_pmfeatures.py'
 
