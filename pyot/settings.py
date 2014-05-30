@@ -66,9 +66,7 @@ ADMINS = (
 '''
 
 TRES_BASE = cfg.get('tres', 'TRES_BASE')
-
-
-
+TRES_PWN_SCRIPT_TMP = '/tmp'
 
 
 CLEANUP_TASK_PERIOD = 30

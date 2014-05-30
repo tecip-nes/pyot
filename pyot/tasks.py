@@ -31,8 +31,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 import random, time, sys
 from djcelery.models import TaskMeta
-from pyot.settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, SERVER_ADDRESS
-from pyot.settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY, TRES_BASE
+from django.conf import settings
+
 import subprocess, os, signal
 from pyot.rplApp import DAGupdate
 import urllib
@@ -40,6 +40,18 @@ from netifaces import interfaces, ifaddresses, AF_INET6
 import random
 import traceback
 
+from pyot.settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, SERVER_ADDRESS
+from pyot.settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY, TRES_BASE
+
+PROJECT_ROOT = settings.PROJECT_ROOT
+tmpDir = settings.TRES_PWN_SCRIPT_TMP
+CLEANUP_TASK_PERIOD = settings.CLEANUP_TASK_PERIOD
+CLEANUP_TIME = settings.CLEANUP_TIME 
+SERVER_ADDRESS = settings.SERVER_ADDRESS
+WORKER_RECOVERY = settings.WORKER_RECOVERY
+RECOVERY_PERIOD = settings.RECOVERY_PERIOD
+SUBSCRIPTION_RECOVERY = settings.SUBSCRIPTION_RECOVERY 
+TRES_BASE = settings.TRES_BASE
 RX_TIMEOUT = 20
 COAP_PATH = PROJECT_ROOT + '/../libcoap-4.0.1/examples/'
 COAP_CLIENT = COAP_PATH + 'coap-client'
@@ -508,109 +520,11 @@ def updateDAGs():
     for n in ns:
         DAGupdate(n.id)
 
-tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile'
-tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py'
-tmpDir = '/tmp/'
 
 @task
-def deployTres(t_res_task_id, t_res_resource_id):
-
-    totalTime = 0
-
-    TResResource = Resource.objects.get(id=t_res_resource_id)
-    TResTask = TResT.objects.get(id=t_res_task_id)
-
-    #tresTaskUri = TResResource.getFullURI()+'/'+ TResTask.pf.name
-
-    basename = os.path.basename(str(TResTask.pf.sourcefile))
-    uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + basename
-    outFile = tmpDir + basename
-
+def tresDownloadScript(filename):
+    print 'downloading script'
+    uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + filename
+    print uri
+    outFile = tmpDir + filename
     urllib.urlretrieve(uri, filename=outFile)
-
-    compile_command = tresCompile + ' ' + tresPMfeat + ' ' + outFile
-    p = subprocess.check_call([compile_command],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         shell=True, cwd=tmpDir)
-
-    start = datetime.now()
-    end = datetime.now()
-    diff = end-start
-
-    fname = os.path.split(outFile)[1]
-
-    try:
-        newTask = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
-    except Resource.DoesNotExist:
-        newTask = Resource.objects.create(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
-
-    start = datetime.now()
-    r = newTask.PUT()
-    end = datetime.now()
-    diff1 = end-start
-    print 'first put result = '+ r.code
-    if r.code != CREATED:
-        newTask.delete()
-        return 'Error creating new resource: ' + '/tasks/' + TResTask.pf.name
-
-    start = datetime.now()
-    TResResource.host.DISCOVER(TResResource.uri)
-    TResResource.host.DISCOVER(TResResource.uri+'/'+ TResTask.pf.name)
-    end = datetime.now()
-    diff2 = end-start
-    newIs = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/is')
-    newOd = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/od')
-    newPf = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name+'/pf')
-
-    #print tmpDir + fname+'c'
-    start = datetime.now()
-    r =  newPf.PUT(inputfile=tmpDir + fname+'c', block=64)
-    end = datetime.now()
-    diff3 = end-start
-    print 'PF put result = '+ r.code
-
-    if r.code != CHANGED:
-        return 'Error uploading processing function.'
-
-    if TResTask.output:
-        r = newOd.PUT(payload='<'+ TResTask.output.getFullURI() +'>')
-        print 'OD put result = '+ r.code
-        if r.code != CHANGED:
-            return 'Error updating OD resource'
-    for inp in TResTask.inputS.all():
-        start = datetime.now()
-        r = newIs.POST(payload='<'+ inp.getFullURI() +'>')
-        print 'IS put result = '+ r.code
-        end = datetime.now()
-        diff4 = end-start
-        if r.code != CHANGED:
-            return 'Error updating OD resource'
-
-    totalTime = str(diff1 + diff2 + diff3 + diff4)
-    tot = totalTime+'\n'
-
-    f = open('tres_local', 'a')
-    f.write(tot)
-    f.close()
-
-    return 'Tres Task ' + str(TResTask) + ' Installed'
-
-@task
-def uninstallTres(t_res_task_id, t_res_resource_id):
-    try:
-        TResTask = TResT.objects.get(id=t_res_task_id)
-        TResResource = Resource.objects.get(id=t_res_resource_id)
-        newTask = Resource.objects.get(host=TResResource.host, uri = '/tasks/'+TResTask.pf.name)
-        r = newTask.DELETE()
-        if r.code == DELETED:
-            newTask.delete()
-            Resource.objects.filter(host=TResResource.host, uri__startswith='/tasks/'+TResTask.pf.name).delete()
-            return 'Task ' + TResTask.pf.name+ ' uninstalled'
-    except Exception, exc:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)
-        return 'Error uninstalling ' + TResTask.pf.name
-

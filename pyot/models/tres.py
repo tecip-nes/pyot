@@ -22,31 +22,35 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from django.db import models
-from django.conf import settings 
+from django.conf import settings
 from django.db.models.signals import pre_save, post_save
-from pyot.models.rest import Resource
+from pyot.models.rest import *
 from django.core.validators import validate_slug
 import py_compile
 import pickle
 import base64
 import urllib
 import sys, os
+import subprocess
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 TFMT = settings.TFMT
 SERVER_ADDRESS = settings.SERVER_ADDRESS
 PROJECT_ROOT = settings.PROJECT_ROOT
+TRES_BASE = settings.TRES_BASE
+tmpDir = settings.TRES_PWN_SCRIPT_TMP 
 
 WAIT_TIMEOUT = 30
 
-SCRIPT_FOLDER = 'scripts/'
-
+SCRIPT_FOLDER = MEDIA_ROOT + 'scripts/'
+tresCompile = TRES_BASE + 'apps/tres/tools/tres-pf-compile'
+tresPMfeat = TRES_BASE + 'apps/tres/tres_pmfeatures.py'
 
 class TResProcessing(models.Model):
     """
-    Defines a T-Res processing function. It is directly connected to a 
-    python source file. The source file is verified 
-    automatically each time the model is saved. 
+    Defines a T-Res processing function. It is directly connected to a
+    python source file. The source file is verified
+    automatically each time the model is saved.
     """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     name = models.CharField(max_length=10, validators=[validate_slug])
@@ -151,8 +155,8 @@ post_save.connect(init_stack, sender=EmulatorState)
 class TResT(models.Model):
     """
     Defines a model for a T-Res task. A Task is defined by its processing
-    function, its input resources, and its output resources. A task 
-    may be instantiated on a TResResource, which is a common Resource object, 
+    function, its input resources, and its output resources. A task
+    may be instantiated on a TResResource, which is a common Resource object,
     or emulated on a PWN. In this case the state of the emulation is defined
     by the emu field.
     """
@@ -173,36 +177,83 @@ class TResT(models.Model):
 
     def deploy(self, t_res_resource):
         """
-        Installs the T-Res task on a T-Res resource. The installation is 
+        Installs the T-Res task on a T-Res resource. The installation is
         executed asynchronously by a PWN.
         """
-        from pyot.tasks import deployTres
+        from pyot.tasks import tresDownloadScript
 
-        #if TResResource.isinstance(Resource) == False:
-        #    raise Exception('TResResource must be a Resource')
         if t_res_resource.uri != '/tasks':
             raise Exception('TResResource must have /tasks uri')
         self.TResResource = t_res_resource #FIXME only update if the installation is succesfull.
-        self.save()
-        res = deployTres.apply_async(args=[self.id, t_res_resource.id],
-                                     queue=t_res_resource.host.getQueue())
-        res.wait()
-        return res.result
 
+
+        #split the operation in phases, single tasks
+        #compile the script
+        basename = os.path.basename(str(self.pf.sourcefile))
+        compile_command = tresCompile + ' ' + tresPMfeat + ' ' + str(self.pf.sourcefile)
+        p = subprocess.check_call([compile_command],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             shell=True, cwd=SCRIPT_FOLDER)
+        #start a task downloading the script from the server
+        pycFilename = basename + 'c'
+        tresDownloadScript.apply_async(args=[pycFilename],
+                                       queue=t_res_resource.host.getQueue())
+        try:
+            newTask = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/'+self.pf.name)
+        except Resource.DoesNotExist:
+            newTask = Resource.objects.create(host=self.TResResource.host, uri = '/tasks/'+self.pf.name)
+    
+        r = newTask.PUT()
+        print 'first put result = '+ r.code
+        if r.code != CREATED:
+            newTask.delete()
+            return 'Error creating new resource: ' + '/tasks/' + self.pf.name
+
+        newIs = Resource.objects.create(host=self.TResResource.host, uri = '/tasks/' + self.pf.name+'/is')
+        newOd = Resource.objects.create(host=self.TResResource.host, uri = '/tasks/' + self.pf.name+'/od')
+        newPf = Resource.objects.create(host=self.TResResource.host, uri = '/tasks/' + self.pf.name+'/pf')
+        newLo = Resource.objects.create(host=self.TResResource.host, uri = '/tasks/' + self.pf.name+'/lo')    
+            
+        r =  newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
+        print 'PF put result = '+ r.code
+    
+        if r.code != CHANGED:
+            return 'Error uploading processing function.'     
+
+        if self.output:
+            r = newOd.PUT(payload='<'+ self.output.getFullURI() +'>')
+            print 'OD put result = '+ r.code
+            if r.code != CHANGED:
+                return 'Error updating OD resource'
+        for inp in self.inputS.all():
+            r = newIs.POST(payload='<'+ inp.getFullURI() +'>')
+            print 'IS put result = '+ r.code
+            if r.code != CHANGED:
+                return 'Error updating OD resource'
+        
+        self.state = 'INSTALLED'
+        self.save() #update TResResource and state
+        
+        return 'Tres Task ' + str(self) + ' Installed'
 
     def uninstall(self):
         """
         Uninstalls a T-Res task from a node.
         """
-        from pyot.tasks import uninstallTres
-        res = uninstallTres.apply_async(args=[self.id, self.TResResource.id],
-                                        queue=self.TResResource.host.getQueue())
-        res.wait()
-        self.state = 'CLEARED'
-        self.save()
-        #TODO, update the TResResource field
-        return res.result
-
+        newTask = Resource.objects.get(host=self.TResResource.host, uri = '/tasks/' + self.pf.name)
+        r = newTask.DELETE()
+        if r.code == DELETED:
+            newTask.delete()
+            Resource.objects.filter(host=self.TResResource.host, 
+                                    uri__startswith='/tasks/'+self.pf.name).delete()
+            self.state = 'CLEARED'
+            self.save()                                    
+            return 'Task ' + self.pf.name+ ' uninstalled' 
+        else:
+            return 'Error uninstalling task ' + self.pf.name       
+        
     def start(self):
         '''
         Activates a TRes Task by sending a POST request to the task resource.
@@ -260,7 +311,7 @@ class TResT(models.Model):
     def getOutputDestination(self):
         """
         Returns the list of Output Destination resources.
-        """        
+        """
         _od = Resource.objects.get(host=self.TResResource.host,
                                    uri='/tasks/'+self.pf.name+'/od')
         return _od
@@ -286,8 +337,8 @@ class TResT(models.Model):
 
     def runPf(self, inp):
         """
-        Runs the T-Res task on the PWN. This functino is used in the emulation 
-        phase. First the source file is retrieved from the VCR and saved in 
+        Runs the T-Res task on the PWN. This functino is used in the emulation
+        phase. First the source file is retrieved from the VCR and saved in
         /tmp dir. If the file has been already downloaded we use that copy.
         The parameter is the current input from an Input Source.
         """
@@ -326,6 +377,6 @@ class TResT(models.Model):
             return None
     def getEmuResult(self):
         """
-        Returns the result of a processing function 
+        Returns the result of a processing function
         """
         return self.emu.result

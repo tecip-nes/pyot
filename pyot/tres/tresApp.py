@@ -22,7 +22,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from pyot.models.tres import *
-from settings import MEDIA_ROOT
+from django.conf import settings
 import os
 
 class TResPF(object):
@@ -31,7 +31,7 @@ class TResPF(object):
         "default constructor, file-based"
 
         if type(fileRef) is not file:
-            raise Exception('A file type is required')
+            raise Exception('A file extension is required')
         #TODO: copy file in media folder
         self.pf = TResProcessing.objects.create(name=name,
                                          description=description,
@@ -42,7 +42,7 @@ class TResPF(object):
     def fromSource(cls, sourceString, name, description=None, version=None):
         if name[-3:] != '.py':
             name += '.py'
-        with open(MEDIA_ROOT + scriptFolder + name, 'w') as newFile:
+        with open(SCRIPT_FOLDER + name, 'w') as newFile:
             newFile.write(sourceString)
             newFile.flush()
             return cls(newFile, name, description, version)

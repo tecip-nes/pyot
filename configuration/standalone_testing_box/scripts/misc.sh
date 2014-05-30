@@ -95,4 +95,7 @@ echo -e "AutomaticLogin=vagrant" >> $GDMCONF
 echo -e "TimedLoginDelay=30" >> $GDMCONF
 echo -e "DefaultSession=gnome-2d" >> $GDMCONF
 
+PROFILE=/home/vagrant/.profile
+echo -e "gsettings set org.gnome.desktop.screensaver lock-enabled false" >> $PROFILE
+
 chown -R vagrant /home/vagrant/
