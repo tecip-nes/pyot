@@ -5,19 +5,22 @@
 {% block content %}
 
 <div>
-	<p> PyoT is an IoT Django-based web application and macroprogramming interface.</p>
+	<p> PyoT is a Web-Based Macroprogramming Interface for the IoT</p>
 
-	<img src="/static/images/pyotarch.png" >
+	<img src="/static/images/pyotarch.png"  alt="PyoT's Architecture" width="500">
 
-	<p>PyoT puts together Django, Celery, libcoap:
+	<p>
 
 	<ul align="left">
-		<li>Allows remote management of a IoT based network. (6LoWPAN, CoAP)</li>
-		<li>CoAP resources, 6LoWPAN nodes are abstracted as high-level Django models objects</li>
-		<li>Provides a nice interface to interact with CoAP resources</li>
-		<li>Enables macroprogramming, using Django shell</li>
+		<li>Allows remote management of IoT-based networks
+		<li>CoAP resources and 6LoWPAN nodes are abstracted as high-level Python objects
+		<li>Provides a web interface to interact with CoAP resources
+		<li>Provides interactive Macroprogramming, using the Shell
+		<li>Resource discovery and indexing based on CoRE Resource Directory
+		<li>Flexible event handling (automatic reaction when IoT resources send alarm notifications)
+		<li>Asynchronous tasks performing communication with IoT nodes on PyoT Workers
+
 	</ul></p>
-	<p>PyoT comes with a Contiki Cooja simulation for local testing.</p>
-	
+	<p>PyoT is available on <a href="https://github.com/tecip-nes/pyot">Github</a>.</p>
 </div>
 {% endblock %}

@@ -1,7 +1,7 @@
 PyoT
 =========
 
-PyoT is aA Web-Based Macroprogramming Interface for the IoT
+PyoT is a Web-Based Macroprogramming Interface for the IoT
 
   - Allows remote management of IoT-based networks
   - CoAP resources and 6LoWPAN nodes are abstracted as high-level Python objects
@@ -29,42 +29,41 @@ Install general requirements:
 sudo apt-get install python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev  libfreetype6-dev libpng12-dev
 ```
 
-Install python requirements, using virtualenv, and build libcoap and its examples:
+The next step will install python requirements, in a local virtual env folder, and build libcoap:
 ```sh
-./install_reqs.sh
+./a_install_reqs.sh
 ```
 
-Create a local Database:
+The we create a local sqlite database:
 ```sh
-./install_db.sh
+./b_install_db.sh
 ```
 
 How to run the application
 --------------
 Start the web application:
 ```sh
-cd pyotapp
-./server_start.sh
+./1_server_start.sh
 ```
 
 Start the worker node in another terminal:
 ```sh
-./worker_start.sh
+./2_worker_start.sh
 ```
 
 Optionally open a new terminal to start IPython Notebook interface:
 ```sh
-./notebook_start.sh
+./3_notebook_start.sh
 ```
 
-Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc already installed:
+Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc and everything required to run a Cooja simulation already installed:
 ```sh
-./cooja_start.sh
+./4_cooja_start.sh
 ```
 
 Start tunslip, open another terminal and type:
 ```sh
-./tunslip_start.sh
+./5_tunslip_start.sh
 ```
 
 Open a web browser (tested with Chrome) and visit http://127.0.0.1:8000. Enter "settings" page and start *RD server* on the Cooja worker node. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
