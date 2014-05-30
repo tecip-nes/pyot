@@ -1,0 +1,9 @@
+#!/bin/bash
+#CONTIKI=/home/andrea/contiki
+CONTIKI=/home/andrea/icsi/t-res
+
+while : 
+do
+  $CONTIKI/tools/tunslip6 -a localhost bbbb::1/64
+  sleep 1
+done
