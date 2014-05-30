@@ -1,9 +1,7 @@
 all: er-example-server 
 # use this target explicitly if requried: er-plugtest-server
-CONTIKI=/home/andrea/icsi/t-res
-#CONTIKI=/home/andrea/contiki
-PROJECTDIRS += ../rplinfo
-PROJECTDIRS += ../common
+PROJECTDIRS += ../../rplinfo
+PROJECTDIRS += ../../common
 PROJECT_SOURCEFILES += rplinfo.c
 
 # variable for this Makefile

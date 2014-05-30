@@ -45,8 +45,6 @@
       se.sics.cooja.mspmote.WismoteMoteType
       <identifier>wismote2</identifier>
       <description>T-Res Node</description>
-      <source EXPORT="discard">[CONFIG_DIR]/tres-node/tres-node.c</source>
-      <commands EXPORT="discard">make tres-node.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/tres-node/tres-node.wismote</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>

@@ -5,7 +5,7 @@ ifndef TARGET
   TARGET = wismote
 endif
 
-CONTIKI=/home/andrea/icsi/t-res
+#CONTIKI=/home/andrea/icsi/t-res
 PROJECTDIRS += ../common
 WITH_UIP6=1
 UIP_CONF_IPV6=1
