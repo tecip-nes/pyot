@@ -34,7 +34,7 @@ from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 import json
 from celery.result import AsyncResult
-from pyot.utils import *
+from pyot.tools.utils import *
 from django.core.paginator import Paginator
 
 

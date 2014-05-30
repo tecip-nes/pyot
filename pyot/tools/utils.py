@@ -23,9 +23,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 def get_celery_worker_status():
     error_key = "ERROR"
+
     try:
-        from celery.task.control import inspect
-        insp = inspect()
+        import celery
+        #from celery.task.control import inspect
+        insp = celery.task.control.inspect()
         d = insp.stats()
         if not d:
             d = {error_key: 'No running Celery workers were found.'}

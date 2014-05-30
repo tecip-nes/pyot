@@ -29,7 +29,7 @@ import base64
 from pyot.models.fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
 from django.conf import settings
 from celery.task.control import revoke
-from pyot.utils import get_celery_worker_status
+from pyot.tools.utils import get_celery_worker_status
 
 TFMT = settings.TFMT
 CACHING = True
