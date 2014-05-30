@@ -22,12 +22,12 @@
       <logoutput>40000</logoutput>
     </events>
     <motetype>
-      se.sics.cooja.mspmote.WismoteMoteType
-      <identifier>wismote1</identifier>
+      se.sics.cooja.mspmote.SkyMoteType
+      <identifier>rplroot</identifier>
       <description>RPL Border Router</description>
       <source EXPORT="discard">[CONFIG_DIR]/br-node/border-router.c</source>
-      <commands EXPORT="discard">make border-router.wismote TARGET=wismote</commands>
-      <firmware EXPORT="copy">[CONFIG_DIR]/br-node/border-router.wismote</firmware>
+      <commands EXPORT="discard">make border-router.sky TARGET=sky</commands>
+      <firmware EXPORT="copy">[CONFIG_DIR]/br-node/border-router.sky</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
@@ -91,7 +91,7 @@
         se.sics.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>wismote1</motetype_identifier>
+      <motetype_identifier>rplroot</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
