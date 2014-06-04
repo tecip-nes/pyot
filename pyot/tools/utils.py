@@ -26,7 +26,6 @@ def get_celery_worker_status():
 
     try:
         import celery
-        #from celery.task.control import inspect
         insp = celery.task.control.inspect()
         d = insp.stats()
         if not d:
