@@ -22,7 +22,6 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from pyot.models.tres import *
-from django.conf import settings
 import os
 
 class TResPF(object):

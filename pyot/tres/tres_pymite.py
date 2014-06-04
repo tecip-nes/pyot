@@ -1,9 +1,5 @@
-import sys
+import sys, traceback, os, importlib, pickle
 from pyot.models.tres import TResT
-import traceback
-import os
-import importlib
-import pickle
 
 def getTaskObject():
     return TResT.objects.get(id=sys.argv[0])
@@ -15,8 +11,8 @@ def setOutput(out):
     task.save()
     if task.output is None:
         return
-    r = task.output.PUT(payload=str(out))
-    return r.code + ' ' + r.content
+    r = task.output.asyncPUT(payload=str(out))
+    return r
 
 def getInput():
     task = getTaskObject()
@@ -24,7 +20,6 @@ def getInput():
 
 def getInputTag():
     task = getTaskObject()
-    #print 'get input tag'
 
 def getIntInput():
     task = getTaskObject()

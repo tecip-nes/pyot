@@ -164,7 +164,7 @@ class TResT(models.Model):
     output = models.ForeignKey(Resource, related_name='OutputDestination',
                                null=True)
     TResResource = models.ForeignKey(Resource, null=True,
-                                     related_name='TresResource') #TODO: we should be able to install a task on multiple nodes.
+                                     related_name='TresResource') 
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
                              default='CREATED')
     emu = models.ForeignKey(EmulatorState, null=True)
@@ -336,7 +336,7 @@ class TResT(models.Model):
 
     def runPf(self, inp):
         """
-        Runs the T-Res task on the PWN. This functino is used in the emulation
+        Runs the T-Res task on the PWN. This function is used in the emulation
         phase. First the source file is retrieved from the VCR and saved in
         /tmp dir. If the file has been already downloaded we use that copy.
         The parameter is the current input from an Input Source.
@@ -354,7 +354,7 @@ class TResT(models.Model):
         self.emu.save()
         self.save()
         #from cStringIO import StringIO
-        sys.path.append(PROJECT_ROOT+'/pyot/tres')
+        sys.path.append(PROJECT_ROOT+'/tres')
         sys.argv = [self.id]
         #oldio = (sys.stdin, sys.stdout, sys.stderr)
         #sio = StringIO()
