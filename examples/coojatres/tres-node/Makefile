@@ -3,7 +3,7 @@ ifndef TARGET
 endif
 
 #PROJECTDIRS += ../rplinfo
-PROJECTDIRS += ../common
+PROJECTDIRS += ../../common
 #PROJECT_SOURCEFILES += rplinfo.c
 
 WITH_COAP=13

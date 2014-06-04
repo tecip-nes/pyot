@@ -22,12 +22,12 @@
       <logoutput>40000</logoutput>
     </events>
     <motetype>
-      se.sics.cooja.mspmote.SkyMoteType
+      se.sics.cooja.mspmote.WismoteMoteType
       <identifier>rplroot</identifier>
       <description>RPL Border Router</description>
       <source EXPORT="discard">[CONFIG_DIR]/br-node/border-router.c</source>
-      <commands EXPORT="discard">make border-router.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONFIG_DIR]/br-node/border-router.sky</firmware>
+      <commands EXPORT="discard">make border-router.wismote TARGET=wismote</commands>
+      <firmware EXPORT="copy">[CONFIG_DIR]/br-node/border-router.wismote</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
@@ -60,12 +60,12 @@
       <moteinterface>se.sics.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <motetype>
-      se.sics.cooja.mspmote.SkyMoteType
-      <identifier>sky3</identifier>
+      se.sics.cooja.mspmote.WismoteMoteType
+      <identifier>wismote3</identifier>
       <description>Sensor Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/erbium/er-example-server.c</source>
-      <commands EXPORT="discard">make er-example-server.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONFIG_DIR]/erbium/er-example-server.sky</firmware>
+      <commands EXPORT="discard">make er-example-server.wismote TARGET=wismote</commands>
+      <firmware EXPORT="copy">[CONFIG_DIR]/erbium/er-example-server.wismote</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
@@ -119,7 +119,7 @@
         se.sics.cooja.mspmote.interfaces.MspMoteID
         <id>3</id>
       </interface_config>
-      <motetype_identifier>sky3</motetype_identifier>
+      <motetype_identifier>wismote3</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />
@@ -133,7 +133,7 @@
         se.sics.cooja.mspmote.interfaces.MspMoteID
         <id>4</id>
       </interface_config>
-      <motetype_identifier>sky3</motetype_identifier>
+      <motetype_identifier>wismote3</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
