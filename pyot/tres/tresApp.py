@@ -31,7 +31,7 @@ class TResPF(object):
 
         if type(fileRef) is not file:
             raise Exception('A file extension is required')
-        #TODO: copy file in media folder
+        # TODO: copy file in media folder
         self.pf = TResProcessing.objects.create(name=name,
                                          description=description,
                                          version=version,
@@ -41,10 +41,11 @@ class TResPF(object):
     def fromSource(cls, sourceString, name, description=None, version=None):
         if name[-3:] != '.py':
             name += '.py'
-        with open(SCRIPT_FOLDER + name, 'w') as newFile:
+        filename = name
+        with open(SCRIPT_FOLDER + filename, 'w') as newFile:
             newFile.write(sourceString)
             newFile.flush()
-            return cls(newFile, name, description, version)
+            return cls(newFile, name[:-3], description, version)
 
     def getPfObject(self):
         return self.pf
@@ -55,11 +56,11 @@ class TResPF(object):
 class TResTask(object):
     taskId = None
     def __init__(self, TresPf, inputS, output=None):
-        #First check if input resources are observable
+        # First check if input resources are observable
         for inp in inputS:
             if inp.obs == False:
                 raise Exception('Input resources must be observable')
-        #Then create task object
+        # Then create task object
         task = TResT.objects.create(pf=TresPf.pf, output=output)
         self.taskId = task.id
         for inp in inputS:
