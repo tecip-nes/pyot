@@ -9,7 +9,7 @@ from django.forms import fields, widgets
 from ipaddr import _IPAddrBase, IPAddress, IPNetwork
 
 
-#from django.forms import ValidationError as FormValidationError
+# from django.forms import ValidationError as FormValidationError
 class IPNetworkWidget(widgets.TextInput):
     def render(self, name, value, attrs=None):
         if isinstance(value, _IPAddrBase):
@@ -32,7 +32,7 @@ class IPNetworkManager(models.Manager):
         except AttributeError:
             return getattr(self.get_query_set(), attr, *args)
 
-class IPNetworkQuerySet(models.query.QuerySet):   
+class IPNetworkQuerySet(models.query.QuerySet):
 
     net = None
 
@@ -45,14 +45,14 @@ class IPNetworkQuerySet(models.query.QuerySet):
     def iterator(self):
         for obj in super(IPNetworkQuerySet, self).iterator():
             try:
-                net = IPNetwork(getattr(obj, self.net[0]))   
+                net = IPNetwork(getattr(obj, self.net[0]))
             except (ValueError, TypeError):
                 pass
             else:
                 if not self.net[1] in net:
                     continue
             yield obj
-            
+
     @classmethod
     def as_manager(cls, ManagerClass=IPNetworkManager):
         return ManagerClass(cls)
@@ -61,7 +61,7 @@ class IPNetworkField(models.Field):
     __metaclass__ = models.SubfieldBase
     description = "IP Network Field with CIDR support"
     empty_strings_allowed = False
-    
+
     def db_type(self, connection):
         return 'varchar(45)'
 
@@ -81,7 +81,7 @@ class IPNetworkField(models.Field):
         if lookup_type == 'exact':
             return self.get_prep_value(value)
         elif lookup_type == 'in':
-            return [self.get_prep_value(v) for v in value]           
+            return [self.get_prep_value(v) for v in value]
         else:
             raise TypeError('Lookup type %r not supported.' \
                 % lookup_type)
@@ -90,7 +90,7 @@ class IPNetworkField(models.Field):
         if isinstance(value, _IPAddrBase):
             value = '%s' % value
         return unicode(value)
-      
+
     def formfield(self, **kwargs):
         defaults = {
             'form_class' : fields.CharField,
@@ -98,11 +98,11 @@ class IPNetworkField(models.Field):
         }
         defaults.update(kwargs)
         return super(IPNetworkField, self).formfield(**defaults)
- 
+
 class IPAddressField(models.Field):
     __metaclass__ = models.SubfieldBase
     description = "IP Address Field with IPv6 support"
-    
+
     def db_type(self, connection):
         return 'varchar(42)'
 
@@ -122,7 +122,7 @@ class IPAddressField(models.Field):
         if lookup_type == 'exact':
             return self.get_prep_value(value)
         elif lookup_type == 'in':
-            return [self.get_prep_value(v) for v in value]           
+            return [self.get_prep_value(v) for v in value]
         else:
             raise TypeError('Lookup type %r not supported.' \
                 % lookup_type)
@@ -131,7 +131,7 @@ class IPAddressField(models.Field):
         if isinstance(value, _IPAddrBase):
             value = '%s' % value
         return unicode(value)
-      
+
     def formfield(self, **kwargs):
         defaults = {
             'form_class' : fields.CharField,
