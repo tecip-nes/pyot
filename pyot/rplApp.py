@@ -33,7 +33,7 @@ def DAGupdate(network):
                                       host__active=True, host__network=network)
     for parent in parents:
         print 'Searching parents for resource: ', parent
-        #with the current implementation nodes have only one parent, index=0
+        # with the current implementation nodes have only one parent, index=0
         r = parent.GET(query='index=0')
         if r.code != CONTENT:
             continue
@@ -42,5 +42,5 @@ def DAGupdate(network):
         l = json.loads(prefix)
         pa = search_host(l['eui'], network)
         G.add_edge(short_name(parent.host), pa)
-    graph = RplGraph.objects.create(graph=G, net=network)
+    graph = RplGraph.objects.create(graph=G.reverse(), net=network)
     return graph
