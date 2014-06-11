@@ -467,7 +467,6 @@ def pingHost(hostId, count=3):
     return stdout + stderr
 
 if WORKER_RECOVERY:
-
     @celery.decorators.periodic_task(run_every=timedelta(seconds=RECOVERY_PERIOD))
     def recoveryWorkers():
         """
@@ -477,9 +476,10 @@ if WORKER_RECOVERY:
         subscriptions.
         """
         networks = Network.objects.all()
+        table = get_celery_worker_status()
         #TaskMeta.objects.filter(status=states.SUCCESS).delete()
         for network in networks:
-            if network.isConnected() == False:
+            if network.isConnected(table) == False:
                 continue
             print network.hostname
             if network.pid is not None and network.pid != '':
