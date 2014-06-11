@@ -55,13 +55,13 @@ class TResPF(object):
 
 class TResTask(object):
     taskId = None
-    def __init__(self, TresPf, inputS, output=None):
+    def __init__(self, TresPf, inputS, output=None, period=0):
         # First check if input resources are observable
         for inp in inputS:
             if inp.obs == False:
                 raise Exception('Input resources must be observable')
         # Then create task object
-        task = TResT.objects.create(pf=TresPf.pf, output=output)
+        task = TResT.objects.create(pf=TresPf.pf, output=output, period=period)
         self.taskId = task.id
         for inp in inputS:
             task.inputS.add(inp)
