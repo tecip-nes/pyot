@@ -55,7 +55,7 @@ def startServer(request, wid):
 #@staff_member_required
 def stopAllSubs():
     sublist = Subscription.objects.filter(active=True)
-    #stop all active subscriptions
+    # stop all active subscriptions
     for s in sublist:
         s.cancel_subscription()
 
@@ -99,7 +99,7 @@ def getServerStatus(request):
         try:
             _e = status[host]
             wstatus = 'Connected'
-            uriLink = '<input type="submit" value="START" onclick = "startCoap('+ Id +');"/><input type="submit" value="STOP" onclick = "stopCoap('+ Id +');"/>'
+            uriLink = '<input type="submit" value="START" onclick = "startCoap(' + Id + ');"/><input type="submit" value="STOP" onclick = "stopCoap(' + Id + ');"/>'
         except KeyError:
             wstatus = 'Disconnected'
             uriLink = ''
@@ -132,7 +132,7 @@ def hostsList(request):
     order = ''
     if sortorder == 'desc':
         order = '-'
-    obj = Host.objects.filter(active=True).values('id', 'ip6address', 'timeadded', 'lastSeen').order_by(order+sortname)
+    obj = Host.objects.filter(active=True).values('id', 'ip6address', 'timeadded', 'lastSeen').order_by(order + sortname)
     p = Paginator(obj, rp)
     filteredHostList = p.page(page).object_list
     l = []
@@ -164,7 +164,7 @@ def resources(request):
             out = ''
             for i in allres:
                 if j != 0:
-                    out = out + ','+ str(i.id)
+                    out = out + ',' + str(i.id)
                 else:
                     out = out + str(i.id)
                 j += 1
@@ -186,9 +186,9 @@ def resourceList(request):
     if hostidList == None:
         return HttpResponse('')
     for i in hostidList:
-        logging.debug('retrieving resource '+ i)
+        logging.debug('retrieving resource ' + i)
     resObj = Resource.objects.filter(host__id__in=hostidList,
-                                     host__active=True) #eccezioni per la query
+                                     host__active=True) # eccezioni per la query
     p = Paginator(resObj, rp)
     filteredResList = p.page(page).object_list
     l = []
@@ -240,7 +240,7 @@ def obsList(request):
     order = ''
     if sortorder == 'desc':
         order = '-'
-    messList = CoapMsg.objects.filter(resource__id=rid).exclude(sub=None).order_by(order+sortname)
+    messList = CoapMsg.objects.filter(resource__id=rid).exclude(sub=None).order_by(order + sortname)
     p = Paginator(messList, rp)
     filteredMessList = p.page(page).object_list
     l = []
@@ -352,7 +352,7 @@ def observe(request):
         else:
             renew = True
 
-        out = 'starting observe on resource ' + rid + ' with duration '+ str(nduration)
+        out = 'starting observe on resource ' + rid + ' with duration ' + str(nduration)
         try:
             r = Resource.objects.get(id=rid)
             r.OBSERVE(nduration, handler, renew=renew)
@@ -406,12 +406,12 @@ def remHandler(request, hid):
             return HttpResponse('Active Subscriptions are using this handler!')
         associatedSubs = Subscription.objects.filter(handler=ob, active=False)
         if associatedSubs.count() != 0:
-            #we have subscriptions associated, but not active
+            # we have subscriptions associated, but not active
             ob.active = False
             ob.save()
             return HttpResponseRedirect(reverse('pyot.views.handlers'))
         else:
-            #we don't have any subscription associated
+            # we don't have any subscription associated
             ob.delete()
             return HttpResponseRedirect(reverse('pyot.views.handlers'))
     except Exception:
