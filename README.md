@@ -66,7 +66,7 @@ Start tunslip, open another terminal and type:
 ./5_tunslip_start.sh
 ```
 
-Open a web browser (tested with Chrome) and visit http://127.0.0.1:8000. Enter "settings" page and start *RD server* on the Cooja worker node. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
+Open a web browser (tested with Chrome) and visit http://127.0.0.1:8000. Enter *"settings"* page and start *RD server* on the Cooja worker node. Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
 Macroprogramming
 --------------
