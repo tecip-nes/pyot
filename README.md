@@ -100,3 +100,10 @@ Screenshots
 [Observe](https://raw.github.com/tecip-nes/pyot/master/screenshots/observe.png)
 
 [Macroprogramming](https://raw.github.com/tecip-nes/pyot/master/screenshots/macroprogramming.png)
+
+Build status
+------------
+
+|              builder                                            |      build            | outcome
+| --------------------------------------------------------------- | --------------------- | -------
+| [Travis](https://travis-ci.org/tecip-nes/pyot)           | unit tests            | [![Build Status](https://travis-ci.org/tecip-nes/pyot.png?branch=master)](https://travis-ci.org/tecip-nes/pyot)
