@@ -10,6 +10,6 @@ before_install:
  - sudo apt-get install -qq python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev  libfreetype6-dev libpng12-dev
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -r requirements.txt && pip install matplotlib==1.1
+install: pip install -r travisreq.txt
 # command to run tests, e.g. python setup.py test
 script:  python manage.py test
