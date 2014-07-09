@@ -21,7 +21,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from __future__ import absolute_import
-from celery import Celery, task
+from celery import task
 import celery
 #from celery.task import task, periodic_task
 from celery.signals import task_revoked
@@ -29,7 +29,7 @@ from pyot.models import *
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
-import random, time, sys
+import time, sys
 from djcelery.models import TaskMeta
 from django.conf import settings
 
@@ -37,11 +37,7 @@ import subprocess, os, signal
 from pyot.rplApp import DAGupdate
 import urllib
 from netifaces import interfaces, ifaddresses, AF_INET6
-import random
 import traceback
-
-from pyot.settings import PROJECT_ROOT, CLEANUP_TASK_PERIOD, CLEANUP_TIME, SERVER_ADDRESS
-from pyot.settings import WORKER_RECOVERY, RECOVERY_PERIOD, SUBSCRIPTION_RECOVERY
 
 PROJECT_ROOT = settings.PROJECT_ROOT
 tmpDir = settings.TRES_PWN_SCRIPT_TMP
@@ -198,7 +194,7 @@ def coapGet(rid, payload, timeout=RX_TIMEOUT, query=None, block=None):
 @task
 def coapPut(rid, payload=None, timeout=RX_TIMEOUT, query=None, inputfile=None, block=None):
     try:
-        _r, uri = getResourceActive(rid)
+        _, uri = getResourceActive(rid)
         if query is not None:
             uri = addQuery(uri, query)
         p = coapRequest('put', uri, payload, timeout, inputfile=inputfile, block=block)
@@ -222,7 +218,7 @@ def coapPut(rid, payload=None, timeout=RX_TIMEOUT, query=None, inputfile=None, b
 @task
 def coapDelete(rid, payload=None, timeout=RX_TIMEOUT, query=None):
     try:
-        _r, uri = getResourceActive(rid)
+        _, uri = getResourceActive(rid)
         if query is not None:
             uri = addQuery(uri, query)
         p = coapRequest('delete', uri, payload, timeout)
@@ -338,7 +334,7 @@ def coapDiscovery(host, path):
             if isTermCode(response):
                 break
             print 'response= ' + response
-            _code, m = parseResponse(response)
+            _, m = parseResponse(response)
             message = message + m
             message = message.rstrip('\n')
         splittedRes = message.split(',')
@@ -394,15 +390,15 @@ def coapRdServer(prefix=''):
         while True:
             response = rd.stdout.readline().strip()
             ipAddr = response.split(']')[0].split('[')[1]
-            time = response.split()[1]
-            print 'RD server, message from: ' + ipAddr + ' time = ' + time
+            timestamp = response.split()[1]
+            print 'RD server, message from: ' + ipAddr + ' time = ' + timestamp
             try:
                 h = Host.objects.get(ip6address=ipAddr)
                 h.lastSeen = datetime.now()
                 h.active = True
-                if int(time) < h.keepAliveCount:
+                if int(timestamp) < h.keepAliveCount:
                     Log.objects.create(log_type='registration', message=ipAddr)
-                h.keepAliveCount = int(time)
+                h.keepAliveCount = int(timestamp)
                 h.save()
                 tmp = Resource.objects.filter(host=h)
                 if len(tmp) == 0:
@@ -517,7 +513,7 @@ def updateDAGs():
 
 
 @task
-def tresDownloadScript(filename): #FIXME return a value
+def tresDownloadScript(filename):
     try:
         print 'downloading script'
         uri = 'http://' + SERVER_ADDRESS + '/media/scripts/' + filename

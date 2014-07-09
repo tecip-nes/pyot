@@ -2,3 +2,5 @@ uses:
     - django
     - celery
 test-warnings: no 
+ignore-paths:
+    - t-res-tools
