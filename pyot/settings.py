@@ -25,10 +25,10 @@ from ConfigParser import RawConfigParser
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-cfg = RawConfigParser()
-cfg.read(PROJECT_PATH + '/settings.ini')
+CFG = RawConfigParser()
+CFG.read(PROJECT_PATH + '/settings.ini')
 
-LOCAL_DB = cfg.getboolean('database', 'DATABASE_LOCAL')
+LOCAL_DB = CFG.getboolean('database', 'DATABASE_LOCAL')
 
 WEB_APPLICATION_SERVER = False
 
@@ -49,21 +49,16 @@ if socket.gethostname() == 'pyot-vcr':
 TEMPLATE_DEBUG = DEBUG
 
 RABBIT_PORT = 5672
-DB_SCHEMA = cfg.get('database', 'DATABASE_NAME')
-SQL_USER = cfg.get('database', 'DATABASE_USERNAME')
-SQL_PWD = cfg.get('database', 'DATABASE_PASSWORD_USER')
+DB_SCHEMA = CFG.get('database', 'DATABASE_NAME')
+SQL_USER = CFG.get('database', 'DATABASE_USERNAME')
+SQL_PWD = CFG.get('database', 'DATABASE_PASSWORD_USER')
 SQL_PORT = ''
 
 if WEB_APPLICATION_SERVER:
     SERVER_ADDRESS = '127.0.0.1'
 else:
-    SERVER_ADDRESS = cfg.get('database', 'DATABASE_HOST')
+    SERVER_ADDRESS = CFG.get('database', 'DATABASE_HOST')
 
-'''
-ADMINS = (
-    ('Andrea', 'a.azzara@sssup.it'),
-)
-'''
 
 TRES_PWN_SCRIPT_TMP = '/tmp'
 
@@ -79,7 +74,6 @@ TFMT = "%Y-%m-%d %H:%M:%S" #global format for time strings
 
 AUTH_PROFILE_MODULE = 'pyot.UserProfile'
 
-#MANAGERS = ADMINS
 
 SQLITE_3 = os.path.join(PROJECT_PATH, 'db.sqlite')
 
@@ -168,7 +162,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -178,7 +171,6 @@ SECRET_KEY = '9%$in^gpdaig@v3or_to&_z(=n)3)$f1mr3hf9e#kespy2ajlo'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -201,11 +193,7 @@ TEMPLATE_DIRS = (
 )
 
 
-
-#import djcelery
-#djcelery.setup_loader()
-
-#rabbitMQ config
+# rabbitMQ config
 BROKER_URL = SERVER_ADDRESS
 
 

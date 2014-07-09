@@ -22,36 +22,6 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from django import forms
 from models import Resource, METHOD_CHOICES
-#from django.forms import ModelForm
-from registration.forms import RegistrationFormTermsOfService
-#, RegistrationForm
-#from models import UserProfile
-#from django.forms import *
-#http://dmitko.ru/django-registration-form-custom-field/
-'''
-class UserProfileForm(forms.Form): 
-    organization = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),
-                              max_length=30)
-    #model = UserProfile
-'''
-#RegistrationFormTermsOfService.base_fields.update(UserProfileForm.base_fields)
-
-class CustomRegistrationForm(RegistrationFormTermsOfService):
-    first_name = forms.CharField()
-    last_name = forms.CharField()
-    organization = forms.CharField()
-    '''
-    def save(self, profile_callback=None):
-        user = super(CustomRegistrationForm, self).save(profile_callback=None)
-        #user.get_profile().organization=self.cleaned_data['organization']
-        user.first_name='ahah'
-        user.save()
-        org = UserProfile.objects.get(user=user)
-        org.organization='test'
-        #self.cleaned_data['organization']
-        org.save()
-        #user.save()
-    '''
 
 class HandlerForm(forms.Form):
     Description = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),
