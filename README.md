@@ -107,3 +107,5 @@ Build status
 |              builder                                            |      build            | outcome
 | --------------------------------------------------------------- | --------------------- | -------
 | [Travis](https://travis-ci.org/tecip-nes/pyot)           | unit tests            | [![Build Status](https://travis-ci.org/tecip-nes/pyot.png?branch=master)](https://travis-ci.org/tecip-nes/pyot)
+[![Code Health](https://landscape.io/github/andreaazzara/pyot/master/landscape.png)](https://landscape.io/github/andreaazzara/pyot/master)
+
