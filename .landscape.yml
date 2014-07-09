@@ -1,0 +1,4 @@
+uses:
+    - django
+    - celery
+test-warnings: no 
