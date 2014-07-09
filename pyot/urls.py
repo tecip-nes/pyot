@@ -27,7 +27,8 @@ from django.contrib import admin
 from pyot import views
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r'^$', views.home, name='home'),
     url(r'^settings/', views.settings, name='settings'),
     url(r'^startServer/(?P<wid>\d*)', views.startServer),
@@ -54,16 +55,16 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include('django.contrib.auth.urls')),
-
 )
 
 import settings
-urlpatterns += patterns('',
-            url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
-                {'document_root': settings.STATIC_ROOT}),
-    )
-urlpatterns += patterns('',
-            url(r'^media/(?P<path>.*)$', 'django.views.static.serve',
-                {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
-            )
-
+urlpatterns += patterns(
+    '',
+    url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
+    {'document_root': settings.STATIC_ROOT}),
+)
+urlpatterns += patterns(
+    '',
+    url(r'^media/(?P<path>.*)$', 'django.views.static.serve',
+    {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
+)
