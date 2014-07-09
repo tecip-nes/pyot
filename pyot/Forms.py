@@ -29,7 +29,7 @@ from registration.forms import RegistrationFormTermsOfService
 #from django.forms import *
 #http://dmitko.ru/django-registration-form-custom-field/
 '''
-class UserProfileForm(forms.Form):
+class UserProfileForm(forms.Form): 
     organization = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),
                               max_length=30)
     #model = UserProfile

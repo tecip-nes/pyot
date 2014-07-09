@@ -33,19 +33,19 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 FMT = "%Y%m%d%H%M%S"
 BASE_PATH = MEDIA_ROOT + 'rpl/'
 
-def short_name(ip_address):
+def short_name(host):
     '''
     Returns a more compact (but incomplete) representation of an IPv6
-    address (last 5 digits)
+    address (last 5 digits). It is used to label the nodes in the 
+    graph.
     '''
-    return ip_address.ip6address.exploded[-5:]
+    return host.ip6address.exploded[-5:]
 
 def search_host(eui, network):
     '''
     Returns the short name (short ip) address of a node in the network (the
     network uses the MAC address of the nodes).
     '''
-
     hosts = rest.Host.objects.filter(network=network)
     for i in hosts:
         if i.ip6address.exploded[20:].replace(':', '') == eui:
@@ -66,7 +66,6 @@ class RplGraph(models.Model):
     '''
     Representation of a RPL graph, based on networkX serialized objects.
     '''
-
     _graph = models.CharField(max_length=5000, blank=True, null=True)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
     net = models.ForeignKey(rest.Network)
@@ -79,13 +78,16 @@ class RplGraph(models.Model):
     class Meta(object):
         app_label = 'pyot'
     def __unicode__(self):
-        return u"Rpl graph for %s" % (self.net.hostname) #TODO: be more specific
+        return u"Rpl graph for %s" % (self.net.hostname) # TODO: be more specific
+
+    def getGraph(self):
+        return self.graph
 
     def getPNG(self, highlight_list=None, color='red'):
         A = to_agraph(self.graph)
 
         if highlight_list:
-            if isinstance(highlight_list, Host):
+            if isinstance(highlight_list, rest.Host):
                 s = short_name(highlight_list)
                 try:
                     A.nodes()[A.nodes().index(s)].attr['color'] = color
@@ -99,9 +101,9 @@ class RplGraph(models.Model):
                     except Exception:
                         pass
         ts = self.timeadded.strftime(FMT)
-        dir_ = BASE_PATH +self.net.hostname + '/'
+        dir_ = BASE_PATH + self.net.hostname + '/'
         make_sure_path_exists(dir_)
-        path = dir_ + 'rpl'+ ts +'.png'
+        path = dir_ + 'rpl' + ts + '.png'
         A.layout(prog='dot')
         A.draw(path, format='png')
         return path
@@ -111,6 +113,13 @@ class RplGraph(models.Model):
         for n in nodes:
             if short_name(host) == n:
                 return n
+
+    def find_host_from_node(self, node):
+        hosts = rest.Host.objects.filter(network=self.net)
+        for host in hosts:
+            if node == short_name(host):
+                return host
+        return None
 
     def get_ancestors(self, host):
         node = self.find_node_from_host(host)

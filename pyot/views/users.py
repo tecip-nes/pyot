@@ -24,6 +24,7 @@ from django.shortcuts import render
 from pyot.Forms import ContactForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth import logout
+from django.core.mail import mail_admins
 
 #@login_required
 def myaccount(request):

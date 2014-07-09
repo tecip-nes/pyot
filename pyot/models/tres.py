@@ -22,31 +22,34 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from django.db import models
-from django.conf import settings 
+from django.conf import settings
 from django.db.models.signals import pre_save, post_save
-from pyot.models.rest import Resource
+from pyot.models.rest import *
 from django.core.validators import validate_slug
 import py_compile
 import pickle
 import base64
 import urllib
 import sys, os
+import subprocess
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 TFMT = settings.TFMT
 SERVER_ADDRESS = settings.SERVER_ADDRESS
 PROJECT_ROOT = settings.PROJECT_ROOT
+tmpDir = settings.TRES_PWN_SCRIPT_TMP
 
 WAIT_TIMEOUT = 30
-
-SCRIPT_FOLDER = 'scripts/'
-
+T_RES_TOOLS = settings.PROJECT_PATH + '/../t-res-tools/'
+SCRIPT_FOLDER = MEDIA_ROOT + 'scripts/'
+tresCompile = T_RES_TOOLS + 'tres-pf-compile'
+tresPMfeat = T_RES_TOOLS + 'tres_pmfeatures.py'
 
 class TResProcessing(models.Model):
     """
-    Defines a T-Res processing function. It is directly connected to a 
-    python source file. The source file is verified 
-    automatically each time the model is saved. 
+    Defines a T-Res processing function. It is directly connected to a
+    python source file. The source file is verified
+    automatically each time the model is saved.
     """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     name = models.CharField(max_length=10, validators=[validate_slug])
@@ -70,7 +73,7 @@ def verify_pf(sender, instance, raw, **kwargs):
     '''
     Validates the syntax of the processing function
     '''
-    print 'Validating '  + str(instance.sourcefile) + ' ...'
+    print 'Validating ' + str(instance.sourcefile) + ' ...'
     py_compile.compile(str(instance.sourcefile), doraise=True)
 
 pre_save.connect(verify_pf, sender=TResProcessing)
@@ -151,8 +154,8 @@ post_save.connect(init_stack, sender=EmulatorState)
 class TResT(models.Model):
     """
     Defines a model for a T-Res task. A Task is defined by its processing
-    function, its input resources, and its output resources. A task 
-    may be instantiated on a TResResource, which is a common Resource object, 
+    function, its input resources, and its output resources. A task
+    may be instantiated on a TResResource, which is a common Resource object,
     or emulated on a PWN. In this case the state of the emulation is defined
     by the emu field.
     """
@@ -161,7 +164,7 @@ class TResT(models.Model):
     output = models.ForeignKey(Resource, related_name='OutputDestination',
                                null=True)
     TResResource = models.ForeignKey(Resource, null=True,
-                                     related_name='TresResource') #TODO: we should be able to install a task on multiple nodes.
+                                     related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
                              default='CREATED')
     emu = models.ForeignKey(EmulatorState, null=True)
@@ -173,46 +176,97 @@ class TResT(models.Model):
 
     def deploy(self, t_res_resource):
         """
-        Installs the T-Res task on a T-Res resource. The installation is 
+        Installs the T-Res task on a T-Res resource. The installation is
         executed asynchronously by a PWN.
         """
-        from pyot.tasks import deployTres
+        from pyot.tasks import tresDownloadScript
 
-        #if TResResource.isinstance(Resource) == False:
-        #    raise Exception('TResResource must be a Resource')
         if t_res_resource.uri != '/tasks':
             raise Exception('TResResource must have /tasks uri')
-        self.TResResource = t_res_resource #FIXME only update if the installation is succesfull.
-        self.save()
-        res = deployTres.apply_async(args=[self.id, t_res_resource.id],
-                                     queue=t_res_resource.host.getQueue())
-        res.wait()
-        return res.result
+        self.TResResource = t_res_resource # FIXME only update if the installation is succesfull.
 
+
+        # split the operation in phases, single tasks
+        # compile the script
+        basename = os.path.basename(str(self.pf.sourcefile))
+        compile_command = tresCompile + ' ' + tresPMfeat + ' ' + str(self.pf.sourcefile)
+        p = subprocess.check_call([compile_command],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             shell=True, cwd=SCRIPT_FOLDER)
+        # start a task downloading the script from the server
+        pycFilename = basename + 'c'
+        r = tresDownloadScript.apply_async(args=[pycFilename],
+                                       queue=t_res_resource.host.getQueue())
+        r.wait()
+        result = r.result
+        if result.code != SUCCESS:
+            return Response(FAILURE, 'PWN: Error downloading pyc.')
+        try:
+            newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+        except Resource.DoesNotExist:
+            newTask = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+
+        r = newTask.PUT()
+        print 'first put result = ' + r.code
+        if r.code != CREATED:
+            newTask.delete()
+            return Response(FAILURE, 'Error creating new resource: ' + '/tasks/' + self.pf.name)
+
+        newIs = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/is')
+        newOd = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/od')
+        newPf = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/pf')
+        _newLo = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/lo')
+
+        r = newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
+        print 'PF put result = ' + r.code
+
+        if r.code != CHANGED:
+            return Response(FAILURE, 'Error uploading processing function.')
+
+        if self.output:
+            r = newOd.PUT(payload='<' + self.output.getFullURI() + '>')
+            print 'OD put result = ' + r.code
+            if r.code != CHANGED:
+                return Response(FAILURE, 'Error updating OD resource')
+        for inp in self.inputS.all():
+            r = newIs.POST(payload='<' + inp.getFullURI() + '>')
+            print 'IS put result = ' + r.code + ' ' + inp.getFullURI()
+            if r.code != CHANGED:
+                return Response(FAILURE, 'Error updating IS resource')
+
+        self.state = 'INSTALLED'
+        self.save() # update TResResource and state
+
+        return Response(SUCCESS, 'Tres Task ' + str(self) + ' Installed')
 
     def uninstall(self):
         """
         Uninstalls a T-Res task from a node.
         """
-        from pyot.tasks import uninstallTres
-        res = uninstallTres.apply_async(args=[self.id, self.TResResource.id],
-                                        queue=self.TResResource.host.getQueue())
-        res.wait()
-        self.state = 'CLEARED'
-        self.save()
-        #TODO, update the TResResource field
-        return res.result
+        newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+        r = newTask.DELETE()
+        if r.code == DELETED:
+            newTask.delete()
+            Resource.objects.filter(host=self.TResResource.host,
+                                    uri__startswith='/tasks/' + self.pf.name).delete()
+            self.state = 'CLEARED'
+            self.save()
+            return Response(SUCCESS, 'Task ' + self.pf.name + ' uninstalled')
+        else:
+            return Response(FAILURE, 'Error uninstalling task ' + self.pf.name)
 
     def start(self):
         '''
         Activates a TRes Task by sending a POST request to the task resource.
         '''
         if self.state == 'RUNNING':
-            return 'Task is already running'
+            return Response(SUCCESS, 'Task is already running')
         Pf = Resource.objects.get(host=self.TResResource.host,
-                                  uri='/tasks/'+self.pf.name)
-        r = Pf.POST()
-        print r.content, r.code
+                                  uri='/tasks/' + self.pf.name)
+        r = Pf.POST(query="op=on")
+        print str(self.TResResource), r.content, r.code
         if r.content == "Task now running":
             self.state = 'RUNNING'
             self.save()
@@ -223,11 +277,11 @@ class TResT(models.Model):
         Stops the execution of the T-Res Task.
         """
         if self.state != 'RUNNING':
-            return 'Task is not running'
+            return Response(SUCCESS, 'Task is not running')
         Pf = Resource.objects.get(host=self.TResResource.host,
-                                  uri='/tasks/'+self.pf.name)
-        r = Pf.POST()
-        print r.content, r.code
+                                  uri='/tasks/' + self.pf.name)
+        r = Pf.POST(query="op=off")
+        print str(self.TResResource), r.content, r.code
         if r.content == "Task now halted":
             self.state = 'STOPPED'
             self.save()
@@ -246,7 +300,7 @@ class TResT(models.Model):
         retrieved or observed.
         """
         last_output = Resource.objects.get(host=self.TResResource.host,
-                                           uri='/tasks/'+self.pf.name+'/lo')
+                                           uri='/tasks/' + self.pf.name + '/lo')
         return last_output
 
     def getInputSource(self):
@@ -254,15 +308,15 @@ class TResT(models.Model):
         Returns the list of Input Source resources.
         """
         _is = Resource.objects.get(host=self.TResResource.host,
-                                   uri='/tasks/'+self.pf.name+'/is')
+                                   uri='/tasks/' + self.pf.name + '/is')
         return _is
 
     def getOutputDestination(self):
         """
         Returns the list of Output Destination resources.
-        """        
+        """
         _od = Resource.objects.get(host=self.TResResource.host,
-                                   uri='/tasks/'+self.pf.name+'/od')
+                                   uri='/tasks/' + self.pf.name + '/od')
         return _od
 
     def emulate(self, duration=120):
@@ -286,8 +340,8 @@ class TResT(models.Model):
 
     def runPf(self, inp):
         """
-        Runs the T-Res task on the PWN. This functino is used in the emulation 
-        phase. First the source file is retrieved from the VCR and saved in 
+        Runs the T-Res task on the PWN. This function is used in the emulation
+        phase. First the source file is retrieved from the VCR and saved in
         /tmp dir. If the file has been already downloaded we use that copy.
         The parameter is the current input from an Input Source.
         """
@@ -304,7 +358,7 @@ class TResT(models.Model):
         self.emu.save()
         self.save()
         #from cStringIO import StringIO
-        sys.path.append(PROJECT_ROOT+'/pyot/tres')
+        sys.path.append(PROJECT_ROOT + '/tres')
         sys.argv = [self.id]
         #oldio = (sys.stdin, sys.stdout, sys.stderr)
         #sio = StringIO()
@@ -326,6 +380,6 @@ class TResT(models.Model):
             return None
     def getEmuResult(self):
         """
-        Returns the result of a processing function 
+        Returns the result of a processing function
         """
         return self.emu.result

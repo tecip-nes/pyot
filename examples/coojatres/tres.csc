@@ -23,7 +23,7 @@
     </events>
     <motetype>
       se.sics.cooja.mspmote.WismoteMoteType
-      <identifier>wismote1</identifier>
+      <identifier>rplroot</identifier>
       <description>RPL Border Router</description>
       <source EXPORT="discard">[CONFIG_DIR]/br-node/border-router.c</source>
       <commands EXPORT="discard">make border-router.wismote TARGET=wismote</commands>
@@ -45,8 +45,6 @@
       se.sics.cooja.mspmote.WismoteMoteType
       <identifier>wismote2</identifier>
       <description>T-Res Node</description>
-      <source EXPORT="discard">[CONFIG_DIR]/tres-node/tres-node.c</source>
-      <commands EXPORT="discard">make tres-node.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/tres-node/tres-node.wismote</firmware>
       <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
       <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
@@ -93,7 +91,7 @@
         se.sics.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>wismote1</motetype_identifier>
+      <motetype_identifier>rplroot</motetype_identifier>
     </mote>
     <mote>
       <breakpoints />

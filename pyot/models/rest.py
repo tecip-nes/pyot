@@ -69,10 +69,18 @@ METHOD_NOT_ALLOWED = '4.05'
 INTERNAL_SERVER_ERROR = '5.00'
 NOT_IMPLEMENTED = '5.01'
 
+SUCCESS = '1'
+FAILURE = '0'
+
 DEFAULT_DISCOVERY_PATH = '/.well-known/core'
 
 CELERY_DEFAULT_QUEUE = 'celery'
 
+def get_hosts_from_resources(resQeurySet):
+    hsl = []
+    for r in resQeurySet:
+        hsl.append(r.host.id)
+    return Host.objects.filter(id__in=hsl)
 
 class Response(object):
     '''
@@ -193,7 +201,7 @@ class Host(models.Model):
         res = coapDiscovery.apply_async(args=[str(self.ip6address), path],
                                               queue=self.getQueue())
         #res.wait(timeout=COAP_REQ_TIMEOUT)
-        return res#.result
+        return res
     class Meta(object):
         app_label = 'pyot'
 
@@ -214,7 +222,7 @@ class Resource(models.Model):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address)
 
     def getFullURI(self):
-        return 'coap://['+str(self.host.ip6address)+']'+self.uri
+        return 'coap://[' + str(self.host.ip6address) + ']' + self.uri
 
     def GET(self, payload=None, timeout=5, query=None):
         if CACHING == True:
@@ -393,7 +401,7 @@ class EventHandlerMsg(EventHandler):
 
     def __unicode__(self):
         return u"{meta}".format(meta=self.description)
-    def action(self, msg=None):#TODO: fix, param not used
+    def action(self, msg=None):
         logging.debug('ACTION')
         from pyot.Events import sendMsg
         if self.activationCount == self.max_activations:

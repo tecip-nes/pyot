@@ -6,6 +6,7 @@
 
 # Install some packages using apt-get
 export DEBIAN_FRONTEND=noninteractive
+
 apt-get update -q
 apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       -o Dpkg::Options::="--force-confold" \
@@ -36,8 +37,17 @@ apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       graphviz \
                       libgraphviz-dev  \
                       libfreetype6-dev \
-                      libpng12-dev
+                      libpng12-dev \
+                      software-properties-common \
+                      ttf-ubuntu-font-family
 
+add-apt-repository -y ppa:fkrull/deadsnakes
+apt-get update -q                       
+
+apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
+                      -o Dpkg::Options::="--force-confold" \
+                      python2.6 \
+                      python2.6-dev
 
 #apt-get -q -y dist-upgrade
 update-alternatives --set java /usr/lib/jvm/java-7-openjdk-i386/jre/bin/java
@@ -47,6 +57,10 @@ cd /usr/share/xsessions && rm !(gnome-classic.desktop)
 
 gsettings set org.gnome.desktop.lockdown disable-lock-screen true
 
+#sudo apt-get install  ttf-ubuntu-font-family  sudo aptitude install --without-recommends ubuntu-desktop
+
+wget http://archive.ubuntu.com/ubuntu/pool/main/t/texinfo/texinfo_4.13a.dfsg.1-8ubuntu2_i386.deb
+dpkg -i texinfo_4.13a.dfsg.1-8ubuntu2_i386.deb
 
 cd /home/vagrant
 git clone https://github.com/contiki-os/contiki.git
@@ -70,21 +84,16 @@ PYOT=/home/vagrant/pyot
 DESKTOP=/home/vagrant/Desktop
 git clone https://github.com/tecip-nes/pyot.git
 cd $PYOT
-git checkout newlayout
+
 cd libcoap-4.0.1/
 ./configure && make
 
 cd $PYOT
-./install_reqs.sh
+./a_install_reqs.sh
 
 ln -s $PYOT                     $DESKTOP/pyot 
 
-./install_db.sh
-
-#echo -e "XKBMODEL=\"pc105\"\n" > /etc/default/keyboard
-#echo -e "XKBLAYOUT=\"it\"\n" >> /etc/default/keyboard
-#echo -e "XKBVARIANT=\"\"\n" >> /etc/default/keyboard
-#echo -e "XKBOPTIONS=\"\"\n" >> /etc/default/keyboard
+./b_install_db.sh
 
 GDMCONF=/etc/gdm/custom.conf
 echo -e "[daemon]" > $GDMCONF
@@ -94,5 +103,8 @@ echo -e "TimedLogin=vagrant" >> $GDMCONF
 echo -e "AutomaticLogin=vagrant" >> $GDMCONF
 echo -e "TimedLoginDelay=30" >> $GDMCONF
 echo -e "DefaultSession=gnome-2d" >> $GDMCONF
+
+PROFILE=/home/vagrant/.profile
+echo -e "gsettings set org.gnome.desktop.screensaver lock-enabled false" >> $PROFILE
 
 chown -R vagrant /home/vagrant/

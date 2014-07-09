@@ -230,7 +230,7 @@ static uint8_t toggle_status = 0;
 #define STATUS_SIZE 4
 
 /* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_POST |METHOD_GET, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
+RESOURCE(toggle, METHOD_POST | METHOD_GET | METHOD_PUT, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
 void
 toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -251,7 +251,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 	  REST.set_response_payload(response, buffer, strlen((char *)buffer));
 	  break;
   }
-  case METHOD_POST:{
+  case METHOD_POST:case METHOD_PUT:{
           if ((len=REST.get_query_variable(request, "mode", &mode))) {
               printf("query ");
             if (strncmp(mode, "on", len)==0) {
