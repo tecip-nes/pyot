@@ -81,22 +81,22 @@ if LOCAL_DB:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': SQLITE_3,                      # Or path to database file if using sqlite3.
-            'USER': '',                      # Not used with sqlite3.
-            'PASSWORD': '',                  # Not used with sqlite3.
-            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+            'NAME': SQLITE_3, # Or path to database file if using sqlite3.
+            'USER': '', # Not used with sqlite3.
+            'PASSWORD': '', # Not used with sqlite3.
+            'HOST': '', # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '', # Set to empty string for default. Not used with sqlite3.
         }
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': DB_SCHEMA,                      # Or path to database file if using sqlite3.
-            'USER': SQL_USER,                      # Not used with sqlite3.
-            'PASSWORD': SQL_PWD,                  # Not used with sqlite3.
-            'HOST': SERVER_ADDRESS,                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': SQL_PORT,                      # Set to empty string for default. Not used with sqlite3.
+            'NAME': DB_SCHEMA, # Or path to database file if using sqlite3.
+            'USER': SQL_USER, # Not used with sqlite3.
+            'PASSWORD': SQL_PWD, # Not used with sqlite3.
+            'HOST': SERVER_ADDRESS, # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': SQL_PORT, # Set to empty string for default. Not used with sqlite3.
         }
     }
 
@@ -206,14 +206,15 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pyot',
-    'djcelery',
-    'django_evolution',
-    'registration',
+    #'djcelery',
+    #'django_evolution',
+    #'registration',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'django_extensions',
+    'polymorphic',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
@@ -288,5 +289,5 @@ LOGGING = {
 IPYTHON_ARGUMENTS = [
     '--ext', 'django_extensions.management.notebook_extension',
     '--ext', 'pyot.notebook_extension',
-    '--debug',    "--ip='*'",
+    '--debug', "--ip='*'",
 ]
