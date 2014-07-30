@@ -20,12 +20,12 @@ def resource_template(**kwparams):
 
 def get_rd_host():
     try:
-        h = Host.objects.get(ip6address='::1')
+        host = Host.objects.get(ip6address='::1')
     except ObjectDoesNotExist:
         # @timedelta: workaround to prevent the host from being disabled by the periodic task
-        h = Host.objects.create(ip6address='::1',
+        host = Host.objects.create(ip6address='::1',
                                 lastSeen=datetime.now() + timedelta(days=1000))
-    return h
+    return host
 
 class PeriodicVsTemplate(object):
     """
@@ -44,7 +44,7 @@ class PeriodicVsTemplate(object):
         """
 
         self.vst = PeriodicVsT.objects.create(host=get_rd_host(),
-                                              inputSet=input_template,
+                                              ioSet=input_template,
                                               uri='/' + name,
                                               title=name,
                                               rt='virtual template')
