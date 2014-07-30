@@ -30,6 +30,7 @@ from pyot.models.fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
 from django.conf import settings
 from celery.task.control import revoke
 from pyot.tools.utils import get_celery_worker_status
+from polymorphic import PolymorphicModel
 
 TFMT = settings.TFMT
 CACHING = True
@@ -205,7 +206,7 @@ class Host(models.Model):
     class Meta(object):
         app_label = 'pyot'
 
-class Resource(models.Model):
+class Resource(PolymorphicModel):
     '''
     Defines a CoAP Resource. Each resource belongs to a host. REST methods
     are available with both synchronous and asynchronous semantics.
@@ -223,6 +224,10 @@ class Resource(models.Model):
 
     def getFullURI(self):
         return 'coap://[' + str(self.host.ip6address) + ']' + self.uri
+
+    def getSubResources(self):
+        subs = Resource.objects.filter(uri__startswith=self.uri + '/', host=self.host)
+        return subs
 
     def GET(self, payload=None, timeout=5, query=None):
         if CACHING == True:
@@ -432,3 +437,6 @@ class EventHandlerTres(EventHandler):
         self.save()
     class Meta(object):
         app_label = 'pyot'
+
+
+

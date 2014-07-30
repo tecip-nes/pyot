@@ -367,19 +367,137 @@ def coapDiscovery(host, path):
     except Exception as e:
         print 'Exception Coap Discovery: %s' % e
 
+"""
+def createRdResources(rdIp, n):
+    try:
+        rdHost = Host.objects.get(ip6address=rdIp)
+    except ObjectDoesNotExist:
+        rdHost = Host.objects.create(ip6address=rdIp, network=n, lastSeen=datetime.now())
+    try:
+        rdRes = Resource.objects.get(host=rdHost, uri="rd")
+    except ObjectDoesNotExist:
+        rdRes = Resource.objects.create(host=rdHost, uri="rd")
+
+
+PY_COAP_PATH = PROJECT_ROOT + '/../coap/'
+
+sys.path.insert(0, PY_COAP_PATH)
+from   coap   import    coap, coapResource, coapDefines as d
+
+class RdResource(coapResource.coapResource):
+
+    def __init__(self):
+        # initialize parent class
+        coapResource.coapResource.__init__(
+            self,
+            path='rd',
+        )
+
+    def GET(self, options=[], sender=None):
+        print 'GET received'
+        for o in options:
+            print o
+        print 'responding'
+        respCode = d.COAP_RC_2_05_CONTENT
+        respOptions = []
+        respPayload = [ord(b) for b in 'dummy response']
+
+        return (respCode, respOptions, respPayload)
+
+    def PUT(self, options=[], payload=[], sender=None):
+        print 'PUT received'
+        print sender
+        respCode = d.COAP_RC_2_04_CHANGED
+        respOptions = []
+        respPayload = [ord(b) for b in 'dummy response']
+        print str(bytearray(payload))
+        return (respCode, respOptions, respPayload)
+
+
+    def POST(self, options=[], payload=[], sender=None):
+        respCode = d.COAP_RC_2_04_CHANGED
+        respOptions = []
+        respPayload = [ord(b) for b in 'dummy response']
+        print sender[0] + ' ' + str(bytearray(payload))
+        ipAddr = sender[0]
+        time = str(bytearray(payload))
+        try:
+            h = Host.objects.get(ip6address=ipAddr)
+            h.lastSeen = datetime.now()
+            h.active = True
+            if int(time) < h.keepAliveCount:
+                Log.objects.create(log_type='registration', message=ipAddr)
+            h.keepAliveCount = int(time)
+            h.save()
+            tmp = Resource.objects.filter(host=h)
+            if len(tmp) == 0:
+                print 'The host has no resources.'
+                try:
+                    h.DISCOVER()
+                except Exception:
+                    pass
+        except ObjectDoesNotExist: #the host does not exists, create a new Host
+            h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount=1)
+            h.save()
+            try:
+                h.DISCOVER()
+            except Exception:
+                pass
+            Log.objects.create(log_type='registration', message=ipAddr)
+
+        return (respCode, respOptions, respPayload)
+
 @task(max_retries=None)
 def coapRdServer(prefix=''):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix
     print 'id = ' + str(coapRdServer.request.id)
+    n = Network.objects.get(network=prefix)
     if coapRdServer.request.retries > 0:
         print 'coapRdServer retry #' + str(coapRdServer.request.retries)
-        n = Network.objects.get(network=prefix)
         n.pid = str(coapRdServer.request.id)
         n.save()
         Log.objects.create(log_type='RdRetry', message=prefix)
     rdIp = prefix[:-3] + '1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
+
+    createRdResources(rdIp, n)
+
+    c = coap.coap(ipAddress='bbbb::1')
+
+    # install resource
+    c.addResource(RdResource())
+    try:
+        while True:
+            time.sleep(5)
+    except Exception, exc:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)
+        coapRdServer.update_state(state="ERROR")
+        coapRdServer.retry(exc=exc, countdown=5)
+    finally:
+        n = Network.objects.get(network=prefix)
+        n.pid = None
+        n.save()
+        c.close()
+"""
+@task(max_retries=None)
+def coapRdServer(prefix=''):
+    print 'starting Coap Resource Directory Server, prefix= ' + prefix
+    print 'id = ' + str(coapRdServer.request.id)
+    n = Network.objects.get(network=prefix)
+    if coapRdServer.request.retries > 0:
+        print 'coapRdServer retry #' + str(coapRdServer.request.retries)
+        n.pid = str(coapRdServer.request.id)
+        n.save()
+        Log.objects.create(log_type='RdRetry', message=prefix)
+    rdIp = prefix[:-3] + '1'
+    if not checkIp(rdIp):
+        raise Exception('Address %s not available' % rdIp)
+
+    #createRdResources(rdIp, n)
+
     try:
         coapRdServer.update_state(state="PROGRESS")
         rd = subprocess.Popen([RD_SERVER + ' -v 1 -A ' + rdIp],

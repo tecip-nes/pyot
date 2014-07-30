@@ -18,8 +18,8 @@ def getInput():
     task = getTaskObject()
     return str(task.emu.inp)
 
-def getInputTag():
-    task = getTaskObject()
+# def getInputTag():
+#     task = getTaskObject()
 
 def getIntInput():
     task = getTaskObject()
@@ -38,10 +38,10 @@ def getState(cl):
     c = cl()
     try:
         return pickle.loads(task.emu._status)
-    except Exception, exc:
-        #exc_type, exc_value, exc_traceback = sys.exc_info()
-        #lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        #print ''.join('!! ' + line for line in lines)
+    except Exception:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)
         task.emu.status = c
         task.emu.save()
         return c
@@ -55,10 +55,10 @@ def pop(def_val):
     task = getTaskObject()
     try:
         return task.emu.pop()
-    except Exception, exc:
-        #exc_type, exc_value, exc_traceback = sys.exc_info()
-        #lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        #print ''.join('!! ' + line for line in lines)
+    except Exception:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)
         return def_val
 
 def push(val):
