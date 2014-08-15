@@ -99,11 +99,6 @@ class SubResource(VResource):
         print 'virtual PUT'
         self.value = newvalue
         self.save()
-        
-    def POST(self, newvalue):
-        print 'virtual POST'
-        self.value = newvalue
-        self.save()
 
     class Meta(object):
         app_label = 'pyot'
@@ -118,6 +113,7 @@ class PeriodicVsT(VResource):
         """
         print "Periodic Virtual Sensor \n>> supported methods: \
 GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
+        return "sample resource: instructions.."
     def POST(self, name):
         """
         TODO

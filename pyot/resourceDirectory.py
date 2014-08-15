@@ -6,8 +6,8 @@ Created on Aug 6, 2014
 
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
+from pyot.models import Resource, Host, Log, SubResource
 
-from pyot.models import Resource, Host, Log
 """
 import sys
 PY_COAP_PATH = '../'
@@ -39,7 +39,9 @@ class Vr(pResource):
         self.payload = "prova"
 
     def render_GET(self, request, query=None):
-        return self.payload
+        print 'requested', request.uri_path
+        uri = '/' + request.uri_path
+        return str(Resource.objects.filter(uri=uri)[0].GET()) #TODO:!!!
 
     def render_PUT(self, request, payload=None, query=None):
         return payload
