@@ -41,6 +41,9 @@ admin.site.register(RplGraph)
 admin.site.register(EmulatorState)
 admin.site.register(pyMapReduce)
 admin.site.register(pyMap)
+admin.site.register(SubResource)
+admin.site.register(PeriodicVsT)
+admin.site.register(PeriodicVsI)
 
 # Define an inline admin descriptor for UserProfile model
 # which acts a bit like a singleton
@@ -51,7 +54,7 @@ class UserProfileInline(admin.StackedInline):
 
 # Define a new User admin
 class UserAdmin(UserAdmin):
-    inlines = (UserProfileInline,)
+    inlines = (UserProfileInline, )
 
 # Re-register UserAdmin
 admin.site.unregister(User)
