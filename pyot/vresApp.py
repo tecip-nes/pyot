@@ -9,6 +9,8 @@ from pyot.models.virtualres import PeriodicVsT
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 
+RDPATH = '/rd/'
+
 def resource_template(**kwparams):
     """
     Returns the dictionary to be serialized as input/output Set.
@@ -34,8 +36,7 @@ class PeriodicVsTemplate(object):
 
     vst = None
 
-    def __init__(self, input_template, name='periodicVs'):
-
+    def __init__(self, input_template, name='perT'):
         """ 
         creates the template
         serve un host per istanziare una risorsa. per ora ne creo uno fasullo
@@ -45,7 +46,7 @@ class PeriodicVsTemplate(object):
 
         self.vst = PeriodicVsT.objects.create(host=get_rd_host(),
                                               ioSet=input_template,
-                                              uri='/' + name,
+                                              uri=RDPATH+name,
                                               title=name,
                                               rt='virtual template')
 

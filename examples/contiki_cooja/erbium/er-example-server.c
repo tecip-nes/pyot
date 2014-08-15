@@ -58,7 +58,7 @@
 #define REST_RES_LIGHT 1
 #define REST_RES_BATTERY 0
 #define REST_RES_RADIO 0
-#define REST_RES_RPLINFO 1
+#define REST_RES_RPLINFO 0
 
 
 #include "erbium.h"

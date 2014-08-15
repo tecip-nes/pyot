@@ -32,7 +32,6 @@ from django.core.mail import mail_admins
 import time, sys
 from djcelery.models import TaskMeta
 from django.conf import settings
-
 import subprocess, os, signal
 from pyot.rplApp import DAGupdate
 import urllib
@@ -58,6 +57,9 @@ allowedMethods = ['get', 'post', 'put', 'delete']
 
 
 def checkIp(ipAddress):
+    """
+    TODO
+    """
     for ifaceName in interfaces():
         addresses = [i['addr'] for i in ifaddresses(ifaceName).setdefault(AF_INET6, [{'addr':'No IP addr'}])]
         #print '%s: %s' % (ifaceName, ', '.join(addresses))
@@ -68,14 +70,23 @@ def checkIp(ipAddress):
 
 @task
 def sendMailAdmin(subject, message):
+    """
+    TODO    
+    """
     print 'sending mail to admins...'
     mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)
     print '...Done'
 
 def getFullUri(r):
+    """
+    TODO
+    """
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None, block=64):
+    """
+    TODO
+    """
     if method not in allowedMethods:
         raise Exception('Method not allowed')
     if observe and method is not 'get':
@@ -105,12 +116,18 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
     return p
 
 class HostNotActive(Exception):
+    """
+    TODO
+    """    
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
 def getResourceActive(rid):
+    """
+    TODO
+    """    
     r = Resource.objects.get(id=rid)
     if r.host.active == False:
         raise HostNotActive(str(r.host.ip6address))
@@ -118,17 +135,26 @@ def getResourceActive(rid):
     return r, uri
 
 def getResource(rid):
+    """
+    TODO
+    """    
     r = Resource.objects.get(id=rid)
     uri = getFullUri(r)
     return r, uri
 
 def isTermCode(response):
+    """
+    TODO
+    """    
     if response[0:4] == TERM_CODE:
         return True
     else:
         return False
 
 def parseResponse(response):
+    """
+    TODO
+    """    
     code = response[0:4]
     return code, response[5:]
 
@@ -367,106 +393,31 @@ def coapDiscovery(host, path):
     except Exception as e:
         print 'Exception Coap Discovery: %s' % e
 
-"""
-def createRdResources(rdIp, n):
-    try:
-        rdHost = Host.objects.get(ip6address=rdIp)
-    except ObjectDoesNotExist:
-        rdHost = Host.objects.create(ip6address=rdIp, network=n, lastSeen=datetime.now())
-    try:
-        rdRes = Resource.objects.get(host=rdHost, uri="rd")
-    except ObjectDoesNotExist:
-        rdRes = Resource.objects.create(host=rdHost, uri="rd")
 
-
-PY_COAP_PATH = PROJECT_ROOT + '/../coap/'
-
-sys.path.insert(0, PY_COAP_PATH)
-from   coap   import    coap, coapResource, coapDefines as d
-
-class RdResource(coapResource.coapResource):
-
-    def __init__(self):
-        # initialize parent class
-        coapResource.coapResource.__init__(
-            self,
-            path='rd',
-        )
-
-    def GET(self, options=[], sender=None):
-        print 'GET received'
-        for o in options:
-            print o
-        print 'responding'
-        respCode = d.COAP_RC_2_05_CONTENT
-        respOptions = []
-        respPayload = [ord(b) for b in 'dummy response']
-
-        return (respCode, respOptions, respPayload)
-
-    def PUT(self, options=[], payload=[], sender=None):
-        print 'PUT received'
-        print sender
-        respCode = d.COAP_RC_2_04_CHANGED
-        respOptions = []
-        respPayload = [ord(b) for b in 'dummy response']
-        print str(bytearray(payload))
-        return (respCode, respOptions, respPayload)
-
-
-    def POST(self, options=[], payload=[], sender=None):
-        respCode = d.COAP_RC_2_04_CHANGED
-        respOptions = []
-        respPayload = [ord(b) for b in 'dummy response']
-        print sender[0] + ' ' + str(bytearray(payload))
-        ipAddr = sender[0]
-        time = str(bytearray(payload))
-        try:
-            h = Host.objects.get(ip6address=ipAddr)
-            h.lastSeen = datetime.now()
-            h.active = True
-            if int(time) < h.keepAliveCount:
-                Log.objects.create(log_type='registration', message=ipAddr)
-            h.keepAliveCount = int(time)
-            h.save()
-            tmp = Resource.objects.filter(host=h)
-            if len(tmp) == 0:
-                print 'The host has no resources.'
-                try:
-                    h.DISCOVER()
-                except Exception:
-                    pass
-        except ObjectDoesNotExist: #the host does not exists, create a new Host
-            h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount=1)
-            h.save()
-            try:
-                h.DISCOVER()
-            except Exception:
-                pass
-            Log.objects.create(log_type='registration', message=ipAddr)
-
-        return (respCode, respOptions, respPayload)
+from pyot.resourceDirectory import createRdResources, CoAPServer
+from twisted.internet import reactor
 
 @task(max_retries=None)
-def coapRdServer(prefix=''):
+def coapRdServer(prefix='bbbb::/64'):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix
-    print 'id = ' + str(coapRdServer.request.id)
+    #print 'id = ' + str(coapRdServer.request.id)
     n = Network.objects.get(network=prefix)
+    """
     if coapRdServer.request.retries > 0:
         print 'coapRdServer retry #' + str(coapRdServer.request.retries)
         n.pid = str(coapRdServer.request.id)
         n.save()
         Log.objects.create(log_type='RdRetry', message=prefix)
+    """    
     rdIp = prefix[:-3] + '1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
 
     createRdResources(rdIp, n)
-
-    c = coap.coap(ipAddress='bbbb::1')
-
-    # install resource
-    c.addResource(RdResource())
+    server = CoAPServer("[bbbb::1]", 5683)
+    reactor.listenUDP(5683, server, "bbbb::1")
+    reactor.run()         
+    """
     try:
         while True:
             time.sleep(5)
@@ -480,8 +431,15 @@ def coapRdServer(prefix=''):
         n = Network.objects.get(network=prefix)
         n.pid = None
         n.save()
-        c.close()
-"""
+        #c.close()
+    """
+
+
+
+
+
+
+""" libcoap regular version
 @task(max_retries=None)
 def coapRdServer(prefix=''):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix
@@ -550,7 +508,7 @@ def coapRdServer(prefix=''):
             if os.path.exists("/proc/" + str(rd.pid)):
                 os.kill(rd.pid, signal.SIGTERM)
         print '...done.'
-
+"""
 
 @celery.decorators.periodic_task(run_every=timedelta(seconds=CLEANUP_TASK_PERIOD))
 def checkConnectedHosts():
