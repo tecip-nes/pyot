@@ -42,8 +42,7 @@ admin.site.register(EmulatorState)
 admin.site.register(pyMapReduce)
 admin.site.register(pyMap)
 admin.site.register(SubResource)
-admin.site.register(PeriodicVsT)
-admin.site.register(PeriodicVsI)
+admin.site.register(VirtualSensorI)
 
 # Define an inline admin descriptor for UserProfile model
 # which acts a bit like a singleton
