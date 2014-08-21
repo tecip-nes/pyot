@@ -552,7 +552,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if (etimer_expired(&et)) {
       printf("Sending msg to rd...");
 
-      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
+      coap_init_message(request, COAP_TYPE_NON, COAP_PUT, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
