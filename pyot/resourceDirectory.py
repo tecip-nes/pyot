@@ -6,17 +6,14 @@ Created on Aug 6, 2014
 
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
-from pyot.models import Resource, Host, Log, SubResource
-
-"""
-import sys
-PY_COAP_PATH = '../'
-
-sys.path.insert(0, PY_COAP_PATH)
-"""
+from pyot.models import Resource, Host, Log, VirtualSensorT
 from coapthon2.server.coap_protocol import CoAP
 from coapthon2.resources.resource import Resource as pResource
-#from example_resources import Storage, Separate
+from pyot.vres.vresApp import get_rd_host
+
+def trunc_exc(exc, max_len=20):
+    s = str(exc)
+    return s[0:max_len] + '...'
 
 def createRdResources(rdIp, n):
     try:
@@ -33,26 +30,130 @@ def createRdResources(rdIp, n):
         Resource.objects.create(host=rdHost, uri="/rd")
 
 
-class Vr(pResource):
+class VrSubresource(pResource):
     def __init__(self, name="VirtualResource"):
-        super(Vr, self).__init__(name, visible=True, observable=False, allow_children=True)
-        self.payload = "prova"
+        super(VrSubresource, self).__init__(name, visible=True, 
+                                 observable=False, allow_children=True)
+        self.payload = "Virtual subResource (cfg)"
 
     def render_GET(self, request, query=None):
-        print 'requested', request.uri_path
         uri = '/' + request.uri_path
-        return str(Resource.objects.filter(uri=uri)[0].GET()) #TODO:!!!
+        return str(Resource.objects.get(uri=uri).GET())
 
     def render_PUT(self, request, payload=None, query=None):
-        return payload
+        uri = '/' + request.uri_path   
+        try:
+            if payload is not None:
+                Resource.objects.get(uri=uri).PUT(payload)
+                return 'Resource updated'
+            return 'Resource unmodified'
+        except Exception as exc:
+            return trunc_exc(exc)           
     def render_DELETE(self, request, query=None):
-        return True
+        """
+        It is only possible to delete a resource if it has no subresources.
+        """
+        try:
+            uri = '/' + request.uri_path
+            r = Resource.objects.get(uri=uri)
+            sub_res = r.getSubResources()
+            if len(sub_res) == 0:
+                r.delete()
+                return True
+            else:
+                return False
+        except Exception:
+            return False
+
+class VrInstance(pResource):
+    def __init__(self, name="VirtualResource"):
+        super(VrInstance, self).__init__(name, visible=True, 
+                                 observable=False, allow_children=True)
+        self.payload = "Virtual Resource Instance"
+
+    def render_GET(self, request, query=None):
+        uri = '/' + request.uri_path
+        return str(Resource.objects.get(uri=uri).GET())
+
+    def render_PUT(self, request, payload=None, query=None):
+        uri = '/' + request.uri_path   
+        try:
+            if payload is not None:
+                Resource.objects.get(uri=uri).PUT(payload)
+                return 'Resource updated'
+            return 'Resource unmodified'
+        except Exception as exc:
+            return trunc_exc(exc)           
+    def render_DELETE(self, request, query=None):
+        """
+        It is only possible to delete a resource if it has no subresources.
+        """
+        try:
+            uri = '/' + request.uri_path
+            r = Resource.objects.get(uri=uri)
+            sub_res = r.getSubResources()
+            if len(sub_res) == 0:
+                r.delete()
+                return True
+            else:
+                return False
+        except Exception:
+            return False
+        
     def render_POST(self, request, payload=None, query=None):
-        print 'creating a virtual resource'
+        print 'creating a virtual subresource'
         print 'payload = ', payload
-        q = "?" + "&".join(query)
-        res = Vr(name=payload)
-        return {"Payload": payload, "Location-Query": q, "Resource": res}    
+        print query
+        try:
+            q = query[0]
+        except:
+            q = None    
+        if q == 'pyot':
+            print 'pyot request'
+
+            q = "?" + "&".join(query)
+            res = VrSubresource(name=payload)
+            return {"Payload": payload, "Location-Query": q, "Resource": res}
+        else:
+            print 'external request'
+            return {} #internal error  
+
+
+
+class VrTemplate(pResource):
+    def __init__(self, name="VirtualResource"):
+        super(VrTemplate, self).__init__(name, visible=True, 
+                                 observable=False, allow_children=True)
+        self.payload = "Virtual Resource Template"
+
+    def render_GET(self, request, query=None):
+        """
+        Usually returns the description of the virtual resource template.
+        """
+        uri = '/' + request.uri_path
+        try:
+            return str(Resource.objects.get(uri=uri).GET())
+        except Exception as exc:
+            return trunc_exc(exc)
+
+    def render_POST(self, request, payload=None, query=None):
+        print 'creating a virtual resource instance'
+        print 'payload = ', payload
+        print query        
+        try:
+            q = query[0]
+        except:
+            q = None    
+        if q == 'pyot':
+            print 'pyot request'
+            print 'internal request'
+            q = "?" + "&".join(query)
+            res = VrInstance(name=payload)     
+            return {"Payload": payload, "Location-Query": q, "Resource": res}       
+        else:
+            print 'external request'
+            return {} #internal error 
+    
 
 class RD(pResource):
     def __init__(self, name="StorageResource"):
@@ -84,21 +185,34 @@ class RD(pResource):
                 except Exception:
                     pass
         except ObjectDoesNotExist: #the host does not exists, create a new Host
-            h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount=1)
-            h.save()
+            h = Host.objects.create(ip6address=ipAddr, 
+                                    lastSeen=datetime.now(), 
+                                    keepAliveCount=1)
             try:
                 h.DISCOVER()
             except Exception:
                 pass
             Log.objects.create(log_type='registration', message=ipAddr)
         return {"Payload": "ok"}
+    
     def render_POST(self, request, payload=None, query=None):
-        print 'creating a virtual resource'
+        print 'creating a virtual resource template.'
         print 'payload = ', payload
-        q = "?" + "&".join(query)
-        res = Vr(name=payload)
-        return {"Payload": payload, "Location-Query": q, "Resource": res}
+        print 'query ', query, request.query
+        
+        try:
+            q = query[0]
+        except:
+            q = None    
+        if q == 'pyot':
+            print 'pyot request'
 
+            q = "?" + "&".join(query)
+            res = VrTemplate(name=payload)
+            return {"Payload": payload, "Location-Query": q, "Resource": res}
+        else:
+            print 'external request'
+            return {} #internal error   
 
 
 class CoAPServer(CoAP): 

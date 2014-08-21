@@ -7,11 +7,14 @@ Created on Jul 29, 2014
 from django.db import models
 import pickle
 from rest import Resource
-from django.db.models.signals import post_save, pre_save, post_init
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from twisted.internet import reactor
+from pyot.vres.pf import apply_pf
+from coapthon2.client.coap_protocol import HelperClient
 
 DEF_VALUE_LENGTH = 1000
+
+client = HelperClient()
 
 class VResource(Resource):
     """
@@ -27,10 +30,14 @@ class VResource(Resource):
     ioSet = property(get_data, set_data)
 
     def GET(self):
-        print 'virtual GET'
+        raise(NotImplementedError)
     def POST(self, name):
-        print 'virtual POST' + name
-
+        raise(NotImplementedError)
+    def PUT(self):
+        raise(NotImplementedError)
+    def DELETE(self):
+        raise(NotImplementedError)
+            
     def get_io_resources(self):
         """
         Returns a queryset including the current list of input/output
@@ -43,40 +50,33 @@ class VResource(Resource):
         app_label = 'pyot'
         abstract = True
 
-from coapthon2.client.coap_protocol import HelperClient
-
-client = HelperClient()
 
 def client_callback(response):
-    pass
-
-import sys
+    print 'Code == ', response.code
+    if response.code != 65:
+        print 'resource creation failed'
 
 
 @receiver(post_save)
 def pre_create_vr(sender, instance, **kwargs):
     # Returns false if 'sender' is NOT a subclass of AbstractModel
     if not issubclass(sender, VResource):
-       return
+        return
     if kwargs['created'] == False:
         return
     print instance.uri    
     print "The vr is going to be created  *********************************\n\n"
-    #from pyot.resourceDirectory import Vr, CoAPServer
-    #rd = CoAPServer("[bbbb::1]", 5683)
-    #rd.add_resource(instance.uri, Vr())
-    r = Resource.objects.get(uri='/rd')
-    #r.POST(payload=instance.uri)
-    #path = 'rd' + '/' + instance.uri[1:]
+    #r = Resource.objects.get(uri='/rd')
     path = instance.uri[1:]
-    
     print "PATH ===================="  + path
-    sys.stdout.flush()
     payload = instance.uri
+    #from pyot.vres.vresApp import get_rd_host
+    #rd_host = get_rd_host()
     client = HelperClient(server=("bbbb::1", 5683))
     function = client.protocol.post
+    
     args = (path, payload)
-    kwargs = {}
+    kwargs = {'Uri-Query':'pyot'}
     callback = client_callback
     operations = [(function, args, kwargs, callback)]
     try:
@@ -103,7 +103,7 @@ class SubResource(VResource):
     class Meta(object):
         app_label = 'pyot'
 
-class PeriodicVsT(VResource):
+class VirtualSensorT(VResource):
     """
     TODO
     """
@@ -113,33 +113,39 @@ class PeriodicVsT(VResource):
         """
         print "Periodic Virtual Sensor \n>> supported methods: \
 GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
-        return "sample resource: instructions.."
+        return "virtual resource template sample"
+    
     def POST(self, name):
         """
-        TODO
+        Starting from the template creates the instance of the virtual 
+        resource using the name provided by the user. If an instance having 
+        that name is already existing it is returned to the user.
         """
         uri = str(self.uri + '/' + name)
-        print 'instance uri ===== ' + uri
-        instance = PeriodicVsI.objects.create(template=self,
+        
+        #print 'instance uri ===== ' + uri
+        
+        instance, created = VirtualSensorI.objects.get_or_create(template=self,
                                               host=self.host,
                                               uri=uri,
                                               title=name,
                                               rt=self.rt)
         
-        period = SubResource.objects.create(host=self.host,
+        period, _ = SubResource.objects.get_or_create(host=self.host,
                                 uri=uri + '/period',
                                 title='period',
-                                rt=self.rt,
-                                value='60')
+                                rt=self.rt, 
+                                defaults={'value':'60'})
 
-        processing = SubResource.objects.create(host=self.host,
+        processing, _ = SubResource.objects.get_or_create(host=self.host,
                                 uri=uri + '/processing',
                                 title='processing',
                                 rt=self.rt,
-                                value=None)
-        instance.period = period
-        instance.processing = processing
-        instance.save()
+                                defaults={'value':None})
+        if created is True:
+            instance.period = period
+            instance.processing = processing
+            instance.save()
 
 
         return instance
@@ -147,22 +153,37 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
     class Meta(object):
         app_label = 'pyot'
 
-proc="""
-print 'this is a user-defined processing function'
-"""
 
 
-def apply_pf(pf, input_list):
-    pass
 
-class PeriodicVsI(VResource):
+class VirtualActuatorT(VResource):
     """
     TODO
     """
+    def GET(self):
+        """
+        TODO
+        """
+        return "virtual actuator template sample"
+    
+    def POST(self, name):
+        """
+        """
+        uri = str(self.uri + '/' + name)
+        #return instance
+
+    class Meta(object):
+        app_label = 'pyot'
+
+
+class VirtualSensorI(VResource):
+    """
+    Virtual Resource Instance
+    """
     #reference to the template so that we can get the input resource list
-    template = models.ForeignKey(Resource, related_name='template')
+    template = models.ForeignKey(Resource, related_name='vs_template')
     period = models.ForeignKey(SubResource, related_name='period', null=True)
-    processing = models.ForeignKey(SubResource, related_name='processing', null=True) 
+    processing = models.ForeignKey(SubResource, related_name='vs_processing', null=True) 
     
     class Meta(object):
         app_label = 'pyot'
@@ -173,19 +194,23 @@ class PeriodicVsI(VResource):
         periodically.
         """
         print 'return the VALUE of the virtual resource'
-        print 'period =', self.period.GET()
-        
+        #print 'period =', self.period.GET()
+        input_list = [1, 2, 3, 4, 5]
+        output = apply_pf(self.processing.value, input_list)
         #for now we just return a fixed list of values
-        return [1, 2, 3, 4, 5]
+        return str(output)
         
 
 
-       
-def periodic_instance_created(sender, instance, **kwargs):
-    #print instance.template.ioSet
-    pass
-
-post_save.connect(periodic_instance_created, 
-                  dispatch_uid="my_unique_identifier", sender=PeriodicVsI)
-
-
+class VirtualActuatorI(VResource):
+    """
+    Virtual Actuator Resource Instance
+    """
+    #reference to the template so that we can get the input resource list
+    template = models.ForeignKey(Resource, related_name='va_template')
+    
+    class Meta(object):
+        app_label = 'pyot'
+    
+    def PUT(self, value):
+        pass
