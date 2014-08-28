@@ -47,7 +47,7 @@ WORKER_RECOVERY = settings.WORKER_RECOVERY
 RECOVERY_PERIOD = settings.RECOVERY_PERIOD
 SUBSCRIPTION_RECOVERY = settings.SUBSCRIPTION_RECOVERY
 RX_TIMEOUT = 20
-COAP_PATH = PROJECT_ROOT + '/../libcoap-4.0.1/examples/'
+COAP_PATH = PROJECT_ROOT + '/../libcoap-coap18/examples/'
 COAP_CLIENT = COAP_PATH + 'coap-client'
 RD_SERVER = COAP_PATH + 'rd'
 DEFAULT_OBS_TIMEOUT = 30
@@ -416,6 +416,7 @@ def coapRdServer(prefix='bbbb::/64'):
     createRdResources(rdIp, n)
     server = CoAPServer("[bbbb::1]", 5683)
     reactor.listenUDP(5683, server, "bbbb::1")
+    coapRdServer.update_state(state="PROGRESS")
     reactor.run()         
     """
     try:
