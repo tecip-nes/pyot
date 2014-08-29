@@ -183,6 +183,7 @@ class VirtualSensorI(VResource):
         print self.template.ioSet
         input_list = []
         ress =  self.template.get_io_resources()
+        ress.filter(host__active=True)
         for i in ress:
             resp = i.GET()
             input_list.append(int(resp.content))
