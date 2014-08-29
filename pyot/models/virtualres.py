@@ -14,7 +14,6 @@ from coapthon2.client.coap_protocol import HelperClient
 
 DEF_VALUE_LENGTH = 1000
 
-client = HelperClient()
 
 class VResource(Resource):
     """
@@ -66,23 +65,11 @@ def pre_create_vr(sender, instance, **kwargs):
         return
     print instance.uri    
     print "The vr is going to be created  *********************************\n\n"
-    #r = Resource.objects.get(uri='/rd')
-    path = instance.uri[1:]
-    print "PATH ===================="  + path
-    payload = instance.uri
-    #from pyot.vres.vresApp import get_rd_host
-    #rd_host = get_rd_host()
-    client = HelperClient(server=("bbbb::1", 5683))
-    function = client.protocol.post
+    from pyot.tasks import coapPost
+    res = coapPost(ip6address="bbbb::1", uri=instance.uri, payload = instance.uri, timeout=30)
+    if res.code != '2.01':
+        raise Exception("could not create resource in rd")
     
-    args = (path, payload)
-    kwargs = {'Uri-Query':'pyot'}
-    callback = client_callback
-    operations = [(function, args, kwargs, callback)]
-    try:
-        client.start(operations)
-    except:
-        client.add_operations(operations)    
     
 class SubResource(VResource):
     """
@@ -131,11 +118,12 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
                                               title=name,
                                               rt=self.rt)
         
-        period, _ = SubResource.objects.get_or_create(host=self.host,
-                                uri=uri + '/period',
-                                title='period',
-                                rt=self.rt, 
-                                defaults={'value':'60'})
+        
+        #period, _ = SubResource.objects.get_or_create(host=self.host,
+        #                        uri=uri + '/period',
+        #                        title='period',
+        #                        rt=self.rt, 
+        #                        defaults={'value':'60'})
 
         processing, _ = SubResource.objects.get_or_create(host=self.host,
                                 uri=uri + '/processing',
@@ -143,7 +131,7 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
                                 rt=self.rt,
                                 defaults={'value':None})
         if created is True:
-            instance.period = period
+            #instance.period = period
             instance.processing = processing
             instance.save()
 
@@ -182,7 +170,7 @@ class VirtualSensorI(VResource):
     """
     #reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vs_template')
-    period = models.ForeignKey(SubResource, related_name='period', null=True)
+    #period = models.ForeignKey(SubResource, related_name='period', null=True)
     processing = models.ForeignKey(SubResource, related_name='vs_processing', null=True) 
     
     class Meta(object):
@@ -190,12 +178,18 @@ class VirtualSensorI(VResource):
 
     def GET(self):
         """
-        Returns a list of values for each input sensor. Values are collected
-        periodically.
         """
         print 'return the VALUE of the virtual resource'
+        print self.template.ioSet
+        input_list = []
+        ress =  self.template.get_io_resources()
+        for i in ress:
+            resp = i.GET()
+            input_list.append(int(resp.content))
+        #filtered_res = Resource.objects.filter(self.template.ioset)
+        #print filtered_res.count()
+        
         #print 'period =', self.period.GET()
-        input_list = [1, 2, 3, 4, 5]
         output = apply_pf(self.processing.value, input_list)
         #for now we just return a fixed list of values
         return str(output)

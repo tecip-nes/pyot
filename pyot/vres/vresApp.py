@@ -60,6 +60,8 @@ class VirtualSensorTemplate(VirtualResourceTemplate):
                                                      uri=RDPATH+name,
                                                      title=name,
                                                      rt=self.rt)
+        self.vst.ioSet = input_template
+        self.vst.save()
 
 
     

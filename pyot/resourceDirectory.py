@@ -103,20 +103,9 @@ class VrInstance(pResource):
     def render_POST(self, request, payload=None, query=None):
         print 'creating a virtual subresource'
         print 'payload = ', payload
-        print query
-        try:
-            q = query[0]
-        except:
-            q = None    
-        if q == 'pyot':
-            print 'pyot request'
-
-            q = "?" + "&".join(query)
-            res = VrSubresource(name=payload)
-            return {"Payload": payload, "Location-Query": q, "Resource": res}
-        else:
-            print 'external request'
-            return {} #internal error  
+        q = "?" + "&".join(query)
+        res = VrSubresource(name=payload)
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
 
 
 
@@ -139,20 +128,10 @@ class VrTemplate(pResource):
     def render_POST(self, request, payload=None, query=None):
         print 'creating a virtual resource instance'
         print 'payload = ', payload
-        print query        
-        try:
-            q = query[0]
-        except:
-            q = None    
-        if q == 'pyot':
-            print 'pyot request'
-            print 'internal request'
-            q = "?" + "&".join(query)
-            res = VrInstance(name=payload)     
-            return {"Payload": payload, "Location-Query": q, "Resource": res}       
-        else:
-            print 'external request'
-            return {} #internal error 
+        q = "?" + "&".join(query)
+        res = VrInstance(name=payload)     
+        return {"Payload": payload, "Location-Query": q, "Resource": res}       
+
     
 
 class RD(pResource):
@@ -163,7 +142,7 @@ class RD(pResource):
         self.payload = "Resource Directory"
 
     def render_GET(self, request, query=None):
-        return self.payload
+        return {"Payload": "Resource Directory"}
 
     def render_PUT(self, request, payload=None, query=None):
         ipAddr = request.source[0]
@@ -198,21 +177,10 @@ class RD(pResource):
     def render_POST(self, request, payload=None, query=None):
         print 'creating a virtual resource template.'
         print 'payload = ', payload
-        print 'query ', query, request.query
-        
-        try:
-            q = query[0]
-        except:
-            q = None    
-        if q == 'pyot':
-            print 'pyot request'
+        q = "?" + "&".join(query)
+        res = VrTemplate(name=payload)
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
 
-            q = "?" + "&".join(query)
-            res = VrTemplate(name=payload)
-            return {"Payload": payload, "Location-Query": q, "Resource": res}
-        else:
-            print 'external request'
-            return {} #internal error   
 
 
 class CoAPServer(CoAP): 
