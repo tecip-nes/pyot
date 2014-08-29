@@ -166,9 +166,9 @@ def addQuery(uri, query):
 @task
 def coapPost(ip6address, uri, payload, timeout=RX_TIMEOUT, query=None, inputfile=None, block=None, index=0):
     try:
-        st = (float(index) * 0.2)
-        time.sleep(st)
-        print st
+        #st = (float(index) * 0.2)
+        #time.sleep(st)
+        #print st
         if query is not None:
             uri = addQuery(uri, query)
         fulluri = 'coap://[' + str(ip6address) + ']' + str(uri)
@@ -414,10 +414,21 @@ def coapRdServer(prefix='bbbb::/64'):
         raise Exception('Address %s not available' % rdIp)
 
     createRdResources(rdIp, n)
-    server = CoAPServer("[bbbb::1]", 5683)
-    reactor.listenUDP(5683, server, "bbbb::1")
-    coapRdServer.update_state(state="PROGRESS")
-    reactor.run()         
+    try:    
+        server = CoAPServer("[bbbb::1]", 5683)
+        reactor.listenUDP(5683, server, "bbbb::1")
+        coapRdServer.update_state(state="PROGRESS")
+        reactor.run()   
+    except Exception, exc:
+        exc_type, exc_value, exc_traceback = sys.exc_info()              
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print ''.join('!! ' + line for line in lines)
+        coapRdServer.update_state(state="ERROR")
+        coapRdServer.retry(exc=exc, countdown=5)
+    finally:
+        n = Network.objects.get(network=prefix)
+        n.pid = None
+        n.save()
     """
     try:
         while True:
@@ -434,82 +445,6 @@ def coapRdServer(prefix='bbbb::/64'):
         n.save()
         #c.close()
     """
-
-
-
-
-
-
-""" libcoap regular version
-@task(max_retries=None)
-def coapRdServer(prefix=''):
-    print 'starting Coap Resource Directory Server, prefix= ' + prefix
-    print 'id = ' + str(coapRdServer.request.id)
-    n = Network.objects.get(network=prefix)
-    if coapRdServer.request.retries > 0:
-        print 'coapRdServer retry #' + str(coapRdServer.request.retries)
-        n.pid = str(coapRdServer.request.id)
-        n.save()
-        Log.objects.create(log_type='RdRetry', message=prefix)
-    rdIp = prefix[:-3] + '1'
-    if not checkIp(rdIp):
-        raise Exception('Address %s not available' % rdIp)
-
-    #createRdResources(rdIp, n)
-
-    try:
-        coapRdServer.update_state(state="PROGRESS")
-        rd = subprocess.Popen([RD_SERVER + ' -v 1 -A ' + rdIp],
-                              stdin=subprocess.PIPE,
-                              stdout=subprocess.PIPE,
-                              shell=True)
-
-        while True:
-            response = rd.stdout.readline().strip()
-            ipAddr = response.split(']')[0].split('[')[1]
-            timestamp = response.split()[1]
-            print 'RD server, message from: ' + ipAddr + ' time = ' + timestamp
-            try:
-                h = Host.objects.get(ip6address=ipAddr)
-                h.lastSeen = datetime.now()
-                h.active = True
-                if int(timestamp) < h.keepAliveCount:
-                    Log.objects.create(log_type='registration', message=ipAddr)
-                h.keepAliveCount = int(timestamp)
-                h.save()
-                tmp = Resource.objects.filter(host=h)
-                if len(tmp) == 0:
-                    print 'The host has no resources.'
-                    try:
-                        h.DISCOVER()
-                    except Exception:
-                        pass
-            except ObjectDoesNotExist: #the host does not exists, create a new Host
-                h = Host(ip6address=ipAddr, lastSeen=datetime.now(), keepAliveCount=1)
-                h.save()
-                try:
-                    h.DISCOVER()
-                except Exception:
-                    pass
-                Log.objects.create(log_type='registration', message=ipAddr)
-
-    except Exception, exc:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)
-        coapRdServer.update_state(state="ERROR")
-        coapRdServer.retry(exc=exc, countdown=5)
-    finally:
-        n = Network.objects.get(network=prefix)
-        n.pid = None
-        n.save()
-
-        print 'finally, killing subprocesses...'
-        if rd is not None:
-            if os.path.exists("/proc/" + str(rd.pid)):
-                os.kill(rd.pid, signal.SIGTERM)
-        print '...done.'
-"""
 
 @celery.decorators.periodic_task(run_every=timedelta(seconds=CLEANUP_TASK_PERIOD))
 def checkConnectedHosts():

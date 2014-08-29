@@ -41,6 +41,7 @@ admin.site.register(RplGraph)
 admin.site.register(EmulatorState)
 admin.site.register(SubResource)
 admin.site.register(VirtualSensorI)
+admin.site.register(VirtualSensorT)
 
 # Define an inline admin descriptor for UserProfile model
 # which acts a bit like a singleton

@@ -33,7 +33,7 @@ from pyot.tools.utils import get_celery_worker_status
 from polymorphic import PolymorphicModel
 
 TFMT = settings.TFMT
-CACHING = True
+CACHING = False
 DEFAULTCACHINGINTERVAL = 60
 DEFAULT_CACHING_RESOURCES = {'/sensors/light':15,
                    'temp': 120,
