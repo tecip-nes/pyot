@@ -69,6 +69,7 @@ char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
 
 extern resource_t res_light;
 extern resource_t res_toggle;
+extern resource_t res_leds;
 
 
 int getRandUint(unsigned int mod){
@@ -107,7 +108,8 @@ PROCESS_THREAD(rest_server_example, ev, data)
   SERVER_NODE(&server_ipaddr);
   /* Activate the application-specific resources. */
   rest_activate_resource(&res_light, "sensors/light"); 
-  rest_activate_resource(&res_toggle, "actuators/toggle");  
+  //rest_activate_resource(&res_toggle, "actuators/toggle");  
+  rest_activate_resource(&res_leds, "actuators/leds");  
   rplinfo_activate_resources();
   PRINTF("Resources activated\n");
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
@@ -115,7 +117,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   static int time=0;
   static char content[12];
 
-  /*int wait_time = getRandUint(MAX_WAITING);
+  int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
 
   printf("start...%d\n", wait_time);
@@ -126,10 +128,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
     PROCESS_YIELD();
     //PROCESS_WAIT_EVENT();
     if (etimer_expired(&et)) break;
-    }*/
+    }
   //etimer_reset(&et);
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
-
+  size_t len;
   while(1) {
     PROCESS_YIELD();
     if (etimer_expired(&et)) {
@@ -147,6 +149,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
         coap_send_transaction(transaction);
         //coap_clear_transaction(transaction);
       }
+      
+      //len = coap_serialize_message(request, uip_appdata);
+      //coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);      
       PRINTF("Done\n");
       etimer_reset(&et);
      }

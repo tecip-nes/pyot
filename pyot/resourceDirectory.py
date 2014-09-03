@@ -6,7 +6,7 @@ Created on Aug 6, 2014
 
 from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
-from pyot.models import Resource, Host, Log, VirtualSensorT
+from pyot.models import Resource, Host, Log, VirtualSensorT, SubResource, VResource, VirtualSensorI
 from coapthon2.server.coap_protocol import CoAP
 from coapthon2.resources.resource import Resource as pResource
 from pyot.vres.vresApp import get_rd_host
@@ -48,22 +48,22 @@ class VrSubresource(pResource):
                 return 'Resource updated'
             return 'Resource unmodified'
         except Exception as exc:
-            return trunc_exc(exc)           
+            return trunc_exc(exc) 
+    """              
     def render_DELETE(self, request, query=None):
-        """
-        It is only possible to delete a resource if it has no subresources.
-        """
+        #It is only possible to delete a resource if it has no subresources.
         try:
             uri = '/' + request.uri_path
-            r = Resource.objects.get(uri=uri)
-            sub_res = r.getSubResources()
-            if len(sub_res) == 0:
-                r.delete()
-                return True
-            else:
-                return False
+            r = SubResource.objects.get(uri=uri)
+            #sub_res = r.getSubResources()
+            #if len(sub_res) == 0:
+            r.delete()
+            return True
+            #else:
+            #    return False
         except Exception:
             return False
+    """  
 
 class VrInstance(pResource):
     def __init__(self, name="VirtualResource"):
@@ -79,18 +79,17 @@ class VrInstance(pResource):
         uri = '/' + request.uri_path   
         try:
             if payload is not None:
-                Resource.objects.get(uri=uri).PUT(payload)
-                return 'Resource updated'
+                result = Resource.objects.get(uri=uri).PUT(payload)
+                return {"Payload": result}
             return 'Resource unmodified'
         except Exception as exc:
-            return trunc_exc(exc)           
+            return trunc_exc(exc)    
+    """           
     def render_DELETE(self, request, query=None):
-        """
-        It is only possible to delete a resource if it has no subresources.
-        """
+        #It is only possible to delete a resource if it has no subresources.
         try:
             uri = '/' + request.uri_path
-            r = Resource.objects.get(uri=uri)
+            r = VirtualSensorI.objects.get(uri=uri)
             sub_res = r.getSubResources()
             if len(sub_res) == 0:
                 r.delete()
@@ -99,8 +98,9 @@ class VrInstance(pResource):
                 return False
         except Exception:
             return False
-        
+    """        
     def render_POST(self, request, payload=None, query=None):
+        # currently meaningful only for internal (shell) requests
         print 'creating a virtual subresource'
         print 'payload = ', payload
         q = "?" + "&".join(query)
@@ -126,13 +126,13 @@ class VrTemplate(pResource):
             return trunc_exc(exc)
 
     def render_POST(self, request, payload=None, query=None):
+        # currently meaningful only for internal (shell) requests
         print 'creating a virtual resource instance'
         print 'payload = ', payload
         q = "?" + "&".join(query)
         res = VrInstance(name=payload)     
         return {"Payload": payload, "Location-Query": q, "Resource": res}       
 
-    
 
 class RD(pResource):
     def __init__(self, name="StorageResource"):
@@ -175,17 +175,16 @@ class RD(pResource):
         return {"Payload": "ok"}
     
     def render_POST(self, request, payload=None, query=None):
+        # currently meaningful only for internal (shell) requests        
         print 'creating a virtual resource template.'
         print 'payload = ', payload
         q = "?" + "&".join(query)
         res = VrTemplate(name=payload)
         return {"Payload": payload, "Location-Query": q, "Resource": res}
-
-
+        
 
 class CoAPServer(CoAP): 
     def __init__(self, host, port):
         CoAP.__init__(self)
         self.add_resource('rd/', RD())
         print "CoAP Server start on " + host + ":" + str(port)
-        #print(self.root.dump())

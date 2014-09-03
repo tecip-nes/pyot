@@ -41,6 +41,7 @@
 #if PLATFORM_HAS_LEDS
 
 #include <string.h>
+#include <stdlib.h>
 #include "rest-engine.h"
 #include "dev/leds.h"
 
@@ -56,11 +57,15 @@
 #define PRINTLLADDR(addr)
 #endif
 
+#define THR1 25
+#define THR2 50
+#define THR3 75
+
 static void res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
 RESOURCE(res_leds,
-         "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"",
+         "title=\"LED\";rt=\"Control\"",
          NULL,
          res_post_put_handler,
          res_post_put_handler,
@@ -70,12 +75,34 @@ static void
 res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
-  const char *color = NULL;
-  const char *mode = NULL;
+  //const char *color = NULL;
+  const char *set = NULL;
   uint8_t led = 0;
-  int success = 1;
 
-  if((len = REST.get_query_variable(request, "color", &color))) {
+  len = REST.get_post_variable(request, "set", &set);
+  if (len <=0){
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+
+  unsigned int set_point = atoi(set);
+  printf("\nset = %d\n", set_point);
+
+  if (set_point > THR1){
+    printf("\nred");
+    led = LEDS_RED;
+  }
+  if (set_point > THR2){
+    printf("\ngreen");
+    led = LEDS_GREEN;
+  }
+  if (set_point > THR3){
+    printf("\nblue");  
+    led = LEDS_YELLOW;
+  }
+  if (set_point != 0){
+    leds_on(led);
+  }
+  /*if((len = REST.get_query_variable(request, "color", &color))) {
     PRINTF("color %.*s\n", len, color);
 
     if(strncmp(color, "r", len) == 0) {
@@ -103,6 +130,6 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     success = 0;
   } if(!success) {
     REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
+  }*/
 }
 #endif /* PLATFORM_HAS_LEDS */
