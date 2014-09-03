@@ -5,7 +5,7 @@ Created on Jul 29, 2014
 '''
 
 from pyot.models.rest import Resource, Host
-from pyot.models.virtualres import VirtualSensorT, VirtualActuatorT
+from pyot.models.virtualres import VirtualSensorT, VirtualActuatorT, VirtualSensorHistT
 from datetime import datetime, timedelta
 
 RDPATH = '/rd/'
@@ -49,10 +49,6 @@ class VirtualSensorTemplate(VirtualResourceTemplate):
     """
     def __init__(self, input_template, name='senT'):
         """ 
-        creates the template
-        serve un host per istanziare una risorsa. per ora ne creo uno fasullo
-        nella versione finale l'host potrebbe essere scelto in base alle risorse selezionate
-        oppure semplicemente associato ad un unico host che ospita l'rdep
         """
         super(VirtualSensorTemplate, self).__init__()
         rd_host = get_rd_host()
@@ -63,7 +59,22 @@ class VirtualSensorTemplate(VirtualResourceTemplate):
         self.vst.ioSet = input_template
         self.vst.save()
 
+class VirtualSensorHistTemplate(VirtualResourceTemplate):
+    """
+    TODO
+    """
+    def __init__(self, input_template, name='senT'):
+        """ 
 
+        """
+        super(VirtualSensorHistTemplate, self).__init__()
+        rd_host = get_rd_host()
+        self.vst, _created = VirtualSensorHistT.objects.get_or_create(host=rd_host,
+                                                     uri=RDPATH+name,
+                                                     title=name,
+                                                     rt=self.rt)
+        self.vst.ioSet = input_template
+        self.vst.save()
     
 class VirtualActuatorTemplate(VirtualResourceTemplate):
     """
@@ -82,4 +93,5 @@ class VirtualActuatorTemplate(VirtualResourceTemplate):
                                                      uri=RDPATH+name,
                                                      title=name,
                                                      rt=self.rt)
-    
+        self.vst.ioSet = output_template
+        self.vst.save()    

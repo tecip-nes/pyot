@@ -397,6 +397,22 @@ def coapDiscovery(host, path):
 from pyot.resourceDirectory import createRdResources, CoAPServer
 from twisted.internet import reactor
 
+def init_rd():
+    """
+    when starting the rd server create all the virtual resources already 
+    present in the db. 
+    """
+    virtual_res = Resource.objects.filter(uri__startswith='/rd/').order_by('id')
+    for res in virtual_res:
+        print res.uri
+        res = coapPost.delay(ip6address="bbbb::1", 
+                             uri=res.uri, payload = res.uri, timeout=30)
+        time.sleep(0.3) #dirty workaround until I find a way to check the result and eventually create the resource
+        #TODO: check the result of the post
+        #res.wait()
+        #if res.code != '2.01':
+        #    raise Exception("could not create resource in rd")
+        
 @task(max_retries=None)
 def coapRdServer(prefix='bbbb::/64'):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix
@@ -418,7 +434,10 @@ def coapRdServer(prefix='bbbb::/64'):
         server = CoAPServer("[bbbb::1]", 5683)
         reactor.listenUDP(5683, server, "bbbb::1")
         coapRdServer.update_state(state="PROGRESS")
-        reactor.run()   
+        reactor.callLater(2, init_rd)
+        reactor.run()
+
+
     except Exception, exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()              
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
