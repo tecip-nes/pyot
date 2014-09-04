@@ -21,7 +21,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from pyot.models.virtualres.virtualsensor import *
 from pyot.models.virtualres.virtualactuator import *
+from pyot.models.virtualres.virtualsensor import *
 from pyot.models.virtualres.virtualsensorhist import *
 from pyot.models.virtualres.vresbase import *

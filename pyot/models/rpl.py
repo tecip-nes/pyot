@@ -21,25 +21,32 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
+import errno
+import os
+import pickle
+
+from django.conf import settings
 from django.db import models
-import errno, os, pickle
+from django.db.models.query import QuerySet
 from networkx import to_agraph
 from networkx.algorithms import ancestors, descendants, shortest_path_length
-from django.db.models.query import QuerySet
-from django.conf import settings
+
 import rest
+
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 FMT = "%Y%m%d%H%M%S"
 BASE_PATH = MEDIA_ROOT + 'rpl/'
 
+
 def short_name(host):
     '''
     Returns a more compact (but incomplete) representation of an IPv6
-    address (last 5 digits). It is used to label the nodes in the 
+    address (last 5 digits). It is used to label the nodes in the
     graph.
     '''
     return host.ip6address.exploded[-5:]
+
 
 def search_host(eui, network):
     '''
@@ -52,6 +59,7 @@ def search_host(eui, network):
             return short_name(i)
     return '6LBR'
 
+
 def make_sure_path_exists(path):
     '''
     Checks if a path exists in the file system.
@@ -62,6 +70,7 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
+
 class RplGraph(models.Model):
     '''
     Representation of a RPL graph, based on networkX serialized objects.
@@ -69,14 +78,17 @@ class RplGraph(models.Model):
     _graph = models.CharField(max_length=5000, blank=True, null=True)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
     net = models.ForeignKey(rest.Network)
+
     def set_data(self, graph):
         self._graph = pickle.dumps(graph)
+
     def get_data(self):
         return pickle.loads(self._graph)
     graph = property(get_data, set_data)
 
     class Meta(object):
         app_label = 'pyot'
+
     def __unicode__(self):
         return u"Rpl graph for %s" % (self.net.hostname) # TODO: be more specific
 
@@ -139,4 +151,3 @@ class RplGraph(models.Model):
         node = self.find_node_from_host(host)
         if node in self.graph.nodes():
             return shortest_path_length(self.graph, node, '6LBR')
-

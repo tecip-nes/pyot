@@ -5,24 +5,27 @@ Created on Aug 6, 2014
 '''
 
 from datetime import datetime, timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
-from pyot.models import Resource, Host, Log, VirtualSensorT, SubResource, VResource, VirtualSensorI
-from coapthon2.server.coap_protocol import CoAP
+
 from coapthon2.resources.resource import Resource as pResource
-from pyot.vres.vresApp import get_rd_host
+from coapthon2.server.coap_protocol import CoAP
+from pyot.models import Resource, Host, Log
+
 
 def trunc_exc(exc, max_len=20):
     s = str(exc)
     return s[0:max_len] + '...'
 
+
 def createRdResources(rdIp, n):
     try:
         rdHost = Host.objects.get(ip6address=rdIp)
     except ObjectDoesNotExist:
-        # the timedelta is a 
-        # workaround to prevent the periodic process disabling the resource 
-        rdHost = Host.objects.create(ip6address=rdIp, 
-                                     network=n, 
+        # the timedelta is a
+        # workaround to prevent the periodic process disabling the resource
+        rdHost = Host.objects.create(ip6address=rdIp,
+                                     network=n,
                                      lastSeen=datetime.now() + timedelta(days=100))
     try:
         Resource.objects.get(host=rdHost, uri="/rd")
@@ -32,8 +35,9 @@ def createRdResources(rdIp, n):
 
 class VrSubresource(pResource):
     def __init__(self, name="VirtualResource"):
-        super(VrSubresource, self).__init__(name, visible=True, 
-                                 observable=False, allow_children=True)
+        super(VrSubresource, self).__init__(name, visible=True,
+                                            observable=False,
+                                            allow_children=True)
         self.payload = "Virtual subResource (cfg)"
 
     def render_GET(self, request, query=None):
@@ -41,15 +45,15 @@ class VrSubresource(pResource):
         return str(Resource.objects.get(uri=uri).GET())
 
     def render_PUT(self, request, payload=None, query=None):
-        uri = '/' + request.uri_path   
+        uri = '/' + request.uri_path
         try:
             if payload is not None:
                 Resource.objects.get(uri=uri).PUT(payload)
                 return 'Resource updated'
             return 'Resource unmodified'
         except Exception as exc:
-            return trunc_exc(exc) 
-    """              
+            return trunc_exc(exc)
+    """
     def render_DELETE(self, request, query=None):
         #It is only possible to delete a resource if it has no subresources.
         try:
@@ -63,12 +67,15 @@ class VrSubresource(pResource):
             #    return False
         except Exception:
             return False
-    """  
+    """
+
 
 class VrInstance(pResource):
     def __init__(self, name="VirtualResource"):
-        super(VrInstance, self).__init__(name, visible=True, 
-                                 observable=False, allow_children=True)
+        super(VrInstance, self).__init__(name,
+                                         visible=True,
+                                         observable=False,
+                                         allow_children=True)
         self.payload = "Virtual Resource Instance"
 
     def render_GET(self, request, query=None):
@@ -76,15 +83,15 @@ class VrInstance(pResource):
         return str(Resource.objects.get(uri=uri).GET())
 
     def render_PUT(self, request, payload=None, query=None):
-        uri = '/' + request.uri_path   
+        uri = '/' + request.uri_path
         try:
             if payload is not None:
                 result = Resource.objects.get(uri=uri).PUT(payload)
                 return {"Payload": result}
             return 'Resource unmodified'
         except Exception as exc:
-            return trunc_exc(exc)    
-    """           
+            return trunc_exc(exc)
+    """
     def render_DELETE(self, request, query=None):
         #It is only possible to delete a resource if it has no subresources.
         try:
@@ -98,7 +105,7 @@ class VrInstance(pResource):
                 return False
         except Exception:
             return False
-    """        
+    """
     def render_POST(self, request, payload=None, query=None):
         # currently meaningful only for internal (shell) requests
         print 'creating a virtual subresource'
@@ -108,11 +115,12 @@ class VrInstance(pResource):
         return {"Payload": payload, "Location-Query": q, "Resource": res}
 
 
-
 class VrTemplate(pResource):
     def __init__(self, name="VirtualResource"):
-        super(VrTemplate, self).__init__(name, visible=True, 
-                                 observable=False, allow_children=True)
+        super(VrTemplate, self).__init__(name,
+                                         visible=True,
+                                         observable=False,
+                                         allow_children=True)
         self.payload = "Virtual Resource Template"
 
     def render_GET(self, request, query=None):
@@ -130,14 +138,14 @@ class VrTemplate(pResource):
         print 'creating a virtual resource instance'
         print 'payload = ', payload
         q = "?" + "&".join(query)
-        res = VrInstance(name=payload)     
-        return {"Payload": payload, "Location-Query": q, "Resource": res}       
+        res = VrInstance(name=payload)
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
 
 
 class RD(pResource):
     def __init__(self, name="StorageResource"):
-        super(RD, self).__init__(name, visible=True, 
-                                 observable=False, 
+        super(RD, self).__init__(name, visible=True,
+                                 observable=False,
                                  allow_children=True)
         self.payload = "Resource Directory"
 
@@ -147,7 +155,7 @@ class RD(pResource):
     def render_PUT(self, request, payload=None, query=None):
         ipAddr = request.source[0]
         timestamp = payload
-        print 'RD server, message from: ' + ipAddr + ' time = ' + timestamp        
+        print 'RD server, message from: ' + ipAddr + ' time = ' + timestamp
         try:
             h = Host.objects.get(ip6address=ipAddr)
             h.lastSeen = datetime.now()
@@ -163,9 +171,9 @@ class RD(pResource):
                     h.DISCOVER()
                 except Exception:
                     pass
-        except ObjectDoesNotExist: #the host does not exists, create a new Host
-            h = Host.objects.create(ip6address=ipAddr, 
-                                    lastSeen=datetime.now(), 
+        except ObjectDoesNotExist:  # the host does not exists, create a new Host
+            h = Host.objects.create(ip6address=ipAddr,
+                                    lastSeen=datetime.now(),
                                     keepAliveCount=1)
             try:
                 h.DISCOVER()
@@ -173,17 +181,17 @@ class RD(pResource):
                 pass
             Log.objects.create(log_type='registration', message=ipAddr)
         return {"Payload": "ok"}
-    
+
     def render_POST(self, request, payload=None, query=None):
-        # currently meaningful only for internal (shell) requests        
+        # currently meaningful only for internal (shell) requests
         print 'creating a virtual resource template.'
         print 'payload = ', payload
         q = "?" + "&".join(query)
         res = VrTemplate(name=payload)
         return {"Payload": payload, "Location-Query": q, "Resource": res}
-        
 
-class CoAPServer(CoAP): 
+
+class CoAPServer(CoAP):
     def __init__(self, host, port):
         CoAP.__init__(self)
         self.add_resource('rd/', RD())

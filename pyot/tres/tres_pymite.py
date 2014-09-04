@@ -1,8 +1,15 @@
-import sys, traceback, os, importlib, pickle
+import importlib
+import os
+import pickle
+import sys
+import traceback
+
 from pyot.models.tres import TResT
+
 
 def getTaskObject():
     return TResT.objects.get(id=sys.argv[0])
+
 
 def setOutput(out):
     task = getTaskObject()
@@ -14,6 +21,7 @@ def setOutput(out):
     r = task.output.asyncPUT(payload=str(out))
     return r
 
+
 def getInput():
     task = getTaskObject()
     return str(task.emu.inp)
@@ -21,13 +29,16 @@ def getInput():
 # def getInputTag():
 #     task = getTaskObject()
 
+
 def getIntInput():
     task = getTaskObject()
     return int(task.emu.inp)
 
+
 def getFloatInput():
     task = getTaskObject()
     return float(task.emu.inp)
+
 
 def getState(cl):
     task = getTaskObject()
@@ -46,10 +57,12 @@ def getState(cl):
         task.emu.save()
         return c
 
+
 def saveState(cli):
     task = getTaskObject()
     task.emu.status = cli
     task.emu.save()
+
 
 def pop(def_val):
     task = getTaskObject()
@@ -60,6 +73,7 @@ def pop(def_val):
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         print ''.join('!! ' + line for line in lines)
         return def_val
+
 
 def push(val):
     task = getTaskObject()

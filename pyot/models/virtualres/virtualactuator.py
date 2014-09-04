@@ -21,23 +21,25 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from vresbase import SubResource, VResource, DEF_PF
-from pyot.vres.pf import apply_pf, set_actuator
 from django.db import models
+
 from pyot.models.rest import Resource
+from pyot.vres.pf import apply_pf, set_actuator
+from vresbase import SubResource, VResource, DEF_PF
+
 
 class VirtualActuatorT(VResource):
     """
     TODO
     """
     default_pf = DEF_PF
-    
+
     def GET(self):
         """
         TODO
         """
         return "virtual actuator template"
-    
+
     def POST(self, name):
         """
         """
@@ -48,52 +50,48 @@ class VirtualActuatorT(VResource):
                                               uri=uri,
                                               title=name,
                                               rt=self.rt)
-        
+
         processing, _ = SubResource.objects.get_or_create(host=self.host,
                                     uri=uri + '/proc',
                                     title='processing',
                                     rt=self.rt, 
                                     defaults={'value':self.default_pf})
-        
-            
-        #except Exception as e:
+
+        # except Exception as e:
         #    print 'error creating subresource: %s' % e
-        
+
         if created is True:
-            #instance.period = period
+            # instance.period = period
             instance.processing = processing
             instance.save()
         return instance
-    
+
     class Meta(object):
         app_label = 'pyot'
-
-
 
 
 class VirtualActuatorI(VResource):
     """
     Virtual Actuator Resource Instance
     """
-    #reference to the template so that we can get the input resource list
+    # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='va_template')
-    processing = models.ForeignKey(SubResource, 
-                                   related_name='va_processing', 
-                                   null=True, 
-                                   on_delete=models.SET_NULL) 
-        
+    processing = models.ForeignKey(SubResource,
+                                   related_name='va_processing',
+                                   null=True,
+                                   on_delete=models.SET_NULL)
+
     class Meta(object):
         app_label = 'pyot'
-    
+
     def PUT(self, value):
         ress = self.template.get_io_resources()
         active_ress = ress.filter(host__active=True)
         input_list = [x.id for x in active_ress]
         set_actuator(value)
         output, set_point = apply_pf(self.processing.value, input_list)
-        results = []        
+        results = []
         for i in active_ress:
             res = i.PUT(payload='set='+str(set_point))
             results.append(res.code)
         return str(output) + ' ' + str(results)
-            

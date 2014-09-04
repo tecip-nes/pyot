@@ -61,6 +61,26 @@
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspLED</moteinterface>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
+    <motetype>
+      org.contikios.cooja.mspmote.WismoteMoteType
+      <identifier>wismote3</identifier>
+      <description>Wismote Mote Type #wismote3</description>
+      <source EXPORT="discard">[CONFIG_DIR]/erbium/er-example-server.c</source>
+      <commands EXPORT="discard">make er-example-server.wismote TARGET=wismote</commands>
+      <firmware EXPORT="copy">[CONFIG_DIR]/erbium/er-example-server.wismote</firmware>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspClock</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspButton</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspLED</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
+    </motetype>
     <mote>
       <breakpoints />
       <interface_config>
@@ -117,6 +137,48 @@
       </interface_config>
       <motetype_identifier>wismote2</motetype_identifier>
     </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>54.93062822566487</x>
+        <y>54.505989308390085</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>5</id>
+      </interface_config>
+      <motetype_identifier>wismote3</motetype_identifier>
+    </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>69.87408864115437</x>
+        <y>81.82633924473627</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>6</id>
+      </interface_config>
+      <motetype_identifier>wismote3</motetype_identifier>
+    </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>63.843805327016085</x>
+        <y>86.81245648901464</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>7</id>
+      </interface_config>
+      <motetype_identifier>wismote3</motetype_identifier>
+    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
@@ -135,10 +197,11 @@
       <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
-      <viewport>4.311728622364622 0.0 0.0 4.311728622364622 -39.66228332208839 -75.62187780823565</viewport>
+      <skin>org.contikios.cooja.plugins.skins.LEDVisualizerSkin</skin>
+      <viewport>6.090472174195171 0.0 0.0 6.090472174195171 -109.2025562025613 -214.625944506827</viewport>
     </plugin_config>
     <width>400</width>
-    <z>2</z>
+    <z>0</z>
     <height>429</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -151,7 +214,7 @@
       <coloring />
     </plugin_config>
     <width>748</width>
-    <z>4</z>
+    <z>2</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -163,13 +226,16 @@
       <mote>1</mote>
       <mote>2</mote>
       <mote>3</mote>
+      <mote>4</mote>
+      <mote>5</mote>
+      <mote>6</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />
       <zoomfactor>500.0</zoomfactor>
     </plugin_config>
     <width>1920</width>
-    <z>6</z>
+    <z>4</z>
     <height>166</height>
     <location_x>1</location_x>
     <location_y>813</location_y>

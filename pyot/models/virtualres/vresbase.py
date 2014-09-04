@@ -21,11 +21,14 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from django.db import models
 import pickle
-from pyot.models.rest import Resource
+
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from pyot.models.rest import Resource
+
 
 DEF_VALUE_LENGTH = 1000
 
@@ -37,9 +40,11 @@ class VResource(Resource):
     Abstract base class for virtual sensors and actuators templates.
     """
     _ioSet = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True, null=True)
-    rt = 'virtual'        
+    rt = 'virtual'
+
     def set_data(self, ioSet):
         self._ioSet = pickle.dumps(ioSet)
+
     def get_data(self):
         return pickle.loads(self._ioSet)
 
@@ -47,13 +52,16 @@ class VResource(Resource):
 
     def GET(self):
         raise(NotImplementedError)
+
     def POST(self, name):
         raise(NotImplementedError)
+
     def PUT(self):
         raise(NotImplementedError)
+
     def DELETE(self):
         raise(NotImplementedError)
-            
+
     def get_io_resources(self):
         """
         Returns a queryset including the current list of input/output
@@ -75,32 +83,34 @@ def pre_create_vr(sender, instance, **kwargs):
     # Returns false if 'sender' is NOT a subclass of AbstractModel
     if not issubclass(sender, VResource):
         return
-    if kwargs['created'] == False:
+    if kwargs['created'] is False:
         return
-    print instance.uri    
-    print "The vr is going to be created  *********************************\n\n"
+    print instance.uri
+    print "The vr is going to be created  ********************************\n\n"
     from pyot.tasks import coapPost
-    res = coapPost(ip6address="bbbb::1", uri=instance.uri, payload = instance.uri, timeout=30)
+    res = coapPost(ip6address="bbbb::1",
+                   uri=instance.uri,
+                   payload=instance.uri,
+                   timeout=30)
     if res.code != '2.01':
         raise Exception("could not create resource in rd")
-    
-    
+
+
 class SubResource(VResource):
     """
-    Configuration Resources for Virtual Sensors/actuators instances. Their value 
-    is directly encoded in the resource directory (--> db) as a string. 
+    Configuration Resources for Virtual Sensors/actuators instances. Their value
+    is directly encoded in the resource directory (--> db) as a string.
     """
     value = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True, null=True)
 
     def GET(self):
         print 'virtual GET'
         return self.value
-    
+
     def PUT(self, newvalue):
         print 'virtual PUT'
         self.value = newvalue
         self.save()
 
     class Meta(object):
-        app_label = 'pyot'    
-        
+        app_label = 'pyot'
