@@ -26,13 +26,14 @@ from pyot.vres.pf import apply_pf
 from django.db import models
 from pyot.models.rest import Resource
 
+
 class VirtualSensorT(VResource):
     """
     TODO
     """
-    
+
     default_pf = DEF_PF
-    
+
     def GET(self):
         """
         TODO
@@ -40,7 +41,7 @@ class VirtualSensorT(VResource):
         print "Periodic Virtual Sensor \n>> supported methods: \
 GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
         return "virtual sensor template"
-    
+
     def POST(self, name):
         """
         Starting from the template creates the instance of the virtual 
@@ -48,25 +49,25 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
         that name is already existing it is returned to the user.
         """
         uri = str(self.uri + '/' + name)
-        
+
         #print 'instance uri ===== ' + uri
-        
+
         instance, created = VirtualSensorI.objects.get_or_create(template=self,
                                               host=self.host,
                                               uri=uri,
                                               title=name,
                                               rt=self.rt)
-            
+
         processing, _ = SubResource.objects.get_or_create(host=self.host,
                                     uri=uri + '/proc',
                                     title='processing',
                                     rt=self.rt, 
                                     defaults={'value':self.default_pf})
-        
-            
+
+
         #except Exception as e:
         #    print 'error creating subresource: %s' % e
-        
+
         if created is True:
             instance.processing = processing
             instance.save()
@@ -74,9 +75,8 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
 
     class Meta(object):
         app_label = 'pyot'
-        
-        
-        
+
+
 class VirtualSensorI(VResource):
     """
     Virtual Resource Instance
@@ -88,7 +88,7 @@ class VirtualSensorI(VResource):
                                    related_name='vs_processing', 
                                    null=True, 
                                    on_delete=models.SET_NULL) 
-    
+
     class Meta(object):
         app_label = 'pyot'
 
@@ -99,7 +99,7 @@ class VirtualSensorI(VResource):
         """
         print self.template.ioSet
         input_list = []
-        ress =  self.template.get_io_resources()
+        ress = self.template.get_io_resources()
         active_ress = ress.filter(host__active=True)
         for i in active_ress:
             resp = i.GET()
@@ -107,4 +107,3 @@ class VirtualSensorI(VResource):
 
         output, _ = apply_pf(self.processing.value, input_list)
         return str(output)
-    

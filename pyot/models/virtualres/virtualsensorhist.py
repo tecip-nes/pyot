@@ -28,20 +28,21 @@ from pyot.models.rest import Resource, CoapMsg
 from datetime import datetime, timedelta
 from calendar import timegm
 
+
 class VirtualSensorHistT(VResource):
     """
     TODO
     """
-    
+
     default_pf = DEF_PF
-    
+
     def GET(self):
         """
         TODO
         """
         print "Past virtual sensor \nSubresources: \n  -processing \n  -startTime \n  -endTime"
         return "virtual resource Past sensor template"
-    
+
     def POST(self, name):
         """
         Starting from the template creates the instance of the virtual 
@@ -49,7 +50,7 @@ class VirtualSensorHistT(VResource):
         that name is already existing it is returned to the user.
         """
         uri = str(self.uri + '/' + name)
-        
+
         instance, created = VirtualSensorHistI.objects.get_or_create(template=self,
                                               host=self.host,
                                               uri=uri,
@@ -59,7 +60,7 @@ class VirtualSensorHistT(VResource):
         processing, _ = SubResource.objects.get_or_create(host=self.host,
                                     uri=uri + '/proc',
                                     title='processing',
-                                    rt=self.rt, 
+                                    rt=self.rt,
                                     defaults={'value':self.default_pf})
 
         yesterday = datetime.now() - timedelta(days=1)
@@ -67,18 +68,17 @@ class VirtualSensorHistT(VResource):
         start, _ = SubResource.objects.get_or_create(host=self.host,
                                     uri=uri + '/start',
                                     title='start',
-                                    rt=self.rt, 
+                                    rt=self.rt,
                                     defaults={'value':yesterday_unix})
-        
-        
+
         now_unix = str(timegm(datetime.now().timetuple()))
-        
+
         end, _ = SubResource.objects.get_or_create(host=self.host,
                                     uri=uri + '/end',
                                     title='end',
-                                    rt=self.rt, 
-                                    defaults={'value':now_unix})        
-        
+                                    rt=self.rt,
+                                    defaults={'value':now_unix})
+
         if created is True:
             instance.processing = processing
             instance.start_time = start
@@ -88,29 +88,29 @@ class VirtualSensorHistT(VResource):
 
     class Meta(object):
         app_label = 'pyot'
-        
-        
+
+
 class VirtualSensorHistI(VResource):
     """
     Virtual Resource Instance
     """
-    #reference to the template so that we can get the input resource list
+    # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vsh_template')
-    processing = models.ForeignKey(SubResource, 
-                                   related_name='vsh_processing', 
-                                   null=True, 
-                                   on_delete=models.SET_NULL) 
+    processing = models.ForeignKey(SubResource,
+                                   related_name='vsh_processing',
+                                   null=True,
+                                   on_delete=models.SET_NULL)
 
-    start_time = models.ForeignKey(SubResource, 
-                                   related_name='vsh_start', 
-                                   null=True, 
-                                   on_delete=models.SET_NULL) 
+    start_time = models.ForeignKey(SubResource,
+                                   related_name='vsh_start',
+                                   null=True,
+                                   on_delete=models.SET_NULL)
 
-    end_time = models.ForeignKey(SubResource, 
-                                   related_name='vsh_end', 
-                                   null=True, 
-                                   on_delete=models.SET_NULL) 
-    
+    end_time = models.ForeignKey(SubResource,
+                                 related_name='vsh_end',
+                                 null=True,
+                                 on_delete=models.SET_NULL)
+
     class Meta(object):
         app_label = 'pyot'
 
@@ -120,18 +120,13 @@ class VirtualSensorHistI(VResource):
         on the input list and return the result.
         """
         print self.template.ioSet
-        ress =  self.template.get_io_resources()
+        ress = self.template.get_io_resources()
         messages = CoapMsg.objects.filter(resource__in=ress)
-        print 'before filtering', messages.count()         
+        print 'before filtering', messages.count()
         start = datetime.fromtimestamp(int(self.start_time.value))
-        endtime = datetime.fromtimestamp(int(self.end_time.value))  
+        endtime = datetime.fromtimestamp(int(self.end_time.value))
         messages.filter(timeadded__gte=start).filter(timeadded__lte=endtime)
-        print 'after filtering', messages.count()                                    
-        # query the db
-        #active_ress = ress.filter(host__active=True)
-        #for i in active_ress:
-        #    resp = i.GET()
-        #    input_list.append(int(resp.content))
+        print 'after filtering', messages.count()
         input_list = [int(x.payload) for x in messages]
         output, _ = apply_pf(self.processing.value, input_list)
-        return str(output)     
+        return str(output)

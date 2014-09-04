@@ -448,22 +448,7 @@ def coapRdServer(prefix='bbbb::/64'):
         n = Network.objects.get(network=prefix)
         n.pid = None
         n.save()
-    """
-    try:
-        while True:
-            time.sleep(5)
-    except Exception, exc:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print ''.join('!! ' + line for line in lines)
-        coapRdServer.update_state(state="ERROR")
-        coapRdServer.retry(exc=exc, countdown=5)
-    finally:
-        n = Network.objects.get(network=prefix)
-        n.pid = None
-        n.save()
-        #c.close()
-    """
+
 
 @celery.decorators.periodic_task(run_every=timedelta(seconds=CLEANUP_TASK_PERIOD))
 def checkConnectedHosts():
@@ -479,6 +464,7 @@ def checkConnectedHosts():
         return None
     except Exception:
         pass
+
 
 @task
 def pingHost(hostId, count=3):
