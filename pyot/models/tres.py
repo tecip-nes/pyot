@@ -22,10 +22,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 import base64
+import os
 import pickle
 import py_compile
 import subprocess
-import sys, os
+import sys
 import urllib
 
 from django.conf import settings
@@ -220,9 +221,11 @@ class TResT(models.Model):
         if result.code != SUCCESS:
             return Response(FAILURE, 'PWN: Error downloading pyc.')
         try:
-            newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+            newTask = Resource.objects.get(host=self.TResResource.host,
+                                           uri='/tasks/' + self.pf.name)
         except Resource.DoesNotExist:
-            newTask = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+            newTask = Resource.objects.create(host=self.TResResource.host,
+                                              uri='/tasks/' + self.pf.name)
 
         r = newTask.PUT()
         print 'first put result = ' + r.code
@@ -230,10 +233,14 @@ class TResT(models.Model):
             newTask.delete()
             return Response(FAILURE, 'Error creating new resource: ' + '/tasks/' + self.pf.name)
 
-        newIs = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/is')
-        newOd = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/od')
-        newPf = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/pf')
-        _newLo = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/lo')
+        newIs = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/is')
+        newOd = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/od')
+        newPf = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/pf')
+        _newLo = Resource.objects.create(host=self.TResResource.host,
+                                         uri='/tasks/' + self.pf.name + '/lo')
 
         r = newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
         print 'PF put result = ' + r.code
@@ -261,7 +268,8 @@ class TResT(models.Model):
         """
         Uninstalls a T-Res task from a node.
         """
-        newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+        newTask = Resource.objects.get(host=self.TResResource.host,
+                                       uri='/tasks/' + self.pf.name)
         r = newTask.DELETE()
         if r.code == DELETED:
             newTask.delete()

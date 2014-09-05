@@ -26,6 +26,7 @@ from pyot.models.tres import *
 
 class TResPF(object):
     pf = None
+
     def __init__(self, fileRef, name, description=None, version=None):
         "default constructor, file-based"
 
@@ -33,9 +34,9 @@ class TResPF(object):
             raise Exception('A file extension is required')
         # TODO: copy file in media folder
         self.pf = TResProcessing.objects.create(name=name,
-                                         description=description,
-                                         version=version,
-                                         sourcefile=os.path.abspath(fileRef.name))
+                                                description=description,
+                                                version=version,
+                                                sourcefile=os.path.abspath(fileRef.name))
 
     @classmethod
     def fromSource(cls, sourceString, name, description=None, version=None):
