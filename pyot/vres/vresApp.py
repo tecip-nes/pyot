@@ -4,9 +4,11 @@ Created on Jul 29, 2014
 @author: andrea
 '''
 
+from datetime import datetime, timedelta
+
 from pyot.models.rest import Resource, Host
 from pyot.models.virtualres import VirtualSensorT, VirtualActuatorT, VirtualSensorHistT
-from datetime import datetime, timedelta
+
 
 RDPATH = '/rd/'
 

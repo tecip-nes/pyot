@@ -5,10 +5,12 @@ Created on Aug 6, 2014
 '''
 
 from datetime import datetime, timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
-from pyot.models import Resource, Host, Log
-from coapthon2.server.coap_protocol import CoAP
+
 from coapthon2.resources.resource import Resource as pResource
+from coapthon2.server.coap_protocol import CoAP
+from pyot.models import Resource, Host, Log
 
 
 def trunc_exc(exc, max_len=20):

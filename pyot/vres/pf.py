@@ -57,4 +57,3 @@ if len(input) > 0:
   set_actuator(newSetpoint)
   set_output(newSetpoint)
 """
-

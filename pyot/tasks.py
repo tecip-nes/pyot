@@ -21,23 +21,30 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from __future__ import absolute_import
-from celery import task
-import celery
-#from celery.task import task, periodic_task
-from celery.signals import task_revoked
-from pyot.models import *
+
 from datetime import datetime, timedelta
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import mail_admins
-import time, sys
-from djcelery.models import TaskMeta
-from django.conf import settings
-import subprocess, os, signal
-from pyot.rplApp import DAGupdate
-import urllib
-from netifaces import interfaces, ifaddresses, AF_INET6
+import os
+import subprocess
+import sys
+import time
 import traceback
 
+from celery import task
+import celery
+from celery.signals import task_revoked
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import mail_admins
+from djcelery.models import TaskMeta
+from netifaces import interfaces, ifaddresses, AF_INET6
+from twisted.internet import reactor
+
+from pyot.models import *
+from pyot.resourceDirectory import createRdResources, CoAPServer
+from pyot.rplApp import DAGupdate
+
+
+# from celery.task import task, periodic_task
 PROJECT_ROOT = settings.PROJECT_ROOT
 tmpDir = settings.TRES_PWN_SCRIPT_TMP
 CLEANUP_TASK_PERIOD = settings.CLEANUP_TASK_PERIOD
@@ -68,20 +75,23 @@ def checkIp(ipAddress):
             return True
     return False
 
+
 @task
 def sendMailAdmin(subject, message):
     """
-    TODO    
+    TODO
     """
     print 'sending mail to admins...'
     mail_admins(subject, message, fail_silently=False, connection=None, html_message=None)
     print '...Done'
+
 
 def getFullUri(r):
     """
     TODO
     """
     return 'coap://[' + str(r.host.ip6address) + ']' + str(r.uri)
+
 
 def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration=60, inputfile=None, block=64):
     """
@@ -115,46 +125,52 @@ def coapRequest(method, uri, payload=None, timeout=None, observe=False, duration
                          shell=True)
     return p
 
+
 class HostNotActive(Exception):
     """
     TODO
-    """    
+    """
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 def getResourceActive(rid):
     """
     TODO
-    """    
+    """
     r = Resource.objects.get(id=rid)
-    if r.host.active == False:
+    if r.host.active is False:
         raise HostNotActive(str(r.host.ip6address))
     uri = getFullUri(r)
     return r, uri
 
+
 def getResource(rid):
     """
     TODO
-    """    
+    """
     r = Resource.objects.get(id=rid)
     uri = getFullUri(r)
     return r, uri
 
+
 def isTermCode(response):
     """
     TODO
-    """    
+    """
     if response[0:4] == TERM_CODE:
         return True
     else:
         return False
 
+
 def parseResponse(response):
     """
     TODO
-    """    
+    """
     code = response[0:4]
     return code, response[5:]
 
@@ -162,6 +178,7 @@ def parseResponse(response):
 #import datetime
 def addQuery(uri, query):
     return uri + '?' + query
+
 
 @task
 def coapPost(ip6address, uri, payload, timeout=RX_TIMEOUT, query=None, inputfile=None, block=None, index=0):
@@ -190,6 +207,7 @@ def coapPost(ip6address, uri, payload, timeout=RX_TIMEOUT, query=None, inputfile
     except Exception as e:
         return Response(FAILURE, 'Exception Coap POST %s' % e)
 
+
 @task
 def coapGet(rid, payload, timeout=RX_TIMEOUT, query=None, block=None):
     try:
@@ -203,7 +221,8 @@ def coapGet(rid, payload, timeout=RX_TIMEOUT, query=None, block=None):
             response = p.stdout.readline()
             if isTermCode(response):
                 if saveMessageToDB:
-                    CoapMsg.objects.create(resource=r, method='GET', code=code, payload=message)
+                    CoapMsg.objects.create(resource=r, method='GET',
+                                           code=code, payload=message)
                 return Response(code, message)
             print 'response= ' + response
             code, m = parseResponse(response)
@@ -216,6 +235,7 @@ def coapGet(rid, payload, timeout=RX_TIMEOUT, query=None, block=None):
         return Response(FAILURE, 'Host ' + e.value + ' not active')
     except Exception as e:
         return Response(FAILURE, 'Exception Coap GET %s' % e)
+
 
 @task
 def coapPut(rid, payload=None, timeout=RX_TIMEOUT, query=None, inputfile=None, block=None):
@@ -241,6 +261,7 @@ def coapPut(rid, payload=None, timeout=RX_TIMEOUT, query=None, inputfile=None, b
     except Exception as e:
         return Response(FAILURE, 'Exception Coap PUT %s' % e)
 
+
 @task
 def coapDelete(rid, payload=None, timeout=RX_TIMEOUT, query=None):
     try:
@@ -264,6 +285,7 @@ def coapDelete(rid, payload=None, timeout=RX_TIMEOUT, query=None):
         return Response(FAILURE, 'Host ' + e.value + ' not active')
     except Exception as e:
         return Response(FAILURE, 'Exception Coap DELETE %s' % e)
+
 
 @task
 def coapObserve(rid, payload=None, timeout=None, duration=DEFAULT_OBS_TIMEOUT, handler=None, renew=False):
@@ -326,13 +348,15 @@ def coapObserve(rid, payload=None, timeout=None, duration=DEFAULT_OBS_TIMEOUT, h
             s.save()
             print 'Subscription closed'
 
+
 @task_revoked.connect(sender=coapObserve)
-def coapObserve_revoked_handler(sender, terminated, signum, args=None, task_id=None,
-                      kwargs=None, **kwds):
+def coapObserve_revoked_handler(sender, terminated, signum, args=None,
+                                task_id=None, kwargs=None, **kwds):
     try:
         print 'Coap Observe revoked handler'
     except Exception as e:
         print e
+
 
 def isObs(s):
     splitted = s.split(';')
@@ -386,7 +410,8 @@ def coapDiscovery(host, path):
                     Resource.objects.get(uri=resUri, host=h)
                 except ObjectDoesNotExist: #the resource is not registered, create a new record
                     #print 'Creating resource ' + resUri
-                    Resource.objects.create(uri=resUri, host=h, obs=obs, title=title, ct=ct, rt=rt)
+                    Resource.objects.create(uri=resUri, host=h, obs=obs,
+                                            title=title, ct=ct, rt=rt)
         return resList
     except ObjectDoesNotExist:
         return 'Host not found'
@@ -394,8 +419,7 @@ def coapDiscovery(host, path):
         print 'Exception Coap Discovery: %s' % e
 
 
-from pyot.resourceDirectory import createRdResources, CoAPServer
-from twisted.internet import reactor
+
 
 def init_rd():
     """
@@ -412,7 +436,8 @@ def init_rd():
         #res.wait()
         #if res.code != '2.01':
         #    raise Exception("could not create resource in rd")
-        
+
+
 @task(max_retries=None)
 def coapRdServer(prefix='bbbb::/64'):
     print 'starting Coap Resource Directory Server, prefix= ' + prefix
@@ -424,22 +449,21 @@ def coapRdServer(prefix='bbbb::/64'):
         n.pid = str(coapRdServer.request.id)
         n.save()
         Log.objects.create(log_type='RdRetry', message=prefix)
-    """    
+    """
     rdIp = prefix[:-3] + '1'
     if not checkIp(rdIp):
         raise Exception('Address %s not available' % rdIp)
 
     createRdResources(rdIp, n)
-    try:    
+    try:
         server = CoAPServer("[bbbb::1]", 5683)
         reactor.listenUDP(5683, server, "bbbb::1")
         coapRdServer.update_state(state="PROGRESS")
         reactor.callLater(2, init_rd)
         reactor.run()
 
-
     except Exception, exc:
-        exc_type, exc_value, exc_traceback = sys.exc_info()              
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         print ''.join('!! ' + line for line in lines)
         coapRdServer.update_state(state="ERROR")
@@ -496,7 +520,7 @@ if WORKER_RECOVERY:
         networks = Network.objects.all()
         #TaskMeta.objects.filter(status=states.SUCCESS).delete()
         for network in networks:
-            if network.isConnected() == False:
+            if network.isConnected() is False:
                 continue
             print network.hostname
             if network.pid is not None and network.pid != '':

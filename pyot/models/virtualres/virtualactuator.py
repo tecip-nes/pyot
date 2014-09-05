@@ -21,10 +21,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from vresbase import SubResource, VResource, DEF_PF
-from pyot.vres.pf import apply_pf, set_actuator
 from django.db import models
+
 from pyot.models.rest import Resource
+from pyot.vres.pf import apply_pf, set_actuator
+from vresbase import SubResource, VResource, DEF_PF
 
 
 class VirtualActuatorT(VResource):

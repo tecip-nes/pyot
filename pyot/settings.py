@@ -20,8 +20,10 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-import os, socket
 from ConfigParser import RawConfigParser
+import os
+import socket
+
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 

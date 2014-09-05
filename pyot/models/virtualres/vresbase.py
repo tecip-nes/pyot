@@ -21,11 +21,14 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from django.db import models
 import pickle
-from pyot.models.rest import Resource
+
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from pyot.models.rest import Resource
+
 
 DEF_VALUE_LENGTH = 1000
 
@@ -83,7 +86,7 @@ def pre_create_vr(sender, instance, **kwargs):
     if kwargs['created'] is False:
         return
     print instance.uri
-    print "The vr is going to be created  *********************************\n\n"
+    print "The vr is going to be created  ********************************\n\n"
     from pyot.tasks import coapPost
     res = coapPost(ip6address="bbbb::1",
                    uri=instance.uri,

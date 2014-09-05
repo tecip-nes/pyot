@@ -21,12 +21,14 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from vresbase import SubResource, VResource, DEF_PF
-from pyot.vres.pf import apply_pf
-from django.db import models
-from pyot.models.rest import Resource, CoapMsg
-from datetime import datetime, timedelta
 from calendar import timegm
+from datetime import datetime, timedelta
+
+from django.db import models
+
+from pyot.models.rest import Resource, CoapMsg
+from pyot.vres.pf import apply_pf
+from vresbase import SubResource, VResource, DEF_PF
 
 
 class VirtualSensorHistT(VResource):

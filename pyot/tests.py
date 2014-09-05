@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+
 class UrlTest(TestCase):
     fixtures = ['testdata.json']
 

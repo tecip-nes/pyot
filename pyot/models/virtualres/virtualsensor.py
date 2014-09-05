@@ -21,10 +21,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from vresbase import SubResource, VResource, DEF_PF
-from pyot.vres.pf import apply_pf
 from django.db import models
+
 from pyot.models.rest import Resource
+from pyot.vres.pf import apply_pf
+from vresbase import SubResource, VResource, DEF_PF
 
 
 class VirtualSensorT(VResource):
@@ -44,13 +45,13 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
 
     def POST(self, name):
         """
-        Starting from the template creates the instance of the virtual 
-        resource using the name provided by the user. If an instance having 
+        Starting from the template creates the instance of the virtual
+        resource using the name provided by the user. If an instance having
         that name is already existing it is returned to the user.
         """
         uri = str(self.uri + '/' + name)
 
-        #print 'instance uri ===== ' + uri
+        # print 'instance uri ===== ' + uri
 
         instance, created = VirtualSensorI.objects.get_or_create(template=self,
                                               host=self.host,
@@ -64,8 +65,7 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
                                     rt=self.rt, 
                                     defaults={'value':self.default_pf})
 
-
-        #except Exception as e:
+        # except Exception as e:
         #    print 'error creating subresource: %s' % e
 
         if created is True:
@@ -81,13 +81,13 @@ class VirtualSensorI(VResource):
     """
     Virtual Resource Instance
     """
-    #reference to the template so that we can get the input resource list
+    # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vs_template')
-    #period = models.ForeignKey(SubResource, related_name='period', null=True)
-    processing = models.ForeignKey(SubResource, 
-                                   related_name='vs_processing', 
-                                   null=True, 
-                                   on_delete=models.SET_NULL) 
+    # period = models.ForeignKey(SubResource, related_name='period', null=True)
+    processing = models.ForeignKey(SubResource,
+                                   related_name='vs_processing',
+                                   null=True,
+                                   on_delete=models.SET_NULL)
 
     class Meta(object):
         app_label = 'pyot'
