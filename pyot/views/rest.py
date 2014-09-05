@@ -20,22 +20,24 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-import logging
-from django.shortcuts import HttpResponse, render
-from django.http import HttpResponseBadRequest
-from pyot.tasks import *
-from pyot.models import *
-from django.template import Context
-from pyot.resourceRepr import getRenderer
-from django.db.models import Max
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from pyot.Forms import *
-from django.http import HttpResponseRedirect, Http404
-from django.core.urlresolvers import reverse
 import json
+import logging
+
 from celery.result import AsyncResult
-from pyot.tools.utils import *
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator
+from django.core.urlresolvers import reverse
+from django.db.models import Max
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseRedirect, Http404
+from django.shortcuts import HttpResponse, render
+from django.template import Context
+
+from pyot.Forms import *
+from pyot.models import *
+from pyot.resourceRepr import getRenderer
+from pyot.tasks import *
+from pyot.tools.utils import *
 
 
 #@staff_member_required
