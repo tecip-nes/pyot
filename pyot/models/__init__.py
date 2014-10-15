@@ -24,4 +24,5 @@ from pyot.models.rest import *
 from pyot.models.misc import *
 from pyot.models.tres import *
 from pyot.models.rpl import *
+from pyot.models.mapreduce import *
 from pyot.models.virtualres import *

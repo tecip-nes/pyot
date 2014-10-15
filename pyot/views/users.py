@@ -28,16 +28,16 @@ from django.shortcuts import render
 from pyot.Forms import ContactForm
 
 
-#@login_required
+# @login_required
 def myaccount(request):
     return render(request, 'account.html')
 
 
-#@login_required
+# @login_required
 def deleteUser(request):
     return render(request, 'deleteuser.htm')
 
-#@login_required
+# @login_required
 def confirmDeleteUser(request):
     request.user.delete()
     logout(request)
@@ -53,7 +53,7 @@ def contacts(request):
 
             sender = form.cleaned_data['sender']
             mess = 'Sender is ' + sender + '\n' + message
-            mail_admins(subject, mess, fail_silently=False, connection=None, 
+            mail_admins(subject, mess, fail_silently=False, connection=None,
                         html_message=None)
             return HttpResponseRedirect('/thanks/') # Redirect after POST
     else:

@@ -158,7 +158,7 @@ class Network(models.Model):
 
     def rplDagUpdate(self):
         from pyot.rplApp import DAGupdate
-        DAGupdate(self)
+        return DAGupdate(self)
 
     class Meta(object):
         app_label = 'pyot'

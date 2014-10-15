@@ -41,6 +41,8 @@ admin.site.register(TResProcessing)
 admin.site.register(TResT)
 admin.site.register(RplGraph)
 admin.site.register(EmulatorState)
+admin.site.register(pyMapReduce)
+admin.site.register(pyMap)
 admin.site.register(SubResource)
 admin.site.register(VirtualSensorI)
 admin.site.register(VirtualSensorT)
@@ -53,7 +55,7 @@ class UserProfileInline(admin.StackedInline):
 
 
 class UserAdmin(UserAdmin):
-    inlines = (UserProfileInline, )
+    inlines = (UserProfileInline,)
 
 # Re-register UserAdmin
 admin.site.unregister(User)
