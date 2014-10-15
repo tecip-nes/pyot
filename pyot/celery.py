@@ -3,12 +3,11 @@ from __future__ import absolute_import
 import os
 
 from celery import Celery
-
 from django.conf import settings
 
 
 CELERY_ROUTES = {'pyot.tasks.checkConnectedHosts': {'queue': 'periodic'},
-                 'pyot.tasks.recoveryWorkers': {'queue': 'periodic'}} # dedicated queue for periodic tasks
+                 'pyot.tasks.recoveryWorkers': {'queue': 'periodic'}}
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERYD_MAX_TASKS_PER_CHILD = 1
@@ -35,4 +34,4 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 @app.task(bind=True)
 def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+    print 'Request: {0!r}'.format(self.request)

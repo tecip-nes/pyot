@@ -22,6 +22,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 from pyot.models import Resource
 
+
 def sendMsg(msg):
     res = Resource.objects.get(id=msg.resource.id)
     if msg.method == 'PUT':
@@ -31,4 +32,3 @@ def sendMsg(msg):
     if msg.method == 'GET':
         out = res.asyncGET(payload=msg.payload)
     return out
-

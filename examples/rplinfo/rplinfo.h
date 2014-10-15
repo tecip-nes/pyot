@@ -1,7 +1,7 @@
 #ifndef _RPLINFO_H_
 #define _RPLINFO_H_
 
-#include "erbium.h"
+#include "er-coap.h"
 
 void rplinfo_activate_resources(void);
 

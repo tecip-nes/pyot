@@ -21,6 +21,7 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
+
 def get_celery_worker_status():
     error_key = "ERROR"
 
@@ -40,9 +41,11 @@ def get_celery_worker_status():
         d = {error_key: str(e)}
     return d
 
+
 def clearTaskMeta():
     from djcelery.models import TaskMeta, states
     TaskMeta.objects.filter(status=states.SUCCESS).delete()
+
 
 def get_statistics():
     #hosts = Host.objects.filter()

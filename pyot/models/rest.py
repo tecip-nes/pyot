@@ -21,22 +21,26 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
-from django.db import models
-import logging
-from datetime import datetime, timedelta
-from model_utils.managers import InheritanceManager
 import base64
-from pyot.models.fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
+from datetime import datetime, timedelta
+import logging
+
 from django.conf import settings
+from django.db import models
+from model_utils.managers import InheritanceManager
+from polymorphic import PolymorphicModel
+
 from celery.task.control import revoke
+from pyot.models.fields import IPNetworkField, IPNetworkQuerySet, IPAddressField
 from pyot.tools.utils import get_celery_worker_status
 
+
 TFMT = settings.TFMT
-CACHING = True
+CACHING = False
 DEFAULTCACHINGINTERVAL = 60
-DEFAULT_CACHING_RESOURCES = {'/sensors/light':15,
-                   'temp': 120,
-                   'baro': 180}
+DEFAULT_CACHING_RESOURCES = {'/sensors/light': 15,
+                             'temp': 120,
+                             'baro': 180}
 
 KEEPALIVEPERIOD = 10
 WAIT_TIMEOUT = 10
@@ -52,7 +56,7 @@ METHOD_CHOICES = (
     (u'DELETE', u'DELETE'),
 )
 
-#CoAP Method result code
+# CoAP Method result code
 
 CREATED = '2.01'
 DELETED = '2.02'
@@ -76,11 +80,13 @@ DEFAULT_DISCOVERY_PATH = '/.well-known/core'
 
 CELERY_DEFAULT_QUEUE = 'celery'
 
+
 def get_hosts_from_resources(resQeurySet):
     hsl = []
     for r in resQeurySet:
         hsl.append(r.host.id)
     return Host.objects.filter(id__in=hsl)
+
 
 class Response(object):
     '''
@@ -88,17 +94,23 @@ class Response(object):
     '''
     code = None
     content = None
+
     def __init__(self, code="", content=""):
         self.code = code
         self.content = content
+
     def get_code(self):
         return self.code
+
     def get_content(self):
         return self.content
+
     def __unicode__(self):
         return u"%s - %s" % (self.code, self.content)
+
     def __str__(self):
         return u"%s - %s" % (self.code, self.content)
+
 
 class Network(models.Model):
     '''
@@ -117,7 +129,7 @@ class Network(models.Model):
     def startRD(self):
         from pyot.tasks import coapRdServer
         rdServer = coapRdServer.apply_async(args=[str(self.network)],
-                                                  queue=self.hostname)
+                                            queue=self.hostname)
         """ possibly use this call to control all the parameters
         add.apply_async((2, 2), retry=True, retry_policy={
                 'max_retries': 3,
@@ -151,6 +163,7 @@ class Network(models.Model):
     class Meta(object):
         app_label = 'pyot'
 
+
 class Host(models.Model):
     '''
     Defines an Ipv6 Host. Each host belongs to a network. Discovery and Ping
@@ -164,7 +177,7 @@ class Host(models.Model):
     keepAliveCount = models.IntegerField(default=0)
     location = models.CharField(max_length=30, blank=True, default='')
     network = models.ForeignKey(Network, null=True, blank=True,
-                               related_name='queue')
+                                related_name='queue')
 
     def find_network(self):
         nets = Network.objects.all()
@@ -194,18 +207,21 @@ class Host(models.Model):
                                    queue=self.getQueue())
         res.wait()
         return res.result
+
     def DISCOVER(self, path=DEFAULT_DISCOVERY_PATH):
-        if self.active == False:
+        if self.active is False:
             return u'Host %s Not Active' % (str(self.ip6address))
         from pyot.tasks import coapDiscovery
         res = coapDiscovery.apply_async(args=[str(self.ip6address), path],
-                                              queue=self.getQueue())
-        #res.wait(timeout=COAP_REQ_TIMEOUT)
+                                        queue=self.getQueue())
+        # res.wait(timeout=COAP_REQ_TIMEOUT)
         return res
+
     class Meta(object):
         app_label = 'pyot'
 
-class Resource(models.Model):
+
+class Resource(PolymorphicModel):
     '''
     Defines a CoAP Resource. Each resource belongs to a host. REST methods
     are available with both synchronous and asynchronous semantics.
@@ -218,16 +234,22 @@ class Resource(models.Model):
     rt = models.CharField(max_length=30, blank=True, null=True)
     title = models.CharField(max_length=30, blank=True, null=True)
     ct = models.CharField(max_length=3, blank=True, null=True)
+
     def __unicode__(self):
         return u"{ip} - {uri}".format(uri=self.uri, ip=self.host.ip6address)
 
     def getFullURI(self):
         return 'coap://[' + str(self.host.ip6address) + ']' + self.uri
 
+    def getSubResources(self):
+        subs = Resource.objects.filter(uri__startswith=self.uri + '/',
+                                       host=self.host)
+        return subs
+
     def GET(self, payload=None, timeout=5, query=None):
-        if CACHING == True:
+        if CACHING is True:
             value = getLastResponse(self)
-            if value != None:
+            if value is not None:
                 return value
         from pyot.tasks import coapGet
         res = coapGet.apply_async(args=[self.id, payload, timeout, query],
@@ -252,8 +274,10 @@ class Resource(models.Model):
                                          payload,
                                          timeout,
                                          query,
-                                         inputfile, block, index],
-                                         queue=self.host.getQueue())
+                                         inputfile,
+                                         block,
+                                         index],
+                                   queue=self.host.getQueue())
         res.wait(timeout=15)
         return res.result
 
@@ -263,7 +287,7 @@ class Resource(models.Model):
                                            payload,
                                            timeout,
                                            query],
-                                           queue=self.host.getQueue())
+                                     queue=self.host.getQueue())
         res.wait()
         return res.result
 
@@ -273,7 +297,7 @@ class Resource(models.Model):
                                         payload,
                                         timeout,
                                         query],
-                                        queue=self.host.getQueue())
+                                  queue=self.host.getQueue())
         return res
 
     def asyncPOST(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None,
@@ -282,7 +306,7 @@ class Resource(models.Model):
         res = coapPost.apply_async(args=[self.host.ip6address, self.uri,
                                          payload, timeout, query, inputfile,
                                          block, index],
-                                         queue=self.host.getQueue())
+                                   queue=self.host.getQueue())
         return res
 
     def asyncPUT(self, payload=None, timeout=COAP_REQ_TIMEOUT, query=None,
@@ -290,15 +314,21 @@ class Resource(models.Model):
         from pyot.tasks import coapPut
         res = coapPut.apply_async(args=[self.id, payload, timeout, query,
                                         inputfile, block],
-                                        queue=self.host.getQueue())
+                                  queue=self.host.getQueue())
         return res
 
     def OBSERVE(self, duration, handler, renew=False):
         from pyot.tasks import coapObserve
-        res = coapObserve.apply_async(kwargs={'rid':self.id, 'duration':duration, 'handler':handler, 'renew': renew}, queue=self.host.getQueue())
+        res = coapObserve.apply_async(kwargs={'rid': self.id,
+                                              'duration': duration,
+                                              'handler': handler,
+                                              'renew': renew},
+                                      queue=self.host.getQueue())
         return res
+
     class Meta(object):
         app_label = 'pyot'
+
 
 class EventHandler(models.Model):
     '''
@@ -312,15 +342,19 @@ class EventHandler(models.Model):
     result = models.CharField(max_length=100, null=True, blank=True)
     timeString = models.FloatField(null=True, blank=True)
     active = models.BooleanField(default=True)
+
     def action(self, res):
         raise NotImplementedError("Subclasses are responsible for creating this method")
+
     def __unicode__(self):
         return u"{description} | Activations = {activationCount} | Max = {max_activations} - active={active}".format(description=self.description,
                                                                                              activationCount=self.activationCount,
                                                                                                 max_activations=self.max_activations,
                                                                                                 active=self.active)
+
     class Meta(object):
         app_label = 'pyot'
+
 
 class Subscription(models.Model):
     '''
@@ -335,18 +369,22 @@ class Subscription(models.Model):
     active = models.BooleanField(default=True)
     handler = models.ForeignKey(EventHandler, null=True, blank=True)
     renew = models.BooleanField(default=False)
+
     def __unicode__(self):
         return u"{t} {uri} - duration={duration} - active={active} - renew={r}".format(uri=self.resource,
                                                           duration=self.duration,
                                                           t=self.timeadded.strftime(TFMT),
                                                           r=self.renew,
                                                           active=self.active)
+
     def cancel_subscription(self):
         revoke(self.pid, terminate=True)
         self.active = False
         self.save()
+
     class Meta(object):
         app_label = 'pyot'
+
 
 class CoapMsg(models.Model):
     '''
@@ -359,6 +397,7 @@ class CoapMsg(models.Model):
     code = models.CharField(max_length=5, null=True, blank=True)
     sub = models.ForeignKey(Subscription, null=True, blank=True)
     _payload = models.TextField(db_column='payload', blank=True, max_length=1024)
+
     def set_data(self, data):
         self._payload = base64.encodestring(data)
 
@@ -366,13 +405,16 @@ class CoapMsg(models.Model):
         return base64.decodestring(self._payload)
 
     payload = property(get_data, set_data)
+
     def __unicode__(self):
         return u"{t} {method} {uri}: {payload}".format(uri=self.resource.uri,
-                                                          method=self.method,
-                                                          payload=self.payload,
-                                                          t=self.timeadded.strftime(TFMT))
+                                                       method=self.method,
+                                                       payload=self.payload,
+                                                       t=self.timeadded.strftime(TFMT))
+
     class Meta(object):
         app_label = 'pyot'
+
 
 def getLastResponse(resource):
     '''
@@ -393,6 +435,7 @@ def getLastResponse(resource):
         return None
     return Response(code=msgs[0].code, content=msgs[0].payload)
 
+
 class EventHandlerMsg(EventHandler):
     '''
     Event handler sending a message to a CoAP resource.
@@ -401,6 +444,7 @@ class EventHandlerMsg(EventHandler):
 
     def __unicode__(self):
         return u"{meta}".format(meta=self.description)
+
     def action(self, msg=None):
         logging.debug('ACTION')
         from pyot.Events import sendMsg
@@ -410,8 +454,10 @@ class EventHandlerMsg(EventHandler):
         self.activationCount += 1
         self.result = sendMsg(self.msg)
         self.save()
+
     class Meta(object):
         app_label = 'pyot'
+
 
 class EventHandlerTres(EventHandler):
     '''
@@ -420,8 +466,10 @@ class EventHandlerTres(EventHandler):
     from tres import TResT
 
     task = models.ForeignKey(TResT)
+
     def __unicode__(self):
         return u"{meta}".format(meta=self.description)
+
     def action(self, msg):
         print 'ACTION, activating tres'
         if self.activationCount == self.max_activations:
@@ -430,5 +478,6 @@ class EventHandlerTres(EventHandler):
         self.task.runPf(msg.payload)
         self.activationCount += 1
         self.save()
+
     class Meta(object):
         app_label = 'pyot'

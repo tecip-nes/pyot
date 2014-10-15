@@ -20,15 +20,17 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-import os, socket
 from ConfigParser import RawConfigParser
+import os
+import socket
+
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-cfg = RawConfigParser()
-cfg.read(PROJECT_PATH + '/settings.ini')
+CFG = RawConfigParser()
+CFG.read(PROJECT_PATH + '/settings.ini')
 
-LOCAL_DB = cfg.getboolean('database', 'DATABASE_LOCAL')
+LOCAL_DB = CFG.getboolean('database', 'DATABASE_LOCAL')
 
 WEB_APPLICATION_SERVER = False
 
@@ -49,27 +51,22 @@ if socket.gethostname() == 'pyot-vcr':
 TEMPLATE_DEBUG = DEBUG
 
 RABBIT_PORT = 5672
-DB_SCHEMA = cfg.get('database', 'DATABASE_NAME')
-SQL_USER = cfg.get('database', 'DATABASE_USERNAME')
-SQL_PWD = cfg.get('database', 'DATABASE_PASSWORD_USER')
+DB_SCHEMA = CFG.get('database', 'DATABASE_NAME')
+SQL_USER = CFG.get('database', 'DATABASE_USERNAME')
+SQL_PWD = CFG.get('database', 'DATABASE_PASSWORD_USER')
 SQL_PORT = ''
 
 if WEB_APPLICATION_SERVER:
     SERVER_ADDRESS = '127.0.0.1'
 else:
-    SERVER_ADDRESS = cfg.get('database', 'DATABASE_HOST')
+    SERVER_ADDRESS = CFG.get('database', 'DATABASE_HOST')
 
-'''
-ADMINS = (
-    ('Andrea', 'a.azzara@sssup.it'),
-)
-'''
 
 TRES_PWN_SCRIPT_TMP = '/tmp'
 
 
 CLEANUP_TASK_PERIOD = 30
-CLEANUP_TIME = 90
+CLEANUP_TIME = 60
 RECOVERY_PERIOD = 30
 
 WORKER_RECOVERY = False
@@ -79,7 +76,6 @@ TFMT = "%Y-%m-%d %H:%M:%S" #global format for time strings
 
 AUTH_PROFILE_MODULE = 'pyot.UserProfile'
 
-#MANAGERS = ADMINS
 
 SQLITE_3 = os.path.join(PROJECT_PATH, 'db.sqlite')
 
@@ -87,22 +83,22 @@ if LOCAL_DB:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': SQLITE_3,                      # Or path to database file if using sqlite3.
-            'USER': '',                      # Not used with sqlite3.
-            'PASSWORD': '',                  # Not used with sqlite3.
-            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+            'NAME': SQLITE_3, # Or path to database file if using sqlite3.
+            'USER': '', # Not used with sqlite3.
+            'PASSWORD': '', # Not used with sqlite3.
+            'HOST': '', # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '', # Set to empty string for default. Not used with sqlite3.
         }
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': DB_SCHEMA,                      # Or path to database file if using sqlite3.
-            'USER': SQL_USER,                      # Not used with sqlite3.
-            'PASSWORD': SQL_PWD,                  # Not used with sqlite3.
-            'HOST': SERVER_ADDRESS,                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': SQL_PORT,                      # Set to empty string for default. Not used with sqlite3.
+            'NAME': DB_SCHEMA, # Or path to database file if using sqlite3.
+            'USER': SQL_USER, # Not used with sqlite3.
+            'PASSWORD': SQL_PWD, # Not used with sqlite3.
+            'HOST': SERVER_ADDRESS, # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': SQL_PORT, # Set to empty string for default. Not used with sqlite3.
         }
     }
 
@@ -168,7 +164,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -178,7 +173,6 @@ SECRET_KEY = '9%$in^gpdaig@v3or_to&_z(=n)3)$f1mr3hf9e#kespy2ajlo'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -201,11 +195,7 @@ TEMPLATE_DIRS = (
 )
 
 
-
-#import djcelery
-#djcelery.setup_loader()
-
-#rabbitMQ config
+# rabbitMQ config
 BROKER_URL = SERVER_ADDRESS
 
 
@@ -218,14 +208,15 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pyot',
-    'djcelery',
-    'django_evolution',
-    'registration',
+    #'djcelery',
+    #'django_evolution',
+    #'registration',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'django_extensions',
+    'polymorphic',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
@@ -300,5 +291,5 @@ LOGGING = {
 IPYTHON_ARGUMENTS = [
     '--ext', 'django_extensions.management.notebook_extension',
     '--ext', 'pyot.notebook_extension',
-    '--debug',    "--ip='*'",
+    '--debug', "--ip='*'",
 ]
