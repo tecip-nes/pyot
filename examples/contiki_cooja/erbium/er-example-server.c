@@ -44,6 +44,7 @@
 #include "contiki-net.h"
 #include "../rplinfo/rplinfo.h"
 #include "../common/pyot.h"
+#include "node-id.h"
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_PUSHING 0
@@ -96,7 +97,7 @@ AUTOSTART_PROCESSES(&rest_server_example);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   PROCESS_BEGIN();
-
+  srand(node_id);
   PRINTF("Starting Erbium Example Server\n");
 
 #ifdef RF_CHANNEL
