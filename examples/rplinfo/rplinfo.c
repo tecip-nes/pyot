@@ -143,7 +143,6 @@ void
 parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 
-//printf("Parents handlers\n");
   int32_t strpos = 0;
   //uip_ds6_route_t *r;
   volatile uint8_t i;
@@ -170,7 +169,7 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 			index = (uint8_t)atoi(pstr);
 
 			if (index >= count) {
-				strpos = snprintf(buffer, preferred_size, "{}");
+				strpos = snprintf((char *)buffer, preferred_size, "{}");
 			} else { 
 				/* seek to the route entry and return it */
 				i = 0;
@@ -181,9 +180,9 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 				}
 				
 				if (parent == dag->preferred_parent) { 
-					strpos = create_parent_msg(buffer, parent, 1);
+					strpos = create_parent_msg((char *)buffer, parent, 1);
 				} else {
-					strpos = create_parent_msg(buffer, parent, 0);
+					strpos = create_parent_msg((char *)buffer, parent, 0);
 				}
 			}	
 
