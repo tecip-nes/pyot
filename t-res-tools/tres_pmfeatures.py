@@ -20,10 +20,10 @@ PM_FEATURES = {
     "HAVE_REPLICATION": True,
     "HAVE_CLASSES": True,
     "HAVE_ASSERT": True,
-    "HAVE_GENERATORS": True,
+    "HAVE_GENERATORS": False,
     "HAVE_BACKTICK": True,
     "HAVE_STRING_FORMAT": True,
-    "HAVE_CLOSURES": True,
+    "HAVE_CLOSURES": False,
     "HAVE_BYTEARRAY": False,
     "HAVE_DEBUG_INFO": True,
 }

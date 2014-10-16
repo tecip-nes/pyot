@@ -12,7 +12,7 @@
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
-      se.sics.cooja.radiomediums.UDGM
+      org.contikios.cooja.radiomediums.UDGM
       <transmitting_range>50.0</transmitting_range>
       <interference_range>100.0</interference_range>
       <success_ratio_tx>1.0</success_ratio_tx>
@@ -22,75 +22,75 @@
       <logoutput>40000</logoutput>
     </events>
     <motetype>
-      se.sics.cooja.mspmote.WismoteMoteType
+      org.contikios.cooja.mspmote.WismoteMoteType
       <identifier>rplroot</identifier>
       <description>RPL Border Router</description>
       <source EXPORT="discard">[CONFIG_DIR]/br-node/border-router.c</source>
       <commands EXPORT="discard">make border-router.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/br-node/border-router.wismote</firmware>
-      <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.Mote2MoteRelations</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.MoteAttributes</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspClock</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspMoteID</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspButton</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspLED</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspClock</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspButton</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspLED</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <motetype>
-      se.sics.cooja.mspmote.WismoteMoteType
+      org.contikios.cooja.mspmote.WismoteMoteType
       <identifier>wismote2</identifier>
       <description>T-Res Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/tres-node/tres-node.c</source>
-      <commands EXPORT="discard">make tres-node.wismote TARGET=wismote</commands>      
+      <commands EXPORT="discard">make tres-node.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/tres-node/tres-node.wismote</firmware>
-      <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.Mote2MoteRelations</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.MoteAttributes</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspClock</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspMoteID</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspButton</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspLED</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspClock</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspButton</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspLED</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <motetype>
-      se.sics.cooja.mspmote.WismoteMoteType
+      org.contikios.cooja.mspmote.WismoteMoteType
       <identifier>wismote3</identifier>
       <description>Sensor Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/erbium/er-example-server.c</source>
       <commands EXPORT="discard">make er-example-server.wismote TARGET=wismote</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/erbium/er-example-server.wismote</firmware>
-      <moteinterface>se.sics.cooja.interfaces.Position</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.IPAddress</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.Mote2MoteRelations</moteinterface>
-      <moteinterface>se.sics.cooja.interfaces.MoteAttributes</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspClock</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspMoteID</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspButton</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspLED</moteinterface>
-      <moteinterface>se.sics.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspClock</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspMoteID</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspButton</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDefaultSerial</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspLED</moteinterface>
+      <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <mote>
       <breakpoints />
       <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>20.549090397664706</x>
-        <y>40.381025445922056</y>
+        org.contikios.cooja.interfaces.Position
+        <x>10.135474276513495</x>
+        <y>39.97264834313181</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>1</id>
       </interface_config>
       <motetype_identifier>rplroot</motetype_identifier>
@@ -98,13 +98,13 @@
     <mote>
       <breakpoints />
       <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>27.727672934096756</x>
-        <y>40.60868937861183</y>
+        org.contikios.cooja.interfaces.Position
+        <x>29.769558448047974</x>
+        <y>40.40450082721671</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>2</id>
       </interface_config>
       <motetype_identifier>wismote2</motetype_identifier>
@@ -112,13 +112,13 @@
     <mote>
       <breakpoints />
       <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>33.73437704053118</x>
-        <y>35.488220304274286</y>
+        org.contikios.cooja.interfaces.Position
+        <x>49.66108404935068</x>
+        <y>29.975129416606</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>3</id>
       </interface_config>
       <motetype_identifier>wismote3</motetype_identifier>
@@ -126,59 +126,59 @@
     <mote>
       <breakpoints />
       <interface_config>
-        se.sics.cooja.interfaces.Position
-        <x>33.73437704053118</x>
-        <y>46.71386404416813</y>
+        org.contikios.cooja.interfaces.Position
+        <x>49.66108404935068</x>
+        <y>59.577742782060795</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
-        se.sics.cooja.mspmote.interfaces.MspMoteID
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>4</id>
       </interface_config>
       <motetype_identifier>wismote3</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
-    se.sics.cooja.plugins.SimControl
+    org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>0</z>
+    <z>1</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
   </plugin>
   <plugin>
-    se.sics.cooja.plugins.Visualizer
+    org.contikios.cooja.plugins.Visualizer
     <plugin_config>
       <moterelations>true</moterelations>
-      <skin>se.sics.cooja.plugins.skins.IDVisualizerSkin</skin>
-      <skin>se.sics.cooja.plugins.skins.GridVisualizerSkin</skin>
-      <skin>se.sics.cooja.plugins.skins.TrafficVisualizerSkin</skin>
-      <skin>se.sics.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <skin>se.sics.cooja.plugins.skins.AddressVisualizerSkin</skin>
-      <skin>se.sics.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
-      <viewport>12.186383531292577 0.0 0.0 12.186383531292577 -166.70005680514362 -347.07306347089104</viewport>
+      <skin>org.contikios.cooja.plugins.skins.IDVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
+      <viewport>4.897434225217246 0.0 0.0 4.897434225217246 49.04273694494931 -36.005700018844465</viewport>
     </plugin_config>
     <width>400</width>
-    <z>3</z>
+    <z>0</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
   </plugin>
   <plugin>
-    se.sics.cooja.plugins.LogListener
+    org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>560</width>
-    <z>1</z>
-    <height>287</height>
+    <width>825</width>
+    <z>2</z>
+    <height>787</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
   </plugin>
   <plugin>
-    se.sics.cooja.plugins.TimeLine
+    org.contikios.cooja.plugins.TimeLine
     <plugin_config>
       <mote>0</mote>
       <mote>1</mote>
@@ -190,13 +190,13 @@
       <zoomfactor>500.0</zoomfactor>
     </plugin_config>
     <width>960</width>
-    <z>2</z>
+    <z>3</z>
     <height>166</height>
     <location_x>2</location_x>
     <location_y>447</location_y>
   </plugin>
   <plugin>
-    se.sics.cooja.plugins.Notes
+    org.contikios.cooja.plugins.Notes
     <plugin_config>
       <notes>Enter notes here</notes>
       <decorations>true</decorations>
