@@ -27,15 +27,18 @@ from pyot.models.rpl import RplGraph
 from django.core.validators import validate_slug
 from networkx.algorithms import bfs_successors
 
+
 class TResDeployFailure(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
 
+
 class pyMap(models.Model):
     """
-    Defines a PyoT map function. 
+    Defines a PyoT map function.
     """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     name = models.CharField(max_length=10, validators=[validate_slug],
@@ -43,8 +46,10 @@ class pyMap(models.Model):
     inputS = models.ManyToManyField(Resource, related_name='inputResources')
     description = models.CharField(max_length=500, blank=True, null=True)
     period = models.IntegerField(default=0)
+
     class Meta(object):
         app_label = 'pyot'
+
     def __unicode__(self):
         return u"{n} -- inputs={i} -- period={t}".format(n=self.name,
                                                    i=str(self.inputS.all()),
@@ -61,7 +66,7 @@ MAPREDUCE_STATES = (
 
 class pyMapReduce(models.Model):
     """
-    Defines a PyoT MapReduce function. 
+    Defines a PyoT MapReduce function.
     """
     timeAdded = models.DateTimeField(auto_now_add=True, blank=True)
     pmap = models.ForeignKey(pyMap, related_name='map')
@@ -70,7 +75,7 @@ class pyMapReduce(models.Model):
     min_input = models.IntegerField(default=2)
 
     network = models.ForeignKey(Network, null=True,
-                                     related_name='net')
+                                related_name='net')
 
     tresTasks = models.ManyToManyField(TResT, null=True,
                                        related_name='tresTasks')
@@ -82,6 +87,7 @@ class pyMapReduce(models.Model):
 
     class Meta(object):
         app_label = 'pyot'
+
     def __unicode__(self):
         return u"map = {m}\nreduce = {r}\noutput = {o}\nstate = {s}".format(m=self.pmap,
                                                                     r=self.preduce,
@@ -90,7 +96,7 @@ class pyMapReduce(models.Model):
 
     def deploy(self, net):
         """
-        
+        TODO
         """
         print 'Deploy mapReduce task:\n\n' + self.__unicode__() + '\n\n...on network: ' + str(net)
 
@@ -117,7 +123,6 @@ class pyMapReduce(models.Model):
 
             host = g.find_host_from_node(j)
 
-
             if host is None:
                 continue
             # Skip the node if it is not a t-res node
@@ -128,10 +133,12 @@ class pyMapReduce(models.Model):
                 desc_list = g.get_descendants(host)
             except:
                 continue
-
-            descendant_ids = [g.find_host_from_node(n).id for n in desc_list] # get the list of descendants' node id
-            descendant_ids.append(host.id) # consider also the node itself as a possible input node
-            descendant_hosts = Host.objects.filter(id__in=descendant_ids) # we get the list of descendant hosts
+            # get the list of descendants' node id
+            descendant_ids = [g.find_host_from_node(n).id for n in desc_list]
+            # consider also the node itself as a possible input node
+            descendant_ids.append(host.id)
+            # we get the list of descendant hosts
+            descendant_hosts = Host.objects.filter(id__in=descendant_ids)
 
             # now we have to count the number of input resources in the list of descendant nodes
             descendant_inputs = Resource.objects.filter(id__in=list(resource_id_list), host__in=descendant_hosts) # select
@@ -147,7 +154,9 @@ class pyMapReduce(models.Model):
                     if i == noi_len - 2:
                         out = self.output
                     # create the TresTask object
-                    tresTask = TResT.objects.create(pf=self.preduce, output=out, period=self.pmap.period)
+                    tresTask = TResT.objects.create(pf=self.preduce,
+                                                    output=out,
+                                                    period=self.pmap.period)
 
                     for inp in descendant_inputs:
                         tresTask.inputS.add(inp)

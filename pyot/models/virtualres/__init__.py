@@ -24,4 +24,5 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 from pyot.models.virtualres.virtualactuator import *
 from pyot.models.virtualres.virtualsensor import *
 from pyot.models.virtualres.virtualsensorhist import *
+from pyot.models.virtualres.virtualsensorperiodic import *
 from pyot.models.virtualres.vresbase import *

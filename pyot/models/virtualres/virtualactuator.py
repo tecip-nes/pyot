@@ -25,10 +25,10 @@ from django.db import models
 
 from pyot.models.rest import Resource
 from pyot.vres.pf import apply_pf, set_actuator
-from vresbase import SubResource, VResource, DEF_PF
+from vresbase import SubRes, VResource, DEF_PF
 
 
-class VirtualActuatorT(VResource):
+class VaT(VResource):
     """
     TODO
     """
@@ -44,18 +44,19 @@ class VirtualActuatorT(VResource):
         """
         """
         uri = str(self.uri + '/' + name)
-        #return instance
-        instance, created = VirtualActuatorI.objects.get_or_create(template=self,
-                                              host=self.host,
-                                              uri=uri,
-                                              title=name,
-                                              rt=self.rt)
 
-        processing, _ = SubResource.objects.get_or_create(host=self.host,
-                                    uri=uri + '/proc',
-                                    title='processing',
-                                    rt=self.rt, 
-                                    defaults={'value':self.default_pf})
+        instance, created = VaI.objects.get_or_create(template=self,
+                                                      host=self.host,
+                                                      uri=uri,
+                                                      title=name,
+                                                      rt=self.rt)
+
+        processing, _ = SubRes.objects.get_or_create(host=self.host,
+                                                     uri=uri + '/proc',
+                                                     title='processing',
+                                                     rt=self.rt,
+                                                     defaults={'value':
+                                                               self.default_pf})
 
         # except Exception as e:
         #    print 'error creating subresource: %s' % e
@@ -70,13 +71,13 @@ class VirtualActuatorT(VResource):
         app_label = 'pyot'
 
 
-class VirtualActuatorI(VResource):
+class VaI(VResource):
     """
     Virtual Actuator Resource Instance
     """
     # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='va_template')
-    processing = models.ForeignKey(SubResource,
+    processing = models.ForeignKey(SubRes,
                                    related_name='va_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)

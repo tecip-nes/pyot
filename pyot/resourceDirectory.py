@@ -153,6 +153,12 @@ class RD(pResource):
         return {"Payload": "Resource Directory"}
 
     def render_PUT(self, request, payload=None, query=None):
+        """
+        Process keep-alive messages from CoAP Endpoints. The payload is a
+        counter incremented every 10 seconds by the endpoints. If it is less
+        than the stored keepAliveCount we consider the message as a
+        registration. This way we can detect rebooting nodes.
+        """
         ipAddr = request.source[0]
         timestamp = payload
         print 'RD server, message from: ' + ipAddr + ' time = ' + timestamp
@@ -171,7 +177,8 @@ class RD(pResource):
                     h.DISCOVER()
                 except Exception:
                     pass
-        except ObjectDoesNotExist:  # the host does not exists, create a new Host
+        except ObjectDoesNotExist:
+            # the host does not exists, create a new Host
             h = Host.objects.create(ip6address=ipAddr,
                                     lastSeen=datetime.now(),
                                     keepAliveCount=1)

@@ -28,10 +28,10 @@ from django.db import models
 
 from pyot.models.rest import Resource, CoapMsg
 from pyot.vres.pf import apply_pf
-from vresbase import SubResource, VResource, DEF_PF
+from vresbase import SubRes, VResource, DEF_PF
 
 
-class VirtualSensorHistT(VResource):
+class VsHistT(VResource):
     """
     TODO
     """
@@ -42,44 +42,47 @@ class VirtualSensorHistT(VResource):
         """
         TODO
         """
-        print "Past virtual sensor \nSubresources: \n  -processing \n  -startTime \n  -endTime"
+        print "Past virtual sensor \nSubresources: \n  -processing \
+        \n  -startTime \n  -endTime"
         return "virtual resource Past sensor template"
 
     def POST(self, name):
         """
-        Starting from the template creates the instance of the virtual 
-        resource using the name provided by the user. If an instance having 
+        Starting from the template creates the instance of the virtual
+        resource using the name provided by the user. If an instance having
         that name is already existing it is returned to the user.
         """
         uri = str(self.uri + '/' + name)
 
-        instance, created = VirtualSensorHistI.objects.get_or_create(template=self,
-                                              host=self.host,
-                                              uri=uri,
-                                              title=name,
-                                              rt=self.rt)
+        instance, created = VsHistI.objects.get_or_create(template=self,
+                                                          host=self.host,
+                                                          uri=uri,
+                                                          title=name,
+                                                          rt=self.rt)
 
-        processing, _ = SubResource.objects.get_or_create(host=self.host,
-                                    uri=uri + '/proc',
-                                    title='processing',
-                                    rt=self.rt,
-                                    defaults={'value':self.default_pf})
+        processing, _ = SubRes.objects.get_or_create(host=self.host,
+                                                     uri=uri + '/proc',
+                                                     title='processing',
+                                                     rt=self.rt,
+                                                     defaults={'value':
+                                                               self.default_pf})
 
         yesterday = datetime.now() - timedelta(days=1)
         yesterday_unix = str(timegm(yesterday.timetuple()))
-        start, _ = SubResource.objects.get_or_create(host=self.host,
-                                    uri=uri + '/start',
-                                    title='start',
-                                    rt=self.rt,
-                                    defaults={'value':yesterday_unix})
+        start, _ = SubRes.objects.get_or_create(host=self.host,
+                                                uri=uri + '/start',
+                                                title='start',
+                                                rt=self.rt,
+                                                defaults={'value':
+                                                          yesterday_unix})
 
         now_unix = str(timegm(datetime.now().timetuple()))
 
-        end, _ = SubResource.objects.get_or_create(host=self.host,
-                                    uri=uri + '/end',
-                                    title='end',
-                                    rt=self.rt,
-                                    defaults={'value':now_unix})
+        end, _ = SubRes.objects.get_or_create(host=self.host,
+                                              uri=uri + '/end',
+                                              title='end',
+                                              rt=self.rt,
+                                              defaults={'value': now_unix})
 
         if created is True:
             instance.processing = processing
@@ -92,23 +95,23 @@ class VirtualSensorHistT(VResource):
         app_label = 'pyot'
 
 
-class VirtualSensorHistI(VResource):
+class VsHistI(VResource):
     """
     Virtual Resource Instance
     """
     # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vsh_template')
-    processing = models.ForeignKey(SubResource,
+    processing = models.ForeignKey(SubRes,
                                    related_name='vsh_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)
 
-    start_time = models.ForeignKey(SubResource,
+    start_time = models.ForeignKey(SubRes,
                                    related_name='vsh_start',
                                    null=True,
                                    on_delete=models.SET_NULL)
 
-    end_time = models.ForeignKey(SubResource,
+    end_time = models.ForeignKey(SubRes,
                                  related_name='vsh_end',
                                  null=True,
                                  on_delete=models.SET_NULL)

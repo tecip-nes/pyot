@@ -43,9 +43,9 @@ admin.site.register(RplGraph)
 admin.site.register(EmulatorState)
 admin.site.register(pyMapReduce)
 admin.site.register(pyMap)
-admin.site.register(SubResource)
-admin.site.register(VirtualSensorI)
-admin.site.register(VirtualSensorT)
+admin.site.register(SubRes)
+admin.site.register(VsI)
+admin.site.register(VsT)
 
 
 class UserProfileInline(admin.StackedInline):

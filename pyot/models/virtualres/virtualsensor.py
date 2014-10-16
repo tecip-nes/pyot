@@ -25,10 +25,10 @@ from django.db import models
 
 from pyot.models.rest import Resource
 from pyot.vres.pf import apply_pf
-from vresbase import SubResource, VResource, DEF_PF
+from vresbase import SubRes, VResource, DEF_PF
 
 
-class VirtualSensorT(VResource):
+class VsT(VResource):
     """
     TODO
     """
@@ -39,8 +39,9 @@ class VirtualSensorT(VResource):
         """
         TODO
         """
-        print "Periodic Virtual Sensor \n>> supported methods: \
-GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
+        print "Virtual Sensor \n>> supported methods: \
+GET|POST\n  >> Configuration\  >>   subresource: period\n>>\
+subresource: processing"
         return "virtual sensor template"
 
     def POST(self, name):
@@ -53,17 +54,18 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
 
         # print 'instance uri ===== ' + uri
 
-        instance, created = VirtualSensorI.objects.get_or_create(template=self,
-                                              host=self.host,
-                                              uri=uri,
-                                              title=name,
-                                              rt=self.rt)
+        instance, created = VsI.objects.get_or_create(template=self,
+                                                      host=self.host,
+                                                      uri=uri,
+                                                      title=name,
+                                                      rt=self.rt)
 
-        processing, _ = SubResource.objects.get_or_create(host=self.host,
-                                    uri=uri + '/proc',
-                                    title='processing',
-                                    rt=self.rt, 
-                                    defaults={'value':self.default_pf})
+        processing, _ = SubRes.objects.get_or_create(host=self.host,
+                                                     uri=uri + '/proc',
+                                                     title='processing',
+                                                     rt=self.rt,
+                                                     defaults={'value':
+                                                               self.default_pf})
 
         # except Exception as e:
         #    print 'error creating subresource: %s' % e
@@ -77,14 +79,14 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
         app_label = 'pyot'
 
 
-class VirtualSensorI(VResource):
+class VsI(VResource):
     """
     Virtual Resource Instance
     """
     # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vs_template')
-    # period = models.ForeignKey(SubResource, related_name='period', null=True)
-    processing = models.ForeignKey(SubResource,
+    # period = models.ForeignKey(SubRes, related_name='period', null=True)
+    processing = models.ForeignKey(SubRes,
                                    related_name='vs_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)
