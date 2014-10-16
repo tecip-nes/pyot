@@ -77,3 +77,6 @@ local.properties
 
 # PDT-specific
 .buildpath
+
+#venv
+venv/**
