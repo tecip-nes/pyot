@@ -7,7 +7,7 @@ Created on Jul 29, 2014
 from datetime import datetime, timedelta
 
 from pyot.models.rest import Resource, Host
-from pyot.models.virtualres import VirtualSensorT, VirtualActuatorT, VirtualSensorHistT
+from pyot.models.virtualres import VsT, VaT, VsHistT, VsPeriodicT
 
 
 RDPATH = '/rd/'
@@ -26,14 +26,15 @@ def resource_template(**kwparams):
 
 
 def get_rd_host():
-    # @timedelta: workaround to prevent the host from being disabled by the periodic task
+    # @timedelta: workaround to prevent the host from being disabled by
+    # the periodic task
     future = datetime.now() + timedelta(days=1000)
     host, _created = Host.objects.get_or_create(ip6address=RD_DEFAULT_HOST,
-                                      defaults={'lastSeen':future})
+                                                defaults={'lastSeen': future})
     return host
 
 
-class VirtualResourceTemplate(object):
+class VresTemplate(object):
     """
     TODO
     """
@@ -50,24 +51,41 @@ class VirtualResourceTemplate(object):
         return self.vst.POST(name)
 
 
-class VirtualSensorTemplate(VirtualResourceTemplate):
+class VsTemplate(VresTemplate):
     """
     TODO
     """
     def __init__(self, input_template, name='senT'):
         """
         """
-        super(VirtualSensorTemplate, self).__init__()
+        super(VsTemplate, self).__init__()
         rd_host = get_rd_host()
-        self.vst, _created = VirtualSensorT.objects.get_or_create(host=rd_host,
-                                                     uri=RDPATH+name,
-                                                     title=name,
-                                                     rt=self.rt)
+        self.vst, _created = VsT.objects.get_or_create(host=rd_host,
+                                                       uri=RDPATH + name,
+                                                       title=name,
+                                                       rt=self.rt)
         self.vst.ioSet = input_template
         self.vst.save()
 
 
-class VirtualSensorHistTemplate(VirtualResourceTemplate):
+class VsPeriodicTemplate(VresTemplate):
+    """
+    TODO
+    """
+    def __init__(self, input_template, name='senT'):
+        """
+        """
+        super(VsPeriodicTemplate, self).__init__()
+        rd_host = get_rd_host()
+        self.vst, _created = VsPeriodicT.objects.get_or_create(host=rd_host,
+                                                               uri=RDPATH + name,
+                                                               title=name,
+                                                               rt=self.rt)
+        self.vst.ioSet = input_template
+        self.vst.save()
+
+
+class VsHistTemplate(VresTemplate):
     """
     TODO
     """
@@ -75,32 +93,29 @@ class VirtualSensorHistTemplate(VirtualResourceTemplate):
         """
 
         """
-        super(VirtualSensorHistTemplate, self).__init__()
+        super(VsHistTemplate, self).__init__()
         rd_host = get_rd_host()
-        self.vst, _created = VirtualSensorHistT.objects.get_or_create(host=rd_host,
-                                                     uri=RDPATH+name,
-                                                     title=name,
-                                                     rt=self.rt)
+        self.vst, _created = VsHistT.objects.get_or_create(host=rd_host,
+                                                           uri=RDPATH + name,
+                                                           title=name,
+                                                           rt=self.rt)
         self.vst.ioSet = input_template
         self.vst.save()
 
 
-class VirtualActuatorTemplate(VirtualResourceTemplate):
+class VaTemplate(VresTemplate):
     """
     TODO
     """
     def __init__(self, output_template, name='actT'):
         """
-        creates the template
-        serve un host per istanziare una risorsa. per ora ne creo uno fasullo
-        nella versione finale l'host potrebbe essere scelto in base alle risorse selezionate
-        oppure semplicemente associato ad un unico host che ospita l'rdep
+        creates the virtual actuator template
         """
-        super(VirtualActuatorTemplate, self).__init__()
+        super(VaTemplate, self).__init__()
         rd_host = get_rd_host()
-        self.vst, _created = VirtualActuatorT.objects.get_or_create(host=rd_host,
-                                                     uri=RDPATH+name,
-                                                     title=name,
-                                                     rt=self.rt)
+        self.vst, _created = VaT.objects.get_or_create(host=rd_host,
+                                                       uri=RDPATH + name,
+                                                       title=name,
+                                                       rt=self.rt)
         self.vst.ioSet = output_template
         self.vst.save()

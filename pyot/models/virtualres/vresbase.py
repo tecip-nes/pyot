@@ -39,7 +39,8 @@ class VResource(Resource):
     """
     Abstract base class for virtual sensors and actuators templates.
     """
-    _ioSet = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True, null=True)
+    _ioSet = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True,
+                              null=True)
     rt = 'virtual'
 
     def set_data(self, ioSet):
@@ -65,7 +66,7 @@ class VResource(Resource):
     def get_io_resources(self):
         """
         Returns a queryset including the current list of input/output
-        relevant resources, based on the resource template. 
+        relevant resources, based on the resource template.
         """
         kwparams = self.ioSet
         return Resource.objects.filter(**kwparams)
@@ -78,7 +79,8 @@ class VResource(Resource):
 @receiver(post_save)
 def pre_create_vr(sender, instance, **kwargs):
     """
-    TODO
+    Each time a Virtual Resource object is created reflect it on the VRD by
+    sending a POST message to the VRD server
     """
     # Returns false if 'sender' is NOT a subclass of AbstractModel
     if not issubclass(sender, VResource):
@@ -86,7 +88,7 @@ def pre_create_vr(sender, instance, **kwargs):
     if kwargs['created'] is False:
         return
     print instance.uri
-    print "The vr is going to be created  ********************************\n\n"
+    print "*** Creating VR on VRD ***\n"
     from pyot.tasks import coapPost
     res = coapPost(ip6address="bbbb::1",
                    uri=instance.uri,
@@ -96,12 +98,13 @@ def pre_create_vr(sender, instance, **kwargs):
         raise Exception("could not create resource in rd")
 
 
-class SubResource(VResource):
+class SubRes(VResource):
     """
-    Configuration Resources for Virtual Sensors/actuators instances. Their value
-    is directly encoded in the resource directory (--> db) as a string.
+    Configuration Resources for Virtual Sensors/actuators instances. Their
+    value is directly encoded in the resource directory (--> db) as a string.
     """
-    value = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True, null=True)
+    value = models.CharField(max_length=DEF_VALUE_LENGTH, blank=True,
+                             null=True)
 
     def GET(self):
         print 'virtual GET'

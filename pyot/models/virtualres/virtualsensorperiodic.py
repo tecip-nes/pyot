@@ -25,10 +25,11 @@ from django.db import models
 
 from pyot.models.rest import Resource
 from pyot.vres.pf import apply_pf
-from vresbase import SubResource, VResource, DEF_PF, DEF_VALUE_LENGTH
+from vresbase import SubRes, VResource, DEF_PF, DEF_VALUE_LENGTH
+from pyot.tres.tresApp import *
 
 
-class VirtualSensorPeriodicT(VResource):
+class VsPeriodicT(VResource):
     """
     TODO
     """
@@ -53,23 +54,25 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
 
         # print 'instance uri ===== ' + uri
 
-        instance, created = VirtualSensorPeriodicI.objects.get_or_create(template=self,
-                                                                         host=self.host,
-                                                                         uri=uri,
-                                                                         title=name,
-                                                                         rt=self.rt)
+        instance, created = VsPeriodicI.objects.get_or_create(template=self,
+                                                              host=self.host,
+                                                              uri=uri,
+                                                              title=name,
+                                                              rt=self.rt)
 
-        processing, _ = SubResource.objects.get_or_create(host=self.host,
-                                                          uri=uri + '/proc',
-                                                          title='processing',
-                                                          rt=self.rt,
-                                                          defaults={'value': self.default_pf})
+        processing, _ = SubRes.objects.get_or_create(host=self.host,
+                                                     uri=uri + '/proc',
+                                                     title='processing',
+                                                     rt=self.rt,
+                                                     defaults={'value':
+                                                               self.default_pf})
 
-        period, _ = SubResource.objects.get_or_create(host=self.host,
-                                                      uri=uri + '/period',
-                                                      title='period',
-                                                      rt=self.rt,
-                                                      defaults={'value': self.default_pf})
+        period, _ = SubRes.objects.get_or_create(host=self.host,
+                                                 uri=uri + '/period',
+                                                 title='period',
+                                                 rt=self.rt,
+                                                 defaults={'value':
+                                                           self.default_pf})
 
         if created is True:
             instance.processing = processing
@@ -90,7 +93,7 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
         app_label = 'pyot'
 
 
-class VirtualSensorPeriodicI(VResource):
+class VsPeriodicI(VResource):
     """
     Virtual Resource Instance.
     When the T-Res task is installed and activated it subscribes to
@@ -100,9 +103,9 @@ class VirtualSensorPeriodicI(VResource):
     """
     # reference to the template so that we can get the input resource list
     template = models.ForeignKey(Resource, related_name='vsp_template')
-    period = models.ForeignKey(SubResource, related_name='vsp_period',
+    period = models.ForeignKey(SubRes, related_name='vsp_period',
                                null=True)
-    processing = models.ForeignKey(SubResource,
+    processing = models.ForeignKey(SubRes,
                                    related_name='vsp_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)
@@ -115,16 +118,16 @@ class VirtualSensorPeriodicI(VResource):
 
     def GET(self):
         """
-        get current values from input sensors, apply the processing function
-        on the input list and return the result.
+        Return the internal value of the virtual resource. The value should
+        be updated by the processing node.
         """
-        print self.template.ioSet
-        input_list = []
-        ress = self.template.get_io_resources()
-        active_ress = ress.filter(host__active=True)
-        for i in active_ress:
-            resp = i.GET()
-            input_list.append(int(resp.content))
+        return self.last_value
 
-        output, _ = apply_pf(self.processing.value, input_list)
-        return str(output)
+    def PUT(self, value):
+        """
+        Update the internal value of the Virtual Resource (last_value) with
+        new data coming from the processing node (T-Res node)
+        """
+        print 'Updating last value, received', value
+        self.last_value = value
+        self.save()

@@ -232,7 +232,8 @@ class TResT(models.Model):
         print 'first put result = ' + r.code
         if r.code != CREATED:
             newTask.delete()
-            return Response(FAILURE, 'Error creating new resource: ' + '/tasks/' + self.pf.name)
+            return Response(FAILURE, 'Error creating new resource: ' +
+                            '/tasks/' + self.pf.name)
 
         newIs = Resource.objects.create(host=self.TResResource.host,
                                         uri='/tasks/' + self.pf.name + '/is')
@@ -282,12 +283,14 @@ class TResT(models.Model):
         if r.code == DELETED:
             newTask.delete()
             Resource.objects.filter(host=self.TResResource.host,
-                                    uri__startswith='/tasks/' + self.pf.name).delete()
+                                    uri__startswith='/tasks/' +
+                                    self.pf.name).delete()
             self.state = 'CLEARED'
             self.save()
             return Response(SUCCESS, 'Task ' + self.pf.name + ' uninstalled')
         else:
-            return Response(FAILURE, 'Error uninstalling task ' + self.pf.name)
+            return Response(FAILURE, 'Error uninstalling task ' +
+                            self.pf.name)
 
     def start(self):
         '''
@@ -331,7 +334,8 @@ class TResT(models.Model):
         retrieved or observed.
         """
         last_output = Resource.objects.get(host=self.TResResource.host,
-                                           uri='/tasks/' + self.pf.name + '/lo')
+                                           uri='/tasks/' +
+                                           self.pf.name + '/lo')
         return last_output
 
     def getInputSource(self):
