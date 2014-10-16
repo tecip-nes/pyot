@@ -42,8 +42,8 @@
 #include "er-coap.h"
 #include "tres.h"
 #include "pm.h"
-#include "../rplinfo/rplinfo.h"
-#include "../common/pyot.h"
+#include "rplinfo.h"
+#include "pyot.h"
 
 /*----------------------------------------------------------------------------*/
 #if !UIP_CONF_IPV6_RPL                       \
@@ -242,6 +242,7 @@ PROCESS_THREAD(tres_process, ev, data)
   rest_activate_resource(&actuator, "actuator");
   rplinfo_activate_resources();
   
+#if PYOT_KEEPALIVE
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);
   
@@ -282,5 +283,6 @@ PROCESS_THREAD(tres_process, ev, data)
       etimer_reset(&et);
      }
   } /* while (1) */  
+#endif
   PROCESS_END();
 }

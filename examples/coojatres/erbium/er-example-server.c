@@ -113,6 +113,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_resource(&res_leds, "actuators/leds");  
   rplinfo_activate_resources();
   PRINTF("Resources activated\n");
+#if PYOT_KEEPALIVE    
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   
   static int time=0;
@@ -157,5 +158,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
       etimer_reset(&et);
      }
   } /* while (1) */
+#endif   
   PROCESS_END();
 }

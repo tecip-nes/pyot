@@ -32,3 +32,5 @@
 
 #define BASE_WAITING 5
 #define MAX_WAITING 5
+
+#define PYOT_KEEPALIVE 0
