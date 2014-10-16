@@ -57,7 +57,7 @@ class TResPF(object):
 
 class TResTask(object):
     taskId = None
-    def __init__(self, TresPf, inputS, output=None, period=0):
+    def __init__(self, TresPf, inputS, output=None, period=30):
         # First check if input resources are observable
         for inp in inputS:
             if inp.obs is False:
