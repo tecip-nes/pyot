@@ -355,6 +355,10 @@ message_handler(struct coap_context_t  *ctx,
 
 			/* TODO: check if we are looking at the correct block number */
 			if (coap_get_data(received, &len, &databuf)){
+			
+
+
+			
 				int l = snprintf(b, BUF_SIZE, "%d.%02d ", (received->hdr->code >> 5), received->hdr->code & 0x1F);
 				append_to_output(b, l);
 				append_to_output(databuf, len);
@@ -415,6 +419,10 @@ message_handler(struct coap_context_t  *ctx,
 			if (block_opt) { /* handle Block1 */
 				block.szx = COAP_OPT_BLOCK_SZX(block_opt);
 				block.num = coap_opt_block_num(block_opt);
+                
+			    int l = snprintf(b, BUF_SIZE, "%d.%02d ", (received->hdr->code >> 5), received->hdr->code & 0x1F);
+			    append_to_output(b, l);
+			    append_to_output("\n", strlen("\n"));
 
 				debug("found Block1, block size is %u, block nr. %u\n",
 						block.szx, block.num);
@@ -500,7 +508,6 @@ message_handler(struct coap_context_t  *ctx,
 			}
 		}
 		else {
-			printf("\nshould be here\n");
 			int l = snprintf(b, BUF_SIZE, "%d.%02d \n", (received->hdr->code >> 5), received->hdr->code & 0x1F);
 			append_to_output(b, l);
 		}
