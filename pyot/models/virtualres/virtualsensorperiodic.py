@@ -35,6 +35,7 @@ class VsPeriodicT(VResource):
     """
 
     default_pf = DEF_PF
+    default_period = '60'
 
     def GET(self):
         """
@@ -42,7 +43,7 @@ class VsPeriodicT(VResource):
         """
         print "Periodic Virtual Sensor \n>> supported methods: \
 GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
-        return "virtual sensor template"
+        return "virtual sensor periodic template"
 
     def POST(self, name):
         """
@@ -72,14 +73,21 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
                                                  title='period',
                                                  rt=self.rt,
                                                  defaults={'value':
-                                                           self.default_pf})
+                                                           self.default_period})
+
+        last_value, _ = SubRes.objects.get_or_create(host=self.host,
+                                                     uri=uri + '/lo',
+                                                     title='lastvalue',
+                                                     rt=self.rt,
+                                                     defaults={'value': 'None'})
 
         if created is True:
             instance.processing = processing
             instance.period = period
+            instance.last_value = last_value
             instance.save()
 
-        # create the appropriate t-res instance, and deploy it and start it.
+        # create the appropriate t-res instance, deploy it and start it.
         # The input sources are defined starting from the resource template.
         # The output destination resource is the instance itself.
         # In case in-network processing is not possible (maybe there's no
@@ -109,9 +117,12 @@ class VsPeriodicI(VResource):
                                    related_name='vsp_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)
-    last_value = models.CharField(max_length=DEF_VALUE_LENGTH,
-                                  blank=True,
-                                  null=True)
+    last_value = models.ForeignKey(SubRes, related_name='vsp_last',
+                                   null=True)
+    # status = models.CharField(max_length=10,
+    #                          blank=True,
+    #                          null=True,
+    #                          default='off')
 
     class Meta(object):
         app_label = 'pyot'
@@ -121,13 +132,31 @@ class VsPeriodicI(VResource):
         Return the internal value of the virtual resource. The value should
         be updated by the processing node.
         """
-        return self.last_value
+        return self.last_value.value
 
     def PUT(self, value):
         """
-        Update the internal value of the Virtual Resource (last_value) with
-        new data coming from the processing node (T-Res node)
+        Deploy and activate the task
         """
-        print 'Updating last value, received', value
-        self.last_value = value
-        self.save()
+        print 'deploying task'
+
+        proc = TResPF.fromSource(self.processing.value, 'vr_proc')
+        rin = Resource.objects.filter(**self.template.ioSet)
+        rout = Resource.objects.filter(uri=self.last_value.uri)[0]
+        print rin, rout
+
+        tresTask = TResTask(TresPf=proc, inputS=rin, output=rout, period=10)
+
+        r = Resource.objects.filter(uri='/tasks')[0]
+        print r.host, '    is a t-res node'
+        tresTask.deploy(r)
+
+        r = tresTask.start()
+
+        return 'resource updated'
+
+    def DELETE(self):
+        """
+        Stop and Uninstall the task
+        """
+        return 'task uninstalled'
