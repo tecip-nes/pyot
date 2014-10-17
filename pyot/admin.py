@@ -46,6 +46,8 @@ admin.site.register(pyMap)
 admin.site.register(SubRes)
 admin.site.register(VsI)
 admin.site.register(VsT)
+admin.site.register(VsPeriodicT)
+admin.site.register(VsPeriodicI)
 
 
 class UserProfileInline(admin.StackedInline):
