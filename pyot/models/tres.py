@@ -276,6 +276,13 @@ class TResT(models.Model):
         """
         Uninstalls a T-Res task from a node.
         """
+        if self.state == 'RUNNING':
+            self.stop()
+
+        if self.state == 'CLEARED':
+            return Response(SUCCESS, 'Task ' + self.pf.name +
+                            'already uninstalled')
+
         newTask = Resource.objects.get(host=self.TResResource.host,
                                        uri='/tasks/' + self.pf.name)
         r = newTask.DELETE()
