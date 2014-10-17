@@ -27,6 +27,7 @@ from pyot.models.rest import Resource
 from pyot.vres.pf import apply_pf
 from vresbase import SubRes, VResource, DEF_PF, DEF_VALUE_LENGTH
 from pyot.tres.tresApp import *
+from pyot.models.tres import TRES_STATES
 
 
 class VsPeriodicT(VResource):
@@ -42,7 +43,8 @@ class VsPeriodicT(VResource):
         TODO
         """
         print "Periodic Virtual Sensor \n>> supported methods: \
-GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: processing"
+GET|POST\n  >> Configuration\  >>   subresource: period\n>>   \
+subresource: processing"
         return "virtual sensor periodic template"
 
     def POST(self, name):
@@ -87,14 +89,6 @@ GET|POST\n  >> Configuration\  >>   subresource: period\n>>   subresource: proce
             instance.last_value = last_value
             instance.save()
 
-        # create the appropriate t-res instance, deploy it and start it.
-        # The input sources are defined starting from the resource template.
-        # The output destination resource is the instance itself.
-        # In case in-network processing is not possible (maybe there's no
-        # t-res node available) we can use the 'emulate' function to run the
-        # processing function on the worker node (though periodicity is still
-        # not supported)
-
         return instance
 
     class Meta(object):
@@ -119,10 +113,9 @@ class VsPeriodicI(VResource):
                                    on_delete=models.SET_NULL)
     last_value = models.ForeignKey(SubRes, related_name='vsp_last',
                                    null=True)
-    # status = models.CharField(max_length=10,
-    #                          blank=True,
-    #                          null=True,
-    #                          default='off')
+
+    tresTask = models.ForeignKey(TResT, null=True,
+                                 related_name='vsp_tresTasks')
 
     class Meta(object):
         app_label = 'pyot'
@@ -132,12 +125,34 @@ class VsPeriodicI(VResource):
         Return the internal value of the virtual resource. The value should
         be updated by the processing node.
         """
-        return self.last_value.value
+        if self.last_value:
+            return self.last_value.value
+        else:
+            return 'None'
 
     def PUT(self, value):
         """
         Deploy and activate the task
+        Create the appropriate t-res instance, deploy it and start it.
+        The input sources are defined starting from the resource template.
+        The output destination resource is the instance itself.
+        In case in-network processing is not possible (maybe there's no
+        t-res node available) we can use the 'emulate' function to run the
+        processing function on the worker node (though periodicity is still
+        not supported)
         """
+        print 'put'
+
+        if self.tresTask is not None:
+            print 'stopping'
+            self.tresTask.stop()
+            self.tresTask.uninstall()
+            self.last_value.value = None
+            self.tresTask = None
+            self.save()
+            print 'removed'
+            return 'task removed'
+
         print 'deploying task'
 
         proc = TResPF.fromSource(self.processing.value, 'vr_proc')
@@ -145,18 +160,20 @@ class VsPeriodicI(VResource):
         rout = Resource.objects.filter(uri=self.last_value.uri)[0]
         print rin, rout
 
-        tresTask = TResTask(TresPf=proc, inputS=rin, output=rout, period=10)
+        task = TResT.objects.create(pf=proc.pf, output=rout,
+                                    period=self.period.value)
 
-        r = Resource.objects.filter(uri='/tasks')[0]
+        self.taskId = task.id
+        for inp in rin:
+            task.inputS.add(inp)
+        task.save()
+
+        self.tresTask = task
+        self.save()
+        r = Resource.objects.filter(uri='/tasks')[0]  # pick a t-res node
         print r.host, '    is a t-res node'
-        tresTask.deploy(r)
+        self.tresTask.deploy(r)
 
-        r = tresTask.start()
+        r = self.tresTask.start()
 
         return 'resource updated'
-
-    def DELETE(self):
-        """
-        Stop and Uninstall the task
-        """
-        return 'task uninstalled'
