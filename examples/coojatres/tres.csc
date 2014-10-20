@@ -8,7 +8,7 @@
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>Flow-src</title>
-    <speedlimit>1.0</speedlimit>
+    <speedlimit>2.0</speedlimit>
     <randomseed>123456</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -113,8 +113,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>49.66108404935068</x>
-        <y>29.975129416606</y>
+        <x>49.97287826017803</x>
+        <y>19.997714670130808</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -137,6 +137,34 @@
       </interface_config>
       <motetype_identifier>wismote3</motetype_identifier>
     </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>62.5425402511113</x>
+        <y>40.19347605326596</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>5</id>
+      </interface_config>
+      <motetype_identifier>wismote3</motetype_identifier>
+    </mote>
+    <mote>
+      <breakpoints />
+      <interface_config>
+        org.contikios.cooja.interfaces.Position
+        <x>28.80614491525071</x>
+        <y>64.64442834425756</y>
+        <z>0.0</z>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>6</id>
+      </interface_config>
+      <motetype_identifier>wismote2</motetype_identifier>
+    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
@@ -156,7 +184,8 @@
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.AddressVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.MoteTypeVisualizerSkin</skin>
-      <viewport>4.897434225217246 0.0 0.0 4.897434225217246 49.04273694494931 -36.005700018844465</viewport>
+      <skin>org.contikios.cooja.plugins.skins.LEDVisualizerSkin</skin>
+      <viewport>3.9990727167209967 0.0 0.0 3.9990727167209967 42.677667498561725 -19.245042406818566</viewport>
     </plugin_config>
     <width>400</width>
     <z>0</z>
@@ -172,7 +201,7 @@
       <coloring />
     </plugin_config>
     <width>825</width>
-    <z>2</z>
+    <z>3</z>
     <height>787</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -184,13 +213,15 @@
       <mote>1</mote>
       <mote>2</mote>
       <mote>3</mote>
+      <mote>4</mote>
+      <mote>5</mote>
       <showRadioRXTX />
       <showRadioHW />
       <showLEDs />
       <zoomfactor>500.0</zoomfactor>
     </plugin_config>
     <width>960</width>
-    <z>3</z>
+    <z>4</z>
     <height>166</height>
     <location_x>2</location_x>
     <location_y>447</location_y>
@@ -202,7 +233,7 @@
       <decorations>true</decorations>
     </plugin_config>
     <width>280</width>
-    <z>5</z>
+    <z>6</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -211,10 +242,22 @@
     SerialSocketServer
     <mote_arg>0</mote_arg>
     <width>422</width>
-    <z>4</z>
+    <z>5</z>
     <height>69</height>
     <location_x>150</location_x>
     <location_y>150</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.mspmote.plugins.MspStackWatcher
+    <mote_arg>1</mote_arg>
+    <plugin_config>
+      <monitoring>false</monitoring>
+    </plugin_config>
+    <width>400</width>
+    <z>2</z>
+    <height>300</height>
+    <location_x>972</location_x>
+    <location_y>31</location_y>
   </plugin>
 </simconf>
 

@@ -37,7 +37,7 @@
  */
 
 #include "contiki.h"
-
+#define PLATFORM_HAS_LEDS 1  //*******************------------------------
 #if PLATFORM_HAS_LEDS
 
 #include <string.h>
@@ -61,9 +61,12 @@
 #define THR2 50
 #define THR3 75
 
-static void res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void
+res_post_put_handler(void *request, void *response, uint8_t *buffer,
+                     uint16_t preferred_size, int32_t *offset);
 
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
+/*A simple actuator example, depending on the color query parameter and
+ * post variable mode, corresponding led is activated or deactivated*/
 RESOURCE(res_leds,
          "title=\"LED\";rt=\"Control\"",
          NULL,
@@ -72,64 +75,30 @@ RESOURCE(res_leds,
          NULL);
 
 static void
-res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_put_handler(void *request, void *response, uint8_t *buffer,
+                     uint16_t preferred_size, int32_t *offset)
 {
-  size_t len = 0;
   //const char *color = NULL;
-  const char *set = NULL;
   uint8_t led = 0;
+  uint16_t len;
+  const uint8_t *ptr;
 
-  len = REST.get_post_variable(request, "set", &set);
-  if (len <=0){
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
+  len = REST.get_request_payload(request, &ptr);
 
-  unsigned int set_point = atoi(set);
-  printf("\nset = %d\n", set_point);
-
+  unsigned int set_point = atoi(ptr);
+  printf("A: %d\n", set_point);
+  leds_off(LEDS_YELLOW|LEDS_RED|LEDS_GREEN);
   if (set_point > THR1){
-    printf("\nred");
     led = LEDS_RED;
   }
   if (set_point > THR2){
-    printf("\ngreen");
-    led = LEDS_GREEN;
+    led = LEDS_GREEN | LEDS_RED;
   }
   if (set_point > THR3){
-    printf("\nblue");  
-    led = LEDS_YELLOW;
+    led = LEDS_YELLOW | LEDS_GREEN | LEDS_RED;
   }
   if (set_point != 0){
     leds_on(led);
   }
-  /*if((len = REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
-
-    if(strncmp(color, "r", len) == 0) {
-      led = LEDS_RED;
-    } else if(strncmp(color, "g", len) == 0) {
-      led = LEDS_GREEN;
-    } else if(strncmp(color, "b", len) == 0) {
-      led = LEDS_BLUE;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  } if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
-    PRINTF("mode %s\n", mode);
-
-    if(strncmp(mode, "on", len) == 0) {
-      leds_on(led);
-    } else if(strncmp(mode, "off", len) == 0) {
-      leds_off(led);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  } if(!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }*/
 }
 #endif /* PLATFORM_HAS_LEDS */

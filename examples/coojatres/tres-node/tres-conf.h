@@ -22,7 +22,7 @@
 
 // if enabled, T-Res always uses CON messages
 #ifndef TRES_CONF_RELIABLE
-#define TRES_CONF_RELIABLE 1
+#define TRES_CONF_RELIABLE 0
 #endif
 #if TRES_CONF_RELIABLE
 #define COAP_OBSERVING_CONF_REFRESH_INTERVAL 0
