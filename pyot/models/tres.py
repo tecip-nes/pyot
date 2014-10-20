@@ -212,6 +212,7 @@ class TResT(models.Model):
                                   stderr=subprocess.PIPE,
                                   shell=True, cwd=SCRIPT_FOLDER)
         # start a task downloading the script from the server
+
         pycFilename = basename + 'c'
         r = tresDownloadScript.apply_async(args=[pycFilename],
                                            queue=t_res_resource.host.getQueue())
@@ -276,6 +277,7 @@ class TResT(models.Model):
         """
         Uninstalls a T-Res task from a node.
         """
+
         if self.state == 'RUNNING':
             self.stop()
 
