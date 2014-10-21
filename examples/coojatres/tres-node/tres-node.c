@@ -241,7 +241,7 @@ PROCESS_THREAD(tres_process, ev, data)
   tres_init();
   rest_activate_resource(&actuator, "actuator");
   rplinfo_activate_resources();
-  
+  sprintf(setpoint, "0");
 #if PYOT_KEEPALIVE
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);

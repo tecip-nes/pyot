@@ -174,9 +174,8 @@ class TResT(models.Model):
     by the emu field.
     """
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
-    inputS = models.ManyToManyField(Resource)
-    output = models.ForeignKey(Resource, related_name='OutputDestination',
-                               null=True)
+    inputS = models.ManyToManyField(Resource, blank=True, related_name='is')
+    output = models.ManyToManyField(Resource, blank=True, related_name='od')
     TResResource = models.ForeignKey(Resource, null=True,
                                      related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
@@ -190,7 +189,7 @@ class TResT(models.Model):
     def __unicode__(self):
         return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf,
                                                         i=str(self.inputS.all()),
-                                                        o=self.output)
+                                                        o=str(self.output.all()))
 
     def deploy(self, t_res_resource):
         """
@@ -205,14 +204,14 @@ class TResT(models.Model):
 
         # 1) compile the script
         basename = os.path.basename(str(self.pf.sourcefile))
-        compile_command = tresCompile + ' ' + tresPMfeat + ' ' + str(self.pf.sourcefile)
+        compile_command = tresCompile + ' ' + (tresPMfeat + ' '
+                                               + str(self.pf.sourcefile))
         p = subprocess.check_call([compile_command],
                                   stdin=subprocess.PIPE,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE,
                                   shell=True, cwd=SCRIPT_FOLDER)
         # start a task downloading the script from the server
-
         pycFilename = basename + 'c'
         r = tresDownloadScript.apply_async(args=[pycFilename],
                                            queue=t_res_resource.host.getQueue())
@@ -252,10 +251,10 @@ class TResT(models.Model):
             self.uninstall()
             return Response(FAILURE, 'Error uploading processing function.')
 
-        # 5) Create output destination resource
-        if self.output:
-            r = newOd.PUT(payload='<' + self.output.getFullURI() + '>')
-            print 'OD put result = ' + r.code
+        # 5) Create output destination resources
+        for od in self.output.all():
+            r = newOd.POST(payload='<' + od.getFullURI() + '>')
+            print 'OD put result = ' + r.code + ' ' + od.getFullURI()
             if r.code != CHANGED:
                 self.uninstall()
                 return Response(FAILURE, 'Error updating OD resource')
@@ -269,7 +268,7 @@ class TResT(models.Model):
                 return Response(FAILURE, 'Error updating IS resource')
 
         self.state = 'INSTALLED'
-        self.save() # update TResResource and state
+        self.save()  # update TResResource and state
 
         return Response(SUCCESS, 'Tres Task ' + str(self) + ' Installed')
 
@@ -277,7 +276,6 @@ class TResT(models.Model):
         """
         Uninstalls a T-Res task from a node.
         """
-
         if self.state == 'RUNNING':
             self.stop()
 
