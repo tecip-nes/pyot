@@ -126,7 +126,7 @@ class VsPeriodicI(VResource):
         be updated by the processing node.
         """
         if self.last_value:
-            return self.last_value.value
+            return Resource.objects.get(uri=self.last_value.uri).GET()
         else:
             return 'None'
 
