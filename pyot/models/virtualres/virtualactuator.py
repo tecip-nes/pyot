@@ -58,11 +58,7 @@ class VaT(VResource):
                                                      defaults={'value':
                                                                self.default_pf})
 
-        # except Exception as e:
-        #    print 'error creating subresource: %s' % e
-
         if created is True:
-            # instance.period = period
             instance.processing = processing
             instance.save()
         return instance
@@ -90,9 +86,9 @@ class VaI(VResource):
         active_ress = ress.filter(host__active=True)
         input_list = [x.id for x in active_ress]
         set_actuator(value)
-        output, set_point = apply_pf(self.processing.value, input_list)
+        set_point = apply_pf(self.processing.value, input_list)
         results = []
         for i in active_ress:
-            res = i.PUT(payload='set='+str(set_point))
+            res = i.PUT(payload=str(set_point))
             results.append(res.code)
-        return str(output) + ' ' + str(results)
+        return str(set_point) + ' ' + str(results)
