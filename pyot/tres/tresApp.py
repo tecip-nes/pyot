@@ -111,6 +111,10 @@ class TResTask(object):
         t = self.getTaskObject()
         return t.getLastOutput()
 
+    def getInputResource(self):
+        t = self.getTaskObject()
+        return t.getInputResource()
+
     def getInputSource(self):
         t = self.getTaskObject()
         return t.getInputSource()

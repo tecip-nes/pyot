@@ -242,6 +242,8 @@ class TResT(models.Model):
                                         uri='/tasks/' + self.pf.name + '/pf')
         _newLo = Resource.objects.create(host=self.TResResource.host,
                                          uri='/tasks/' + self.pf.name + '/lo')
+        _newIn = Resource.objects.create(host=self.TResResource.host,
+                                         uri='/tasks/' + self.pf.name + '/in')
 
         # 4) Upload the processing function
         r = newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
@@ -343,6 +345,16 @@ class TResT(models.Model):
                                            uri='/tasks/' +
                                            self.pf.name + '/lo')
         return last_output
+
+    def getInputResource(self):
+        """
+        Returns the input resource reference. The resource can be
+        retrieved or observed.
+        """
+        input_resource = Resource.objects.get(host=self.TResResource.host,
+                                              uri='/tasks/' +
+                                              self.pf.name + '/in')
+        return input_resource
 
     def getInputSource(self):
         """
