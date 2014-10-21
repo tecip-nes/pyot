@@ -158,11 +158,11 @@ class VsPeriodicI(VResource):
         proc = TResPF.fromSource(self.processing.value, 'vr_proc')
         rin = Resource.objects.filter(**self.template.ioSet)
         rout = Resource.objects.filter(uri=self.last_value.uri)[0]
+
         print rin, rout
 
-        task = TResT.objects.create(pf=proc.pf, output=rout,
-                                    period=self.period.value)
-
+        task = TResT.objects.create(pf=proc.pf, period=self.period.value)
+        task.output.add(rout)
         self.taskId = task.id
         for inp in rin:
             task.inputS.add(inp)
