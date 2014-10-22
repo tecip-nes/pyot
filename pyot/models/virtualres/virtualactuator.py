@@ -89,6 +89,6 @@ class VaI(VResource):
         set_point = apply_pf(self.processing.value, input_list)
         results = []
         for i in active_ress:
-            res = i.PUT(payload=str(set_point))
-            results.append(res.code)
-        return str(set_point) + ' ' + str(results)
+            res = i.asyncPUT(payload=str(set_point))
+            # results.append(res.code)
+        return str(set_point)  # + ' ' + str(results)
