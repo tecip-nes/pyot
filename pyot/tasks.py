@@ -236,10 +236,15 @@ def coapGet(rid, payload, timeout=RX_TIMEOUT, query=None, block=None):
     except Exception as e:
         return Response(FAILURE, 'Exception Coap GET %s' % e)
 
+from random import uniform
+
 
 @task
 def coapPut(rid, payload=None, timeout=RX_TIMEOUT, query=None, inputfile=None, block=None):
     try:
+        st = uniform(0, 0.5)
+        time.sleep(st)
+        print st
         _, uri = getResourceActive(rid)
         if query is not None:
             uri = addQuery(uri, query)
@@ -473,7 +478,7 @@ def coapRdServer(prefix='bbbb::/64'):
         n.pid = None
         n.save()
 
-
+'''
 @celery.decorators.periodic_task(run_every=timedelta(seconds=CLEANUP_TASK_PERIOD))
 def checkConnectedHosts():
     try:
@@ -488,6 +493,7 @@ def checkConnectedHosts():
         return None
     except Exception:
         pass
+'''
 
 
 @task
