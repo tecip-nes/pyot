@@ -50,6 +50,8 @@ class VrSubresource(pResource):
             if payload is not None:
                 Resource.objects.get(uri=uri).PUT(payload)
                 return 'Resource updated'
+            else:
+                return 'Provide a content'
             return 'Resource unmodified'
         except Exception as exc:
             return trunc_exc(exc)
