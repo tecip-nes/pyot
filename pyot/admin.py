@@ -48,6 +48,8 @@ admin.site.register(VsI)
 admin.site.register(VsT)
 admin.site.register(VsPeriodicT)
 admin.site.register(VsPeriodicI)
+admin.site.register(VaT)
+admin.site.register(VaI)
 
 
 class UserProfileInline(admin.StackedInline):
