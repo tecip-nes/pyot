@@ -3,8 +3,10 @@ Created on Aug 21, 2014
 
 @author: andrea
 '''
+import sys
+from django.conf import settings
 
-
+PROJECT_ROOT = settings.PROJECT_ROOT
 input_list = None
 output_result = None
 actuator_setpoint = None
@@ -38,6 +40,7 @@ def set_actuator(value):
 
 
 def apply_pf(pf, il):
+    sys.path.append(PROJECT_ROOT + '/vres')
     global input_list
     global actuator_setpoint
     input_list = il

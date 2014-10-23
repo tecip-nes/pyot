@@ -26,6 +26,8 @@ from django.db import models
 from pyot.models.rest import Resource
 from pyot.vres.pf import apply_pf, set_actuator
 from vresbase import SubRes, VResource, DEF_PF
+from pyot.tres.tresApp import *
+from pyot.models.tres import TRES_STATES
 
 
 class VaT(VResource):
@@ -77,18 +79,87 @@ class VaI(VResource):
                                    related_name='va_processing',
                                    null=True,
                                    on_delete=models.SET_NULL)
+    tresTask = models.ForeignKey(TResT, null=True,
+                                 related_name='vsa_tresTasks')
 
     class Meta(object):
         app_label = 'pyot'
 
+    def deploy(self):
+        print 'deploying task'
+
+        proc = TResPF.fromSource(self.processing.value, 'va_proc')
+        # TODO: remove the list slicing
+        rout = Resource.objects.filter(**self.template.ioSet)[0:2]
+
+        print rout
+
+        task = TResT.objects.create(pf=proc.pf, period=0)
+
+        for od in rout:
+            task.output.add(od)
+        task.save()
+
+        self.tresTask = task
+
+        # TODO: for the moment we choose a predefined tres node, #1
+        r = Resource.objects.filter(uri='/tasks')[1]  # pick a t-res node
+        print r.host, '    is a t-res node'
+        self.tresTask.deploy(r)
+        r = self.tresTask.start()
+        self.save()
+
+    def tresDeployment(self):
+        print 'checking if in-net deployment is possible'
+        tresNodes = Resource.objects.filter(uri='/tasks', host__active=True)
+        if tresNodes.count() != 0:
+            return True
+        return False
+
     def PUT(self, value):
-        ress = self.template.get_io_resources()
-        active_ress = ress.filter(host__active=True)
-        input_list = [x.id for x in active_ress]
-        set_actuator(value)
-        set_point = apply_pf(self.processing.value, input_list)
-        results = []
-        for i in active_ress:
-            res = i.asyncPUT(payload=str(set_point))
-            # results.append(res.code)
-        return str(set_point)  # + ' ' + str(results)
+
+        if value.isdigit():
+            print 'sending new value to actuator'
+
+            if self.tresTask is not None:
+                print 'a tres task is already deployed. Check if it is running'
+                if self.tresTask.state != 'RUNNING':
+                    print 'try to start the task'
+                    self.tresTask.start()
+
+                print 'send the value to *in* resource'
+                inres = self.tresTask.getInputResource()
+                inres.asyncPUT(value)
+                return 'Command Sent to processing node'
+            else:
+                # is the task already deployed and active?
+                sys.path.append(PROJECT_ROOT + '/tres')
+                ress = self.template.get_io_resources()
+                active_ress = ress.filter(host__active=True)
+                input_list = [x.id for x in active_ress]
+                set_actuator(value)
+                set_point = apply_pf(self.processing.value, input_list)
+                results = []
+                for i in active_ress:
+                    res = i.asyncPUT(payload=str(set_point))
+                    # results.append(res.code)
+                return 'Command Sent to actuators'
+
+        else:
+            print 'check if we need to install or uninstall a task'
+            if self.tresTask is not None:  # uninstall the task
+                self.tresTask.stop()
+                self.tresTask.uninstall()
+                self.tresTask = None
+                self.save()
+                return 'Task removed'
+
+            if self.tresDeployment():
+                self.deploy()
+                return 'Task deployed'
+            else:
+                print 'in-net not possible'
+                return 'In-net processing not possible'
+
+
+

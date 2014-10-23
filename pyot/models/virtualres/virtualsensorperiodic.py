@@ -163,7 +163,7 @@ class VsPeriodicI(VResource):
 
         task = TResT.objects.create(pf=proc.pf, period=self.period.value)
         task.output.add(rout)
-        self.taskId = task.id
+
         for inp in rin:
             task.inputS.add(inp)
         task.save()
