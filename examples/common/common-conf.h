@@ -37,16 +37,16 @@
 #ifdef RF_CHANNEL
 #undef RF_CHANNEL
 #endif /* RF_CHANNEL */
-#define RF_CHANNEL              13 
+#define RF_CHANNEL              19 
 
 #ifdef CC2420_CONF_CHANNEL
 #undef CC2420_CONF_CHANNEL
 #endif
-#define CC2420_CONF_CHANNEL 13
+#define CC2420_CONF_CHANNEL 19
 
 /* wismote id */
 #undef NODE_ID
-#define NODE_ID 3
+#define NODE_ID 1
 
 /* Use csma/ca */
 #undef NETSTACK_CONF_MAC
