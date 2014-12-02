@@ -167,6 +167,7 @@ class TResT(models.Model):
                                      related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
                              default='CREATED')
+    period = models.IntegerField(default=0)
     emu = models.ForeignKey(EmulatorState, null=True)
     class Meta(object):
         app_label = 'pyot'
@@ -185,9 +186,7 @@ class TResT(models.Model):
             raise Exception('TResResource must have /tasks uri')
         self.TResResource = t_res_resource # FIXME only update if the installation is succesfull.
 
-
-        # split the operation in phases, single tasks
-        # compile the script
+        # 1) compile the script
         basename = os.path.basename(str(self.pf.sourcefile))
         compile_command = tresCompile + ' ' + tresPMfeat + ' ' + str(self.pf.sourcefile)
         p = subprocess.check_call([compile_command],
@@ -195,7 +194,8 @@ class TResT(models.Model):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              shell=True, cwd=SCRIPT_FOLDER)
-        # start a task downloading the script from the server
+
+        # 2) start a task downloading the script from the server
         pycFilename = basename + 'c'
         r = tresDownloadScript.apply_async(args=[pycFilename],
                                        queue=t_res_resource.host.getQueue())
@@ -208,7 +208,8 @@ class TResT(models.Model):
         except Resource.DoesNotExist:
             newTask = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
 
-        r = newTask.PUT()
+        # 3) Create a new task resource
+        r = newTask.PUT(query="per=" + str(self.period))
         print 'first put result = ' + r.code
         if r.code != CREATED:
             newTask.delete()
@@ -219,21 +220,28 @@ class TResT(models.Model):
         newPf = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/pf')
         _newLo = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/lo')
 
+        # 4) Upload the processing function
         r = newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
         print 'PF put result = ' + r.code
 
         if r.code != CHANGED:
+            self.uninstall()
             return Response(FAILURE, 'Error uploading processing function.')
 
+        # 5) Create output destination resource
         if self.output:
             r = newOd.PUT(payload='<' + self.output.getFullURI() + '>')
             print 'OD put result = ' + r.code
             if r.code != CHANGED:
+                self.uninstall()
                 return Response(FAILURE, 'Error updating OD resource')
+
+        # 6) Create input source resources
         for inp in self.inputS.all():
             r = newIs.POST(payload='<' + inp.getFullURI() + '>')
             print 'IS put result = ' + r.code + ' ' + inp.getFullURI()
             if r.code != CHANGED:
+                self.uninstall()
                 return Response(FAILURE, 'Error updating IS resource')
 
         self.state = 'INSTALLED'
