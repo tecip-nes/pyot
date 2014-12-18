@@ -39,11 +39,11 @@
 
 #include "contiki.h"
 #include "node-id.h"
-#include "erbium.h"
+#include "er-coap.h"
 #include "tres.h"
 #include "pm.h"
-//#include "../rplinfo/rplinfo.h"
-#include "../common/pyot.h"
+#include "rplinfo.h"
+#include "pyot.h"
 
 /*----------------------------------------------------------------------------*/
 #if !UIP_CONF_IPV6_RPL                       \
@@ -53,6 +53,12 @@
 #include "static-routing.h"
 #endif
 
+#ifdef TRES_EXAMPLE_CONF_RANDOM_SENSOR_VALUE
+#define TRES_EXAMPLE_RANDOM_SENSOR_VALUE TRES_EXAMPLE_CONF_RANDOM_SENSOR_VALUE
+#else
+#define TRES_EXAMPLE_RANDOM_SENSOR_VALUE 0
+#endif
+
 /*----------------------------------------------------------------------------*/
 /*                               Extern variables                             */
 /*----------------------------------------------------------------------------*/
@@ -60,50 +66,139 @@ uint8_t tres_start_monitoring(tres_res_t *tres);
 uint8_t tres_stop_monitoring(tres_res_t *tres);
 void task_is_add(tres_res_t *task, char *str);
 void task_od_set(tres_res_t *task, char *str);
-/*----------------------------------------------------------------------------*/
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
+/*----------------------------------------------------------------------------*/
+
+PROCESS(tres_process, "T-Res Evaluation");
+
+AUTOSTART_PROCESSES(&tres_process);
+
+static uint16_t sensor_value = 0;
+
+/*----------------------------------------------------------------------------*/
+/*                            Fake sensor resource                            */
+/*----------------------------------------------------------------------------*/
+void sensor_periodic_handler(void);
+void sensor_handler(void *request, void *response, uint8_t *buffer,
+               uint16_t preferred_size, int32_t *offset);
+
+PERIODIC_RESOURCE(sensor, "title=\"Fake generic sensor\";obs",
+                 sensor_handler,
+                 NULL,
+                 NULL,
+                 NULL,
+                 TRES_EXAMPLE_SENSOR_PERIOD * CLOCK_SECOND, 
+                 sensor_periodic_handler);
 
 /* Example URIs that can be queried. */
 #define NUMBER_OF_URLS 2
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
 /*----------------------------------------------------------------------------*/
-int getRandUint(unsigned int mod){
-  return (unsigned int)(rand() % mod);
+void
+sensor_handler(void *request, void *response, uint8_t *buffer,
+               uint16_t preferred_size, int32_t *offset)
+{
+  uint16_t len;
+  char *str;
+
+  str = (char *)buffer;
+  sprintf(str, "%d", sensor_value);
+  len = strlen(str);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_response_payload(response, buffer, len);
 }
 
 /*----------------------------------------------------------------------------*/
-PROCESS(tres_process, "T-Res Evaluation");
+#if TRES_EXAMPLE_RANDOM_SENSOR_VALUE
+static uint16_t
+new_sensor_value()
+{
+  uint16_t tmp = rand();
 
-AUTOSTART_PROCESSES(&tres_process);
+  return tmp % 2000;
+}
+#else
+static uint16_t
+new_sensor_value()
+{
+  // never exceeds 4 digits
+  if(sensor_value == 9999) {
+    sensor_value = -1;
+  }
+  sensor_value++;
+  return sensor_value;
+}
+#endif
+
+/*----------------------------------------------------------------------------*/
+void
+sensor_periodic_handler(void)
+{
+  // we always want an obs_counter of 2 bytes, therefore we initialize it to 
+  // 0xFF since it is immediately incremented by 1
+  static uint16_t obs_counter = 0xFF;
+  char str[10];
+  uint16_t len;
+
+  obs_counter++;
+  sensor_value = new_sensor_value();
+  len = snprintf(str, sizeof(str), "%04u", sensor_value);
+  //printf("S: %s\n", str);
+  /* Build notification. */
+  coap_packet_t notification[1];
+
+  coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+  coap_set_payload(notification, str, len);
+  /* Notify the registered observers with the given message type, 
+   * observe option, and payload. */
+  REST.notify_subscribers(&sensor);
+  // we always want an obs_counter of 2 bytes
+  if(obs_counter == 0xFFFF) {
+    obs_counter = 0xFF;
+  }
+}
+
+
 
 /*----------------------------------------------------------------------------*/
 /*                          Fake Actuator Resoruce                            */
 /*----------------------------------------------------------------------------*/
-RESOURCE(actuator, METHOD_GET | METHOD_POST | METHOD_PUT, "actuator",
-        "title=\"actuator\";rt=\"Text\"");
+void actuator_get_handler(void *request, void *response, uint8_t *buffer,
+                 uint16_t preferred_size, int32_t *offset);
+void
+actuator_set_handler(void *request, void *response, uint8_t *buffer,
+                 uint16_t preferred_size, int32_t *offset);
+
+static char setpoint[10];                 
+
+RESOURCE(actuator, "title=\"A fake generic actuator\";rt=\"Text\"",
+        actuator_get_handler, 
+        actuator_set_handler, 
+        actuator_set_handler, 
+        NULL);
+
 
 /*----------------------------------------------------------------------------*/
 void
-actuator_handler(void *request, void *response, uint8_t *buffer,
+actuator_set_handler(void *request, void *response, uint8_t *buffer,
                  uint16_t preferred_size, int32_t *offset)
 {
-  static char setpoint[10];
-  static uint8_t last_token_len = 0;
-  static uint8_t last_token[COAP_TOKEN_LEN];
-  const uint8_t *token;
+  //static uint8_t last_token_len = 0;
+  //static uint8_t last_token[COAP_TOKEN_LEN];
+  //const uint8_t *token;
   uint16_t len;
-  rest_resource_flags_t method;
   const uint8_t *ptr;
-  int i;
+  //int i;
 
   // Filter duplicated messages
   // FIXME: token option is not enough, we must check also the client ip address
-  len = coap_get_header_token(request, &token);
+  /*len = coap_get_token(request, &token);
   if(last_token_len == len) {
     for(i = 0; i < len && token[i] == last_token[i]; i++);
     if(i == len) {
+      printf("Duplicated");
       // duplicated message
       return;
     }
@@ -111,26 +206,30 @@ actuator_handler(void *request, void *response, uint8_t *buffer,
   last_token_len = len;
   for(i = 0; i < len; i++) {
     last_token[i] = token[i];
-  }
+  }*/ //FIXME andrea: this thing does not work anymore, returns always as duplicated
+  
 
-  method = REST.get_method_type(request);
-  if(method == METHOD_GET) {
-    len = strlen(setpoint);
-    memcpy(buffer, setpoint, len);
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_response_payload(response, buffer, len);
-  } else {                      // it's a put/post request
-    len = REST.get_request_payload(request, &ptr);
-    printf("A: %s\n", (char *)ptr);
-    if(len > 9) {
-      len = 9;
-    }
-    memcpy(setpoint, ptr, len);
-    setpoint[len] = '\0';
+  len = REST.get_request_payload(request, &ptr);
+  printf("A: %s\n", (char *)ptr);
+  if(len > 9) {
+    len = 9;
   }
+  memcpy(setpoint, ptr, len);
+  setpoint[len] = '\0';
 }
 
+/*----------------------------------------------------------------------------*/
+void
+actuator_get_handler(void *request, void *response, uint8_t *buffer,
+                 uint16_t preferred_size, int32_t *offset)
+{
+  uint16_t len;
 
+  len = strlen(setpoint);
+  memcpy(buffer, setpoint, len);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_response_payload(response, buffer, len);
+}
 
 /*----------------------------------------------------------------------------*/
 PROCESS_THREAD(tres_process, ev, data)
@@ -140,16 +239,14 @@ PROCESS_THREAD(tres_process, ev, data)
   srand(node_id);
   rest_init_engine();
   tres_init();
-  rest_activate_resource(&resource_actuator);
-  //rplinfo_activate_resources();
-  
+  rest_activate_resource(&actuator, "actuator");
+  rplinfo_activate_resources();
+  sprintf(setpoint, "0");
+#if PYOT_KEEPALIVE
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   SERVER_NODE(&server_ipaddr);
-
-  /* receives all CoAP messages */
-  coap_receiver_init();
   
-  int wait_time = getRandUint(MAX_WAITING);
+  int wait_time = (unsigned int)(rand() % MAX_WAITING);
   int base_wait = BASE_WAITING;
   
   static int g_time=0;
@@ -168,10 +265,8 @@ PROCESS_THREAD(tres_process, ev, data)
     PROCESS_YIELD();
     if (etimer_expired(&et)) {
 
-      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
+      coap_init_message(request, COAP_TYPE_NON, COAP_PUT, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
-
-
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", g_time++));
       //PRINT6ADDR(&server_ipaddr);
       //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
@@ -188,5 +283,6 @@ PROCESS_THREAD(tres_process, ev, data)
       etimer_reset(&et);
      }
   } /* while (1) */  
+#endif
   PROCESS_END();
 }
