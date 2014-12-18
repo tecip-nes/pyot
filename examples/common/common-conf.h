@@ -37,12 +37,12 @@
 #ifdef RF_CHANNEL
 #undef RF_CHANNEL
 #endif /* RF_CHANNEL */
-#define RF_CHANNEL              19 
+#define RF_CHANNEL              13 
 
 #ifdef CC2420_CONF_CHANNEL
 #undef CC2420_CONF_CHANNEL
 #endif
-#define CC2420_CONF_CHANNEL 19
+#define CC2420_CONF_CHANNEL 13
 
 /* wismote id */
 #undef NODE_ID
@@ -63,18 +63,28 @@
 #define NULLRDC_CONF_802154_AUTOACK 0
 
 #undef CC2520_CONF_AUTOACK
-#define CC2520_CONF_AUTOACK 0
+#define CC2520_CONF_AUTOACK 1
 
 /* include support 6lowpan fragmentation */
 #define SICSLOWPAN_CONF_FRAG	1
+
+/* Disabling TCP on CoAP nodes. */
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   0
 
 /* compress all ipv6 packets */
 #undef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
 
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     12
+#define UIP_CONF_DS6_NBR_NBU     16
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   12
+#define UIP_CONF_MAX_ROUTES   16
+
+/* Save some memory for the sky platform. */
+#undef UIP_CONF_DS6_NBR_NBU
+#define UIP_CONF_DS6_NBR_NBU     16
+#undef UIP_CONF_DS6_ROUTE_NBU
+#define UIP_CONF_DS6_ROUTE_NBU   16
 
 #endif /* __COMMON_CONF_H__ */
