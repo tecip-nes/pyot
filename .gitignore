@@ -80,3 +80,9 @@ local.properties
 
 #venv
 venv/**
+
+#exec and sqlite
+*.wismote
+*.sky
+*.seedeye
+*.sqlite
