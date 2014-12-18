@@ -18,3 +18,4 @@ pygraphviz==1.2
 librabbitmq==1.0.3
 six==1.5.2
 ipaddr==2.1.10
+MySQL-python==1.2.5
