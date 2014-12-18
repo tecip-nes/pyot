@@ -20,10 +20,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from pyot.models.rpl import RplGraph, search_host, short_name
-from pyot.models.rest import Resource, CONTENT
 import json
+
 import networkx as nx
+from pyot.models.rest import Resource, CONTENT
+from pyot.models.rpl import RplGraph, search_host, short_name
 
 
 def DAGupdate(network):

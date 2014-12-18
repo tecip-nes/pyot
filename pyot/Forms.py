@@ -21,23 +21,28 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from django import forms
+
 from models import Resource, METHOD_CHOICES
+
 
 class HandlerForm(forms.Form):
     Description = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),
                                   max_length=50, required=True)
     MaxActivations = forms.IntegerField(min_value=1, initial=1)
 
+
 class MsgHandlerForm(HandlerForm):
     Resource = forms.ModelChoiceField(queryset=Resource.objects.all().filter(host__active=True).exclude(uri='.well-known'))
-    Payload = forms.CharField(widget=forms.TextInput(attrs={'size':'30'}),
+    Payload = forms.CharField(widget=forms.TextInput(attrs={'size': '30'}),
                               max_length=30, required=False)
     Method = forms.CharField(max_length=5,
                              widget=forms.Select(choices=METHOD_CHOICES))
 
+
 class MsgHandlerFormFreq(MsgHandlerForm):
     EventCount = forms.IntegerField(min_value=1, initial=10, required=True)
     Seconds = forms.IntegerField(min_value=1, initial=10, required=True)
+
 
 class ContactForm(forms.Form):
     subject = forms.CharField(max_length=100)

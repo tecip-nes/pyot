@@ -20,11 +20,13 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from django.shortcuts import render
-from pyot.Forms import ContactForm
-from django.http import HttpResponseRedirect
 from django.contrib.auth import logout
 from django.core.mail import mail_admins
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+
+from pyot.Forms import ContactForm
+
 
 # @login_required
 def myaccount(request):
