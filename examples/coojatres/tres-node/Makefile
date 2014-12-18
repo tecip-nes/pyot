@@ -2,13 +2,13 @@ ifndef TARGET
   TARGET = wismote
 endif
 
-#PROJECTDIRS += ../rplinfo
+PROJECTDIRS += ../../rplinfo
 PROJECTDIRS += ../../common
-#PROJECT_SOURCEFILES += rplinfo.c
+PROJECT_SOURCEFILES += rplinfo.c
 
 WITH_COAP=13
 
-CONTIKI=/home/andrea/icsi/t-res
+#CONTIKI=/home/andrea/icsi/t-res
 APPS = tres pymite
 CONTIKI_PROJECT = tres-node
 # additional files to be deleted when make clean is invoked
@@ -43,24 +43,8 @@ endif
 # linker optimizations
 #SMALL=1
 
-# REST framework, requires WITH_COAP
-ifeq ($(WITH_COAP), 13)
-${info INFO: compiling with CoAP-13}
-CFLAGS += -DWITH_COAP=13
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-13
-else ifeq ($(WITH_COAP), 7)
-${info INFO: compiling with CoAP-08}
-CFLAGS += -DWITH_COAP=7
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-07
-else
-${error ERROR:: Unsupported CoAP version specified}
-endif
-
-APPS += erbium
+APPS += rest-engine
+APPS += er-coap
 
 # optional rules to get assembly
 #CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
@@ -95,5 +79,5 @@ connect-router:	$(CONTIKI)/tools/tunslip6
 connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 aaaa::1/64
 
-tap0up:
+connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0

@@ -38,8 +38,8 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "net/uip.h"
-#include "net/uip-ds6.h"
+#include "net/ip/uip.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/rpl/rpl.h"
 
 #include "net/netstack.h"
@@ -52,9 +52,7 @@
 #include <ctype.h>
 
 #define DEBUG DEBUG_NONE
-#include "net/uip-debug.h"
-
-uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
+#include "net/ip/uip-debug.h"
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
@@ -320,18 +318,24 @@ request_prefix(void)
 void
 set_prefix_64(uip_ipaddr_t *prefix_64)
 {
+  rpl_dag_t *dag;
   uip_ipaddr_t ipaddr;
   memcpy(&prefix, prefix_64, 16);
   memcpy(&ipaddr, prefix_64, 16);
   prefix_set = 1;
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
+  if(dag != NULL) {
+    rpl_set_prefix(dag, &prefix, 64);
+    PRINTF("created a new RPL dag\n");
+  }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
-  rpl_dag_t *dag;
 
   PROCESS_BEGIN();
 
@@ -361,12 +365,6 @@ PROCESS_THREAD(border_router_process, ev, data)
     etimer_set(&et, CLOCK_SECOND);
     request_prefix();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-  }
-
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
-  if(dag != NULL) {
-    rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
   }
 
   /* Now turn the radio on, but disable radio duty cycling.
