@@ -70,9 +70,9 @@
 
 /* Save some memory for the sky platform. */
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     10
+#define UIP_CONF_DS6_NBR_NBU     16
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   10
+#define UIP_CONF_MAX_ROUTES   16
 
 /* Reduce 802.15.4 frame queue to save RAM. */
 #undef QUEUEBUF_CONF_NUM
