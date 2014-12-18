@@ -54,18 +54,30 @@ class TResPF(object):
     def __repr__(self):
         return self.pf.__unicode__()
 
+
 class TResTask(object):
     taskId = None
-    def __init__(self, TresPf, inputS, output=None, period=0):
+
+    def __init__(self, TresPf, inputS=None, output=None, period=30):
+
         # First check if input resources are observable
-        for inp in inputS:
-            if inp.obs == False:
-                raise Exception('Input resources must be observable')
+        if inputS is not None:
+            for inp in inputS:
+                if inp.obs is False:
+                    raise Exception('Input resources must be observable')
         # Then create task object
-        task = TResT.objects.create(pf=TresPf.pf, output=output, period=period)
+        task = TResT.objects.create(pf=TresPf.pf, period=period)
         self.taskId = task.id
-        for inp in inputS:
-            task.inputS.add(inp)
+        if inputS is not None:
+            for inp in inputS:
+                task.inputS.add(inp)
+
+        if output is not None:
+            if isinstance(output, Resource):
+                task.output.add(output)
+            else:
+                for od in output:
+                    task.output.add(od)
         task.save()
 
     def getTaskObject(self):
