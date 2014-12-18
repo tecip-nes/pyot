@@ -20,6 +20,6 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
+from pyot.views.general import *
 from pyot.views.rest import *
 from pyot.views.users import *
-from pyot.views.general import *

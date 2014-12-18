@@ -21,10 +21,13 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 from django.conf.urls import patterns, include, url
+from django.contrib import admin
+
+from pyot import views
+import settings
+
 
 # Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-from pyot import views
 admin.autodiscover()
 
 urlpatterns = patterns(
@@ -57,11 +60,10 @@ urlpatterns = patterns(
     url(r'^', include('django.contrib.auth.urls')),
 )
 
-import settings
 urlpatterns += patterns(
     '',
     url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
-    {'document_root': settings.STATIC_ROOT}),
+        {'document_root': settings.STATIC_ROOT}),
 )
 urlpatterns += patterns(
     '',

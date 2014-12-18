@@ -22,10 +22,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
-from django.conf import settings
+
 
 TFMT = settings.TFMT
 LOG_CHOICES = (
@@ -45,6 +46,7 @@ class UserProfile(models.Model):
     '''
     user = models.ForeignKey(User, unique=True, related_name='profile')
     organization = models.CharField(max_length=50, blank=False)
+
     def save(self, *args, **kwargs):
         try:
             existing = UserProfile.objects.get(user=self.user)
@@ -52,14 +54,17 @@ class UserProfile(models.Model):
         except UserProfile.DoesNotExist:
             pass
         models.Model.save(self, *args, **kwargs)
+
     class Meta(object):
         app_label = 'pyot'
+
 
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
 post_save.connect(create_user_profile, sender=User)
+
 
 class Log(models.Model):
     '''
@@ -68,9 +73,11 @@ class Log(models.Model):
     log_type = models.CharField(max_length=30, choices=LOG_CHOICES)
     message = models.CharField(max_length=1024)
     timeadded = models.DateTimeField(auto_now_add=True, blank=True)
+
     def __unicode__(self):
         return u"{t} {log_type} {message}".format(log_type=self.log_type,
-                                              message=self.message,
-                                              t=self.timeadded.strftime(TFMT))
+                                                  message=self.message,
+                                                  t=self.timeadded.strftime(TFMT))
+
     class Meta(object):
         app_label = 'pyot'

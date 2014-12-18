@@ -22,10 +22,11 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from pyot.models.tres import *
-import os
+
 
 class TResPF(object):
     pf = None
+
     def __init__(self, fileRef, name, description=None, version=None):
         "default constructor, file-based"
 
@@ -33,9 +34,9 @@ class TResPF(object):
             raise Exception('A file extension is required')
         # TODO: copy file in media folder
         self.pf = TResProcessing.objects.create(name=name,
-                                         description=description,
-                                         version=version,
-                                         sourcefile=os.path.abspath(fileRef.name))
+                                                description=description,
+                                                version=version,
+                                                sourcefile=os.path.abspath(fileRef.name))
 
     @classmethod
     def fromSource(cls, sourceString, name, description=None, version=None):
@@ -73,39 +74,55 @@ class TResTask(object):
     def __repr__(self):
         t = self.getTaskObject()
         return t.__unicode__()
+
     def deploy(self, TResResource):
         t = self.getTaskObject()
         return t.deploy(TResResource)
+
     def uninstall(self):
         t = self.getTaskObject()
         return t.uninstall()
+
     def start(self):
         t = self.getTaskObject()
         return t.start()
+
     def stop(self):
         t = self.getTaskObject()
         return t.stop()
+
     def getStatus(self):
         t = self.getTaskObject()
         return t.getStatus()
+
     def getLastOutput(self):
         t = self.getTaskObject()
         return t.getLastOutput()
+
+    def getInputResource(self):
+        t = self.getTaskObject()
+        return t.getInputResource()
+
     def getInputSource(self):
         t = self.getTaskObject()
         return t.getInputSource()
+
     def getOutputDestination(self):
         t = self.getTaskObject()
         return t.getOutputDestination()
+
     def emulate(self, duration=None):
         t = self.getTaskObject()
         return t.emulate(duration)
+
     def runPf(self, inp):
         t = self.getTaskObject()
         return t.runPf(inp)
+
     def getEmuLastOutput(self):
         t = self.getTaskObject()
         return t.getEmuLastOutput()
+
     def getEmuResult(self):
         t = self.getTaskObject()
         return t.getEmuResult()
