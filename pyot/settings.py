@@ -58,9 +58,12 @@ SQL_PORT = ''
 
 if WEB_APPLICATION_SERVER:
     SERVER_ADDRESS = '127.0.0.1'
+    DATABASE_HOST = SERVER_ADDRESS
+    RABBIT_HOST = SERVER_ADDRESS
 else:
-    SERVER_ADDRESS = CFG.get('database', 'DATABASE_HOST')
-
+    SERVER_ADDRESS = CFG.get('services', 'WEB_SERVER')
+    DATABASE_HOST = CFG.get('database', 'DATABASE_HOST')
+    RABBIT_HOST = CFG.get('services', 'RABBIT_HOST')
 
 TRES_PWN_SCRIPT_TMP = '/tmp'
 
@@ -97,7 +100,7 @@ else:
             'NAME': DB_SCHEMA,                      # Or path to database file if using sqlite3.
             'USER': SQL_USER,                      # Not used with sqlite3.
             'PASSWORD': SQL_PWD,                  # Not used with sqlite3.
-            'HOST': SERVER_ADDRESS,                      # Set to empty string for localhost. Not used with sqlite3.
+            'HOST': DATABASE_HOST,                      # Set to empty string for localhost. Not used with sqlite3.
             'PORT': SQL_PORT,                      # Set to empty string for default. Not used with sqlite3.
         }
     }
@@ -196,7 +199,7 @@ TEMPLATE_DIRS = (
 
 
 # rabbitMQ config
-BROKER_URL = SERVER_ADDRESS
+BROKER_URL = RABBIT_HOST
 
 
 
@@ -218,7 +221,7 @@ INSTALLED_APPS = (
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
