@@ -10,7 +10,7 @@
  *	/home/andrea/mygithub/contiki-tres/apps/pymite/lib/string.py
  *	img-list-terminator
  * by pmImgCreator.py on
- * Thu Dec 18 15:10:38 2014.
+ * Fri Dec 19 14:19:59 2014.
  * 
  * Byte count: 4321
  * 

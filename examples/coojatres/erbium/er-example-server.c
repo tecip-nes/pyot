@@ -46,27 +46,16 @@
 #include "../common/pyot.h"
 #include "node-id.h"
 
-/* Define which resources to include to meet memory constraints. */
-#define REST_RES_PUSHING 0
-#define REST_RES_EVENT 0
-#define REST_RES_SUB 0
-#define REST_RES_TOGGLE 1
-#define REST_RES_LIGHT 1
-#define REST_RES_RPLINFO 0
-
 #include "er-coap.h"
 #include "er-coap-engine.h"
 #include "er-coap-transactions.h"
 
-#define RD_ANNOUNCE 1
 
 uip_ipaddr_t server_ipaddr;
 static struct etimer et;
 
 /* Example URIs that can be queried. */
 #define NUMBER_OF_URLS 2
-/* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
 
 extern resource_t res_light;
 extern resource_t res_toggle;
@@ -77,20 +66,6 @@ int getRandUint(unsigned int mod){
   return (unsigned int)(rand() % mod);
 }
 
-
-
-/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
-static 
-void
-client_chunk_handler(void *response)
-{
-  const uint8_t *chunk;
-
-  int len = coap_get_payload(response, &chunk);
-
-  printf("|%.*s", len, (char *)chunk);
-}
-
 PROCESS(rest_server_example, "Er");
 AUTOSTART_PROCESSES(&rest_server_example);
 
@@ -98,22 +73,17 @@ PROCESS_THREAD(rest_server_example, ev, data)
 {
   PROCESS_BEGIN();
   srand(node_id);
-  PRINTF("Starting Erbium Example Server\n");
-
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
-#endif
 
   /* Initialize the REST engine. */
   rest_init_engine();
   SERVER_NODE(&server_ipaddr);
   /* Activate the application-specific resources. */
-  rest_activate_resource(&res_light, "sensors/light"); 
+  rest_activate_resource(&res_light, "light");
   //rest_activate_resource(&res_toggle, "actuators/toggle");  
   rest_activate_resource(&res_leds, "actuators/leds");  
   rplinfo_activate_resources();
-  PRINTF("Resources activated\n");
-#if PYOT_KEEPALIVE    
+
+#if PYOT_KEEPALIVE
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   
   static int time=0;
@@ -122,16 +92,13 @@ PROCESS_THREAD(rest_server_example, ev, data)
   int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
 
-  printf("start...%d\n", wait_time);
-
   etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
 
   while(1) {
     PROCESS_YIELD();
-    //PROCESS_WAIT_EVENT();
     if (etimer_expired(&et)) break;
     }
-  //etimer_reset(&et);
+  etimer_reset(&et);
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
   size_t len;
   while(1) {
@@ -139,25 +106,17 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if (etimer_expired(&et)) {
       PRINTF("Sending msg to rd...");
 
-      coap_init_message(request, COAP_TYPE_NON, COAP_PUT, 0 );
-      coap_set_header_uri_path(request, service_urls[1]);
+      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
+      coap_set_header_uri_path(request, "/rd");
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
-      coap_transaction_t *transaction;
-
       request->mid = coap_get_mid();
-      if ((transaction = coap_new_transaction(request->mid, &server_ipaddr, REMOTE_PORT)))
-      {
-        transaction->packet_len = coap_serialize_message(request, transaction->packet);
-        coap_send_transaction(transaction);
-        //coap_clear_transaction(transaction);
-      }
-      
-      //len = coap_serialize_message(request, uip_appdata);
-      //coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);      
+      len = coap_serialize_message(request, uip_appdata);
+      coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);
       PRINTF("Done\n");
       etimer_reset(&et);
      }
   } /* while (1) */
-#endif   
+
+#endif //PYOT_KEEPALIVE 
   PROCESS_END();
 }

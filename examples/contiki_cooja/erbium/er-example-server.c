@@ -93,8 +93,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   int wait_time = getRandUint(MAX_WAITING);
   int base_wait = BASE_WAITING;
 
-  printf("start...%d\n", wait_time);
-
   etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
 
   while(1) {
