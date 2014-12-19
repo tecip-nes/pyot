@@ -78,12 +78,12 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
   SERVER_NODE(&server_ipaddr);
   /* Activate the application-specific resources. */
-  rest_activate_resource(&res_light, "light");
+  rest_activate_resource(&res_light, "light"); 
   //rest_activate_resource(&res_toggle, "actuators/toggle");  
   rest_activate_resource(&res_leds, "actuators/leds");  
   rplinfo_activate_resources();
 
-#if PYOT_KEEPALIVE
+#if PYOT_KEEPALIVE 
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   
   static int time=0;
@@ -111,7 +111,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
       request->mid = coap_get_mid();
       len = coap_serialize_message(request, uip_appdata);
-      coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);
+      coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);      
       PRINTF("Done\n");
       etimer_reset(&et);
      }
