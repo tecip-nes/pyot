@@ -74,94 +74,6 @@ PROCESS(tres_process, "T-Res Evaluation");
 
 AUTOSTART_PROCESSES(&tres_process);
 
-static uint16_t sensor_value = 0;
-
-/*----------------------------------------------------------------------------*/
-/*                            Fake sensor resource                            */
-/*----------------------------------------------------------------------------*/
-void sensor_periodic_handler(void);
-void sensor_handler(void *request, void *response, uint8_t *buffer,
-               uint16_t preferred_size, int32_t *offset);
-
-PERIODIC_RESOURCE(sensor, "title=\"Fake generic sensor\";obs",
-                 sensor_handler,
-                 NULL,
-                 NULL,
-                 NULL,
-                 TRES_EXAMPLE_SENSOR_PERIOD * CLOCK_SECOND, 
-                 sensor_periodic_handler);
-
-/* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 2
-/* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
-/*----------------------------------------------------------------------------*/
-void
-sensor_handler(void *request, void *response, uint8_t *buffer,
-               uint16_t preferred_size, int32_t *offset)
-{
-  uint16_t len;
-  char *str;
-
-  str = (char *)buffer;
-  sprintf(str, "%d", sensor_value);
-  len = strlen(str);
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_response_payload(response, buffer, len);
-}
-
-/*----------------------------------------------------------------------------*/
-#if TRES_EXAMPLE_RANDOM_SENSOR_VALUE
-static uint16_t
-new_sensor_value()
-{
-  uint16_t tmp = rand();
-
-  return tmp % 2000;
-}
-#else
-static uint16_t
-new_sensor_value()
-{
-  // never exceeds 4 digits
-  if(sensor_value == 9999) {
-    sensor_value = -1;
-  }
-  sensor_value++;
-  return sensor_value;
-}
-#endif
-
-/*----------------------------------------------------------------------------*/
-void
-sensor_periodic_handler(void)
-{
-  // we always want an obs_counter of 2 bytes, therefore we initialize it to 
-  // 0xFF since it is immediately incremented by 1
-  static uint16_t obs_counter = 0xFF;
-  char str[10];
-  uint16_t len;
-
-  obs_counter++;
-  sensor_value = new_sensor_value();
-  len = snprintf(str, sizeof(str), "%04u", sensor_value);
-  //printf("S: %s\n", str);
-  /* Build notification. */
-  coap_packet_t notification[1];
-
-  coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
-  coap_set_payload(notification, str, len);
-  /* Notify the registered observers with the given message type, 
-   * observe option, and payload. */
-  REST.notify_subscribers(&sensor);
-  // we always want an obs_counter of 2 bytes
-  if(obs_counter == 0xFFFF) {
-    obs_counter = 0xFF;
-  }
-}
-
-
-
 /*----------------------------------------------------------------------------*/
 /*                          Fake Actuator Resoruce                            */
 /*----------------------------------------------------------------------------*/
@@ -265,8 +177,8 @@ PROCESS_THREAD(tres_process, ev, data)
     PROCESS_YIELD();
     if (etimer_expired(&et)) {
 
-      coap_init_message(request, COAP_TYPE_NON, COAP_PUT, 0 );
-      coap_set_header_uri_path(request, service_urls[1]);
+      coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
+      coap_set_header_uri_path(request, "/rd");
       coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", g_time++));
       //PRINT6ADDR(&server_ipaddr);
       //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));

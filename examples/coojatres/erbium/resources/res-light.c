@@ -56,30 +56,22 @@ PERIODIC_RESOURCE(res_light,
          NULL,
          NULL,
          NULL,
-         1*CLOCK_SECOND,
+         5*CLOCK_SECOND,
          light_periodic_handler);
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  //static long unsigned int cpu1 = 0;
-  //static long unsigned int cpu2 = 0;
-  //cpu1 = energest_type_time(ENERGEST_TYPE_TRANSMIT);
-  
-  uint16_t light_photosynthetic = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-  
-  uint16_t light_solar = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);
+  uint16_t light_photosynthetic = ((uint16_t)rand()) % 300;
+  //uint16_t light_solar = ((uint16_t)rand()) % 300;
 
-  unsigned int r = ((unsigned int)rand()) % 100;
-  
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN)
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    //snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u", r);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u", light_photosynthetic);
 
     REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
   }
@@ -89,50 +81,15 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     const char *msg = "no";
     REST.set_response_payload(response, msg, strlen(msg));
   }  
-  /*
-  static long unsigned int del = 1000;
-  
-  volatile long unsigned int d = 0;
-  volatile long unsigned int c=0;
-  for (d=0; d<del; d++){
-    c++;
-    
-  }
-  del *= 10;
   
   
-  cpu2 = energest_type_time(ENERGEST_TYPE_TRANSMIT);
-  printf("cpu time %lu %lu %lu %lu\n", cpu1, cpu2, cpu2-cpu1, c);
-  */
 }
 
 
 void
 light_periodic_handler()
 {
-  uint16_t light_photosynthetic = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-  //uint16_t light_solar = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);	
-  static uint16_t obs_counter = 0;
-  static char content[11];
-
-  
-  //REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  //snprintf((char *)content, LIGHT_SIZE, "%u;%u", light_photosynthetic, light_solar);
-
-  //REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));  
-  ++obs_counter;
-
-  //PRINTF("TICK %u for /%s\n", obs_counter, r->url);
-
-  /* Build notification. */
-  coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
-  coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0 );
-  coap_set_payload(notification, content, snprintf(content, sizeof(content), "%u", light_photosynthetic));
-
-  /* Notify the registered observers with the given message type, observe option, and payload. */
-
   REST.notify_subscribers(&res_light);  
 }
-
 
 //#endif /* PLATFORM_HAS_LIGHT */
