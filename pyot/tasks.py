@@ -28,6 +28,7 @@ import subprocess
 import sys
 import time
 import traceback
+import signal
 
 from celery import task
 import celery
@@ -571,3 +572,4 @@ def tresDownloadScript(filename):
         return Response(SUCCESS, 'pyc downloaded')
     except Exception as e:
         return Response(FAILURE, str(e))
+
