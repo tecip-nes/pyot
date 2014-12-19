@@ -33,6 +33,7 @@ import signal
 from celery import task
 import celery
 from celery.signals import task_revoked
+from celery.signals import worker_ready
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
@@ -572,4 +573,25 @@ def tresDownloadScript(filename):
         return Response(SUCCESS, 'pyc downloaded')
     except Exception as e:
         return Response(FAILURE, str(e))
+
+
+def checkRoute(net):
+    p = subprocess.check_output(["ip", "-6", "route", "show"])
+    if p.find(net) == -1:
+        return False
+    return True
+
+
+@worker_ready.connect
+def autostart_rd(sender=None, conf=None, **kwargs):
+    """
+    Checks if the worker process is running on one of the PWN. Then waits for
+    the associated route to become available and starts the resource directory
+    task.
+    """
+    n = Network.objects.get(hostname=sender.hostname)
+    while checkRoute(str(n.network)) is False:
+        time.sleep(1)
+    print 'starting rd server ' + str(n)
+    n.startRD()
 
