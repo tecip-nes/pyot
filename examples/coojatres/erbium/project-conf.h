@@ -78,4 +78,7 @@
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM       4
 
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   0
+
 #endif /* __PROJECT_ERBIUM_CONF_H__ */

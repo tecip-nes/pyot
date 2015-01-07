@@ -70,12 +70,15 @@
 
 /* Save some memory for the sky platform. */
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     10
+#define UIP_CONF_DS6_NBR_NBU     15
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   10
+#define UIP_CONF_MAX_ROUTES   15
 
 /* Reduce 802.15.4 frame queue to save RAM. */
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM       4
+
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   0
 
 #endif /* __PROJECT_ERBIUM_CONF_H__ */

@@ -73,8 +73,16 @@
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
 
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     7
+#define UIP_CONF_DS6_NBR_NBU     15
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   7
+#define UIP_CONF_MAX_ROUTES   15
+
+/* Save some memory for the sky platform. */
+#undef UIP_CONF_DS6_NBR_NBU
+#define UIP_CONF_DS6_NBR_NBU     14
+#undef UIP_CONF_DS6_ROUTE_NBU
+#define UIP_CONF_DS6_ROUTE_NBU   14
+
+#define ENERGEST_CONF_ON 1
 
 #endif /* __COMMON_CONF_H__ */

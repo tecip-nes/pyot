@@ -1,7 +1,7 @@
 #ifndef __PROJECT_TRES_EXAMPLE_CONF_H__
 #define __PROJECT_TRES_EXAMPLE_CONF_H__
 
-#include "common-conf.h"
+#include "common-conf-tres.h"
 #include "tres-conf.h"
 
 /******************************************************************************/
@@ -16,5 +16,8 @@
 #define UIP_CONF_DS6_NBR_NBU     4
 #undef UIP_CONF_DS6_ROUTE_NBU
 #define UIP_CONF_DS6_ROUTE_NBU   4
+
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   0
 
 #endif /* __PROJECT_TRES_EXAMPLE_CONF_H__ */

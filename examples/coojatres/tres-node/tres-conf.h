@@ -42,15 +42,15 @@
 
 /* Must be <= open transaction number. */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS      COAP_MAX_OPEN_TRANSACTIONS-2
+#define COAP_MAX_OBSERVERS      3//COAP_MAX_OPEN_TRANSACTIONS-2
 #endif
 
 #ifndef COAP_CONF_MAX_OBSERVEES
-#define COAP_CONF_MAX_OBSERVEES      COAP_MAX_OPEN_TRANSACTIONS-2
+#define COAP_CONF_MAX_OBSERVEES      1//COAP_MAX_OPEN_TRANSACTIONS-2
 #endif
 
 /* Reduce 802.15.4 frame queue to save RAM. */
 #undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM               3
+#define QUEUEBUF_CONF_NUM               4
 
 #endif /* __TRES_TEST_CONF_H__ */
