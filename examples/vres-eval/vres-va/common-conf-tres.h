@@ -37,12 +37,12 @@
 #ifdef RF_CHANNEL
 #undef RF_CHANNEL
 #endif /* RF_CHANNEL */
-#define RF_CHANNEL              13
+#define RF_CHANNEL              13 
 
 #ifdef CC2420_CONF_CHANNEL
 #undef CC2420_CONF_CHANNEL
 #endif
-#define CC2420_CONF_CHANNEL     13
+#define CC2420_CONF_CHANNEL 13
 
 /* wismote id */
 #undef NODE_ID
@@ -66,58 +66,22 @@
 #define CC2520_CONF_AUTOACK 0
 
 /* include support 6lowpan fragmentation */
-#define SICSLOWPAN_CONF_FRAG     1
+#define SICSLOWPAN_CONF_FRAG	1
 
 /* compress all ipv6 packets */
 #undef SICSLOWPAN_CONF_COMPRESSION_THRESHOLD
 #define SICSLOWPAN_CONF_COMPRESSION_THRESHOLD 0
 
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     14
+#define UIP_CONF_DS6_NBR_NBU     4
 #undef UIP_CONF_MAX_ROUTES
-#define UIP_CONF_MAX_ROUTES   14
-#undef UIP_CONF_DS6_ROUTE_NBU
-#define UIP_CONF_DS6_ROUTE_NBU   14
+#define UIP_CONF_MAX_ROUTES   4
+
+#undef UIP_CONF_DS6_NBR_NBU
+#define UIP_CONF_DS6_NBR_NBU     4
+#undef UIP_CONF_MAX_ROUTES
+#define UIP_CONF_MAX_ROUTES   4
 
 #define ENERGEST_CONF_ON 1
-
-
-/* Powerlog configuration */
-
-#define POWER_MEASURE
-#define HD
-//#define HUNDREDS
-
-#ifdef POWER_MEASURE
-
-#if defined(HD)
-#define PW_RATIO     0.32768
-#define EN_UNIT      " Joule*10^-9 "
-#define TIME_UNIT    " s*10^-5 "
-
-#elif defined(HUNDREDS)
-
-#define PW_RATIO     3.2768
-#define EN_UNIT      " Joule*10^-8 "
-#define TIME_UNIT    " s*10^-4 "
-
-#else
-
-#define PW_RATIO     32.768
-#define EN_UNIT      " Joule*10^-7 "
-#define TIME_UNIT    " s*10^-3 (ms) "
-#endif //HD
-
-#define CLIENT_RX        185
-#define CPU_CURRENT      22
-#define TX_CURRENT       258
-#define VOLTAGE          3.3
-
-#endif //POWER_MEASURE
-
-
-//#define THREEOUT
-#define FOUROUT    1
-
 
 #endif /* __COMMON_CONF_H__ */

@@ -12,12 +12,10 @@
 #include "er-coap.h"
 #include "er-coap-engine.h"
 #include "er-coap-transactions.h"
+#include "powerlog.h"
 
-uip_ipaddr_t server_ipaddr;
+static uip_ipaddr_t server_ipaddr;
 static struct etimer et;
-
-/* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 2
 
 static uip_ipaddr_t input_sensor;
 static uip_ipaddr_t output_actuator;
@@ -33,51 +31,47 @@ static
 void
 client_chunk_handler_b(void *response)
 {
-  return;
+  coap_packet_t * pkt = (coap_packet_t *) response;
+  if (pkt->type == COAP_TYPE_ACK){
+    //PRINTF("ACK VA\n");
+    return;
+  }
 }
 
+
 PROCESS_THREAD(cpa_va, ev, data){
-	PROCESS_BEGIN();
-	new_input_event = process_alloc_event();
-	SERVER_NODE(&server_ipaddr);
-	static coap_packet_t request[1];
-	char out_msg[20];
-    static uint8_t *token_ptr;
-    static uint8_t token_len;
-    PRINT6ADDR(&output_actuator);
-    PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
-    while(1) {
-      PROCESS_YIELD();
-      if(ev == new_input_event) {
-  	    wait_completion = 1;
-    	coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-		coap_set_header_uri_path(request, "/tasks/halve/in");
-
-		int input = atoi((char *)data);
-        int output = input *2;
-		sprintf(out_msg, "%d", output);
-		PRINTF("Requesting Va Service %s\n", out_msg);
-	    coap_set_payload(request, (uint8_t *)out_msg, strlen(out_msg));
-
-
-
-
-	    token_len = coap_generate_token(&token_ptr);
-	    coap_set_token(request, token_ptr, token_len);
-	    sprintf(out_msg, "%u", output);
-	    //PRINTF("Requesting Va Service %s\n", out_msg);
-	    coap_set_payload(request, (uint8_t *)out_msg, strlen(out_msg));
-	    //PRINTF("Requesting Output %d", j);
-	    //PRINT6ADDR(&output_actuators[j]);
-        //PRINTF(": %u\n" , UIP_HTONS(REMOTE_PORT));
-        COAP_BLOCKING_REQUEST(&output_actuator, REMOTE_PORT, request,
-		                      client_chunk_handler_b);
-
-	    wait_completion = 0;
-      }
-
+  PROCESS_BEGIN();
+  new_input_event = process_alloc_event();
+  SERVER_NODE(&server_ipaddr);
+  static coap_packet_t request[1];
+  char out_msg[20];
+  static uint8_t *token_ptr;
+  static uint8_t token_len;
+  PRINT6ADDR(&output_actuator);PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+  while(1) {
+    PROCESS_YIELD();
+    if(ev == new_input_event) {
+      wait_completion = 1;
+      coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+      coap_set_header_uri_path(request, "/tasks/va/in");
+      int input = atoi((char *)data);
+      int output = input *2;
+      sprintf(out_msg, "%d", output);
+      //PRINTF("Requesting Va Service %s\n", out_msg);
+      coap_set_payload(request, (uint8_t *)out_msg, strlen(out_msg));
+      token_len = coap_generate_token(&token_ptr);
+      coap_set_token(request, token_ptr, token_len);
+      sprintf(out_msg, "%u", output);
+      coap_set_payload(request, (uint8_t *)out_msg, strlen(out_msg));
+      //PRINTF("Requesting Output %d", j);
+      //PRINT6ADDR(&output_actuators[j]);
+      //PRINTF(": %u\n" , UIP_HTONS(REMOTE_PORT));
+      COAP_BLOCKING_REQUEST(&output_actuator, REMOTE_PORT, request,
+                            client_chunk_handler_b);
+      wait_completion = 0;
     }
-    PROCESS_END();
+  }
+  PROCESS_END();
 }
 
 
@@ -88,12 +82,15 @@ static
 void
 client_chunk_handler_a(void *response)
 {
+  coap_packet_t * pkt = (coap_packet_t *) response;
+
+  if (pkt->type == COAP_TYPE_ACK){
+    //PRINTF("ACK VS\n");
+  }
   const uint8_t *chunk;
-
   int len = coap_get_payload(response, &chunk);
-  PRINTF("RECEIVED RESPONSE\n");
+  //PRINTF("RECEIVED RESPONSE from VS\n");
   process_post(&cpa_va, new_input_event, (process_data_t)chunk);
-
 }
 
 
@@ -124,23 +121,28 @@ PROCESS_THREAD(cpa_app, ev, data)
     PROCESS_YIELD();
     if(etimer_expired(&et)) {
 
-
       if (monitoring == 0) {
-    	  etimer_reset(&et);
-    	  continue;
+        etimer_reset(&et);
+        continue;
       }
-      if (wait_completion == 0){
-  	    PRINTF("T: \n");
-        PRINTF("Requesting Vs Input\n");
-        coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-        coap_set_header_uri_path(request, "/tasks/halve/lo");
 
-        PRINT6ADDR(&server_ipaddr);
-        PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
+      /* powerlog measures */
+      pl_switch();
+
+      if (wait_completion == 0){
+        PRINTF("T: \n");
+        //PRINTF("Requesting Vs Input\n");
+        coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+        coap_set_header_uri_path(request, "/tasks/vs/lo");
+
+        //PRINT6ADDR(&server_ipaddr);
+        //PRINTF(" : %u\n", UIP_HTONS(REMOTE_PORT));
 
         COAP_BLOCKING_REQUEST(&input_sensor, REMOTE_PORT, request,
                               client_chunk_handler_a);
-      }else{PRINTF("M: \n");}
+      }else{
+        PRINTF("M: \n");
+      }
       etimer_reset(&et);
     }
     if(ev == serial_line_event_message) {
@@ -149,7 +151,7 @@ PROCESS_THREAD(cpa_app, ev, data)
         monitoring = 0;
       else
         monitoring = 1;
-     }
+    }
   }
   PROCESS_END();
 }

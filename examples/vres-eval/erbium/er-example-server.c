@@ -42,9 +42,20 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-#include "../rplinfo/rplinfo.h"
-#include "../common/pyot.h"
 #include "node-id.h"
+#include "common-conf.h"
+#include "powerlog.h"
+
+#define DEBUG 1
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
+#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]",(lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3],(lladdr)->addr[4], (lladdr)->addr[5])
+#else
+#define PRINTF(...)
+#define PRINT6ADDR(addr)
+#define PRINTLLADDR(addr)
+#endif
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_PUSHING 0
@@ -54,19 +65,21 @@
 #define REST_RES_LIGHT 1
 #define REST_RES_RPLINFO 0
 
+
 #include "er-coap.h"
 #include "er-coap-engine.h"
 #include "er-coap-transactions.h"
 
+
 #define RD_ANNOUNCE 1
 
-uip_ipaddr_t server_ipaddr;
-static struct etimer et;
+//uip_ipaddr_t server_ipaddr;
+//static struct etimer et;
 
 /* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 2
+//#define NUMBER_OF_URLS 2
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
-char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
+//char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/rd"};
 
 extern resource_t res_light;
 extern resource_t res_toggle;
@@ -77,22 +90,9 @@ int getRandUint(unsigned int mod){
   return (unsigned int)(rand() % mod);
 }
 
-
-
-/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
-static 
-void
-client_chunk_handler(void *response)
-{
-  const uint8_t *chunk;
-
-  int len = coap_get_payload(response, &chunk);
-
-  printf("|%.*s", len, (char *)chunk);
-}
-
 PROCESS(rest_server_example, "Er");
 AUTOSTART_PROCESSES(&rest_server_example);
+
 
 PROCESS_THREAD(rest_server_example, ev, data)
 {
@@ -106,60 +106,18 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   /* Initialize the REST engine. */
   rest_init_engine();
-  SERVER_NODE(&server_ipaddr);
+  //SERVER_NODE(&server_ipaddr);
   /* Activate the application-specific resources. */
   rest_activate_resource(&res_light, "sensors/light"); 
   //rest_activate_resource(&res_toggle, "actuators/toggle");  
   rest_activate_resource(&res_leds, "actuators/leds");  
-  rplinfo_activate_resources();
+  //rplinfo_activate_resources();
   PRINTF("Resources activated\n");
 
-#if PYOT_KEEPALIVE  
-  static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
-  
-  static int time=0;
-  static char content[12];
+#ifdef POWER_MEASURE
+  power_log_start();
+#endif //POWER_MEASURE
 
-  int wait_time = getRandUint(MAX_WAITING);
-  int base_wait = BASE_WAITING;
-
-  printf("start...%d\n", wait_time);
-
-  etimer_set(&et, (wait_time + base_wait) * CLOCK_SECOND);
-
-  while(1) {
-    PROCESS_YIELD();
-    //PROCESS_WAIT_EVENT();
-    if (etimer_expired(&et)) break;
-    }
-  //etimer_reset(&et);
-  etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
-  size_t len;
-  while(1) {
-    PROCESS_YIELD();
-    if (etimer_expired(&et)) {
-      PRINTF("Sending msg to rd...");
-
-      coap_init_message(request, COAP_TYPE_NON, COAP_PUT, 0 );
-      coap_set_header_uri_path(request, service_urls[1]);
-      coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
-      coap_transaction_t *transaction;
-
-      request->mid = coap_get_mid();
-      if ((transaction = coap_new_transaction(request->mid, &server_ipaddr, REMOTE_PORT)))
-      {
-        transaction->packet_len = coap_serialize_message(request, transaction->packet);
-        coap_send_transaction(transaction);
-        //coap_clear_transaction(transaction);
-      }
-      
-      //len = coap_serialize_message(request, uip_appdata);
-      //coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);      
-      PRINTF("Done\n");
-      etimer_reset(&et);
-     }
-  } /* while (1) */
-
-#endif
   PROCESS_END();
 }
+
