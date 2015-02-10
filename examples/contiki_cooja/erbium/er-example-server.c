@@ -87,7 +87,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if PYOT_KEEPALIVE 
   static coap_packet_t request[1]; /* This way the packet can be treated as pointer as usual. */
   
-  static int time=0;
+  static long unsigned int time=0;
   static char content[12];
 
   int wait_time = getRandUint(MAX_WAITING);
@@ -109,7 +109,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
       coap_init_message(request, COAP_TYPE_NON, COAP_POST, 0 );
       coap_set_header_uri_path(request, "/rd");
-      coap_set_payload(request, content, snprintf(content, sizeof(content), "%d", time++));
+      coap_set_payload(request, content, snprintf(content, sizeof(content), "%lu", time++));
       request->mid = coap_get_mid();
       len = coap_serialize_message(request, uip_appdata);
       coap_send_message(&server_ipaddr, REMOTE_PORT, uip_appdata, len);      
