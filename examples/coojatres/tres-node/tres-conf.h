@@ -42,7 +42,7 @@
 
 /* Must be <= open transaction number. */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS      COAP_MAX_OPEN_TRANSACTIONS-2
+#define COAP_MAX_OBSERVERS      0
 #endif
 
 #ifndef COAP_MAX_OBSERVEES

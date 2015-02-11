@@ -69,24 +69,10 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   uint16_t light_photosynthetic = ((unsigned int)rand()) % 300;
   uint16_t light_solar = ((unsigned int)rand()) % 300;
 #endif //PLATFORM_HAS_LIGHT
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
-
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "no";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }  
-  
-  
+  REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
 
@@ -99,9 +85,9 @@ light_periodic_handler()
   uint16_t light_photosynthetic = ((unsigned int)rand()) % 300;
 #endif //PLATFORM_HAS_LIGHT
   static uint16_t obs_counter = 0;
-  
+
   static char content[11];
-  
+
   ++obs_counter;
 
   /* Build notification. */
@@ -111,7 +97,7 @@ light_periodic_handler()
 
   /* Notify the registered observers with the given message type, observe option, and payload. */
 
-  REST.notify_subscribers(&res_light);  
+  REST.notify_subscribers(&res_light);
 }
 
 //#endif /* PLATFORM_HAS_LIGHT */

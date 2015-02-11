@@ -63,33 +63,17 @@ static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   uint16_t light_photosynthetic = ((uint16_t)rand()) % 300;
-  //uint16_t light_solar = ((uint16_t)rand()) % 300;
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u", light_photosynthetic);
 
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u", light_photosynthetic);
-
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "no";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }  
-  
-  
+  REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
 
 void
 light_periodic_handler()
 {
-  REST.notify_subscribers(&res_light);  
+  REST.notify_subscribers(&res_light);
 }
 
 //#endif /* PLATFORM_HAS_LIGHT */
