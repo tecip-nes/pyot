@@ -207,7 +207,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'pyot',
     'djcelery',
-    'django_evolution',
+    #'django_evolution',
     'registration',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
