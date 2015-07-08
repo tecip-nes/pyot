@@ -1,4 +1,4 @@
-CONTIKI=../../contiki-tres/
+CONTIKI=../../../contiki-tres/
 CONTIKI_PROJECT=border-router
 all: $(CONTIKI_PROJECT) 
 

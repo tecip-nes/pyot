@@ -1,4 +1,4 @@
-CONTIKI=../../contiki-tres/
+CONTIKI=../../../contiki-tres/
 all: er-example-server 
 # use this target explicitly if requried: er-plugtest-server
 PROJECTDIRS += ../../rplinfo
