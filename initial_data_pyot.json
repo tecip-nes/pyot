@@ -1,0 +1,1152 @@
+[
+{
+    "fields": {
+        "model": "permission",
+        "app_label": "auth"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 1
+},
+{
+    "fields": {
+        "model": "group",
+        "app_label": "auth"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 2
+},
+{
+    "fields": {
+        "model": "user",
+        "app_label": "auth"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 3
+},
+{
+    "fields": {
+        "model": "contenttype",
+        "app_label": "contenttypes"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 4
+},
+{
+    "fields": {
+        "model": "session",
+        "app_label": "sessions"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 5
+},
+{
+    "fields": {
+        "model": "site",
+        "app_label": "sites"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 6
+},
+{
+    "fields": {
+        "model": "network",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 7
+},
+{
+    "fields": {
+        "model": "host",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 8
+},
+{
+    "fields": {
+        "model": "resource",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 9
+},
+{
+    "fields": {
+        "model": "eventhandler",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 10
+},
+{
+    "fields": {
+        "model": "subscription",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 11
+},
+{
+    "fields": {
+        "model": "coapmsg",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 12
+},
+{
+    "fields": {
+        "model": "eventhandlermsg",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 13
+},
+{
+    "fields": {
+        "model": "tresprocessing",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 14
+},
+{
+    "fields": {
+        "model": "emulatorstate",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 15
+},
+{
+    "fields": {
+        "model": "trest",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 16
+},
+{
+    "fields": {
+        "model": "eventhandlertres",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 17
+},
+{
+    "fields": {
+        "model": "userprofile",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 18
+},
+{
+    "fields": {
+        "model": "log",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 19
+},
+{
+    "fields": {
+        "model": "rplgraph",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 20
+},
+{
+    "fields": {
+        "model": "pymap",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 21
+},
+{
+    "fields": {
+        "model": "pymapreduce",
+        "app_label": "pyot"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 22
+},
+{
+    "fields": {
+        "model": "taskmeta",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 23
+},
+{
+    "fields": {
+        "model": "tasksetmeta",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 24
+},
+{
+    "fields": {
+        "model": "intervalschedule",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 25
+},
+{
+    "fields": {
+        "model": "crontabschedule",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 26
+},
+{
+    "fields": {
+        "model": "periodictasks",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 27
+},
+{
+    "fields": {
+        "model": "periodictask",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 28
+},
+{
+    "fields": {
+        "model": "workerstate",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 29
+},
+{
+    "fields": {
+        "model": "taskstate",
+        "app_label": "djcelery"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 30
+},
+{
+    "fields": {
+        "model": "logentry",
+        "app_label": "admin"
+    },
+    "model": "contenttypes.contenttype",
+    "pk": 31
+},
+{
+    "fields": {
+        "expire_date": "2015-07-22T15:02:53.437",
+        "session_data": "YmRjZGU3N2ViZjFlNmUyMTQ2NjFjZjU0ZTU1OTQ0ZTNkOWMyZmVmODp7Il9hdXRoX3VzZXJfaGFzaCI6ImNjNGE2MTNkNThlZjI0NjA5MThjNmRlNzY2NTA2ZDQwMzdkNDM0ZjEiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0="
+    },
+    "model": "sessions.session",
+    "pk": "fqlruy933kmfbc7k3v9f0jgvqdzz39my"
+},
+{
+    "fields": {
+        "domain": "example.com",
+        "name": "example.com"
+    },
+    "model": "sites.site",
+    "pk": 1
+},
+{
+    "fields": {
+        "timeadded": "2015-07-08T15:03:14.785",
+        "hostname": "cooja@pyot",
+        "pid": "",
+        "network": "aaaa::/64"
+    },
+    "model": "pyot.network",
+    "pk": 1
+},
+{
+    "fields": {
+        "codename": "add_permission",
+        "name": "Can add permission",
+        "content_type": 1
+    },
+    "model": "auth.permission",
+    "pk": 1
+},
+{
+    "fields": {
+        "codename": "change_permission",
+        "name": "Can change permission",
+        "content_type": 1
+    },
+    "model": "auth.permission",
+    "pk": 2
+},
+{
+    "fields": {
+        "codename": "delete_permission",
+        "name": "Can delete permission",
+        "content_type": 1
+    },
+    "model": "auth.permission",
+    "pk": 3
+},
+{
+    "fields": {
+        "codename": "add_group",
+        "name": "Can add group",
+        "content_type": 2
+    },
+    "model": "auth.permission",
+    "pk": 4
+},
+{
+    "fields": {
+        "codename": "change_group",
+        "name": "Can change group",
+        "content_type": 2
+    },
+    "model": "auth.permission",
+    "pk": 5
+},
+{
+    "fields": {
+        "codename": "delete_group",
+        "name": "Can delete group",
+        "content_type": 2
+    },
+    "model": "auth.permission",
+    "pk": 6
+},
+{
+    "fields": {
+        "codename": "add_user",
+        "name": "Can add user",
+        "content_type": 3
+    },
+    "model": "auth.permission",
+    "pk": 7
+},
+{
+    "fields": {
+        "codename": "change_user",
+        "name": "Can change user",
+        "content_type": 3
+    },
+    "model": "auth.permission",
+    "pk": 8
+},
+{
+    "fields": {
+        "codename": "delete_user",
+        "name": "Can delete user",
+        "content_type": 3
+    },
+    "model": "auth.permission",
+    "pk": 9
+},
+{
+    "fields": {
+        "codename": "add_contenttype",
+        "name": "Can add content type",
+        "content_type": 4
+    },
+    "model": "auth.permission",
+    "pk": 10
+},
+{
+    "fields": {
+        "codename": "change_contenttype",
+        "name": "Can change content type",
+        "content_type": 4
+    },
+    "model": "auth.permission",
+    "pk": 11
+},
+{
+    "fields": {
+        "codename": "delete_contenttype",
+        "name": "Can delete content type",
+        "content_type": 4
+    },
+    "model": "auth.permission",
+    "pk": 12
+},
+{
+    "fields": {
+        "codename": "add_session",
+        "name": "Can add session",
+        "content_type": 5
+    },
+    "model": "auth.permission",
+    "pk": 13
+},
+{
+    "fields": {
+        "codename": "change_session",
+        "name": "Can change session",
+        "content_type": 5
+    },
+    "model": "auth.permission",
+    "pk": 14
+},
+{
+    "fields": {
+        "codename": "delete_session",
+        "name": "Can delete session",
+        "content_type": 5
+    },
+    "model": "auth.permission",
+    "pk": 15
+},
+{
+    "fields": {
+        "codename": "add_site",
+        "name": "Can add site",
+        "content_type": 6
+    },
+    "model": "auth.permission",
+    "pk": 16
+},
+{
+    "fields": {
+        "codename": "change_site",
+        "name": "Can change site",
+        "content_type": 6
+    },
+    "model": "auth.permission",
+    "pk": 17
+},
+{
+    "fields": {
+        "codename": "delete_site",
+        "name": "Can delete site",
+        "content_type": 6
+    },
+    "model": "auth.permission",
+    "pk": 18
+},
+{
+    "fields": {
+        "codename": "add_network",
+        "name": "Can add network",
+        "content_type": 7
+    },
+    "model": "auth.permission",
+    "pk": 19
+},
+{
+    "fields": {
+        "codename": "change_network",
+        "name": "Can change network",
+        "content_type": 7
+    },
+    "model": "auth.permission",
+    "pk": 20
+},
+{
+    "fields": {
+        "codename": "delete_network",
+        "name": "Can delete network",
+        "content_type": 7
+    },
+    "model": "auth.permission",
+    "pk": 21
+},
+{
+    "fields": {
+        "codename": "add_host",
+        "name": "Can add host",
+        "content_type": 8
+    },
+    "model": "auth.permission",
+    "pk": 22
+},
+{
+    "fields": {
+        "codename": "change_host",
+        "name": "Can change host",
+        "content_type": 8
+    },
+    "model": "auth.permission",
+    "pk": 23
+},
+{
+    "fields": {
+        "codename": "delete_host",
+        "name": "Can delete host",
+        "content_type": 8
+    },
+    "model": "auth.permission",
+    "pk": 24
+},
+{
+    "fields": {
+        "codename": "add_resource",
+        "name": "Can add resource",
+        "content_type": 9
+    },
+    "model": "auth.permission",
+    "pk": 25
+},
+{
+    "fields": {
+        "codename": "change_resource",
+        "name": "Can change resource",
+        "content_type": 9
+    },
+    "model": "auth.permission",
+    "pk": 26
+},
+{
+    "fields": {
+        "codename": "delete_resource",
+        "name": "Can delete resource",
+        "content_type": 9
+    },
+    "model": "auth.permission",
+    "pk": 27
+},
+{
+    "fields": {
+        "codename": "add_eventhandler",
+        "name": "Can add event handler",
+        "content_type": 10
+    },
+    "model": "auth.permission",
+    "pk": 28
+},
+{
+    "fields": {
+        "codename": "change_eventhandler",
+        "name": "Can change event handler",
+        "content_type": 10
+    },
+    "model": "auth.permission",
+    "pk": 29
+},
+{
+    "fields": {
+        "codename": "delete_eventhandler",
+        "name": "Can delete event handler",
+        "content_type": 10
+    },
+    "model": "auth.permission",
+    "pk": 30
+},
+{
+    "fields": {
+        "codename": "add_subscription",
+        "name": "Can add subscription",
+        "content_type": 11
+    },
+    "model": "auth.permission",
+    "pk": 31
+},
+{
+    "fields": {
+        "codename": "change_subscription",
+        "name": "Can change subscription",
+        "content_type": 11
+    },
+    "model": "auth.permission",
+    "pk": 32
+},
+{
+    "fields": {
+        "codename": "delete_subscription",
+        "name": "Can delete subscription",
+        "content_type": 11
+    },
+    "model": "auth.permission",
+    "pk": 33
+},
+{
+    "fields": {
+        "codename": "add_coapmsg",
+        "name": "Can add coap msg",
+        "content_type": 12
+    },
+    "model": "auth.permission",
+    "pk": 34
+},
+{
+    "fields": {
+        "codename": "change_coapmsg",
+        "name": "Can change coap msg",
+        "content_type": 12
+    },
+    "model": "auth.permission",
+    "pk": 35
+},
+{
+    "fields": {
+        "codename": "delete_coapmsg",
+        "name": "Can delete coap msg",
+        "content_type": 12
+    },
+    "model": "auth.permission",
+    "pk": 36
+},
+{
+    "fields": {
+        "codename": "add_eventhandlermsg",
+        "name": "Can add event handler msg",
+        "content_type": 13
+    },
+    "model": "auth.permission",
+    "pk": 37
+},
+{
+    "fields": {
+        "codename": "change_eventhandlermsg",
+        "name": "Can change event handler msg",
+        "content_type": 13
+    },
+    "model": "auth.permission",
+    "pk": 38
+},
+{
+    "fields": {
+        "codename": "delete_eventhandlermsg",
+        "name": "Can delete event handler msg",
+        "content_type": 13
+    },
+    "model": "auth.permission",
+    "pk": 39
+},
+{
+    "fields": {
+        "codename": "add_tresprocessing",
+        "name": "Can add t res processing",
+        "content_type": 14
+    },
+    "model": "auth.permission",
+    "pk": 40
+},
+{
+    "fields": {
+        "codename": "change_tresprocessing",
+        "name": "Can change t res processing",
+        "content_type": 14
+    },
+    "model": "auth.permission",
+    "pk": 41
+},
+{
+    "fields": {
+        "codename": "delete_tresprocessing",
+        "name": "Can delete t res processing",
+        "content_type": 14
+    },
+    "model": "auth.permission",
+    "pk": 42
+},
+{
+    "fields": {
+        "codename": "add_emulatorstate",
+        "name": "Can add emulator state",
+        "content_type": 15
+    },
+    "model": "auth.permission",
+    "pk": 43
+},
+{
+    "fields": {
+        "codename": "change_emulatorstate",
+        "name": "Can change emulator state",
+        "content_type": 15
+    },
+    "model": "auth.permission",
+    "pk": 44
+},
+{
+    "fields": {
+        "codename": "delete_emulatorstate",
+        "name": "Can delete emulator state",
+        "content_type": 15
+    },
+    "model": "auth.permission",
+    "pk": 45
+},
+{
+    "fields": {
+        "codename": "add_trest",
+        "name": "Can add t res t",
+        "content_type": 16
+    },
+    "model": "auth.permission",
+    "pk": 46
+},
+{
+    "fields": {
+        "codename": "change_trest",
+        "name": "Can change t res t",
+        "content_type": 16
+    },
+    "model": "auth.permission",
+    "pk": 47
+},
+{
+    "fields": {
+        "codename": "delete_trest",
+        "name": "Can delete t res t",
+        "content_type": 16
+    },
+    "model": "auth.permission",
+    "pk": 48
+},
+{
+    "fields": {
+        "codename": "add_eventhandlertres",
+        "name": "Can add event handler tres",
+        "content_type": 17
+    },
+    "model": "auth.permission",
+    "pk": 49
+},
+{
+    "fields": {
+        "codename": "change_eventhandlertres",
+        "name": "Can change event handler tres",
+        "content_type": 17
+    },
+    "model": "auth.permission",
+    "pk": 50
+},
+{
+    "fields": {
+        "codename": "delete_eventhandlertres",
+        "name": "Can delete event handler tres",
+        "content_type": 17
+    },
+    "model": "auth.permission",
+    "pk": 51
+},
+{
+    "fields": {
+        "codename": "add_userprofile",
+        "name": "Can add user profile",
+        "content_type": 18
+    },
+    "model": "auth.permission",
+    "pk": 52
+},
+{
+    "fields": {
+        "codename": "change_userprofile",
+        "name": "Can change user profile",
+        "content_type": 18
+    },
+    "model": "auth.permission",
+    "pk": 53
+},
+{
+    "fields": {
+        "codename": "delete_userprofile",
+        "name": "Can delete user profile",
+        "content_type": 18
+    },
+    "model": "auth.permission",
+    "pk": 54
+},
+{
+    "fields": {
+        "codename": "add_log",
+        "name": "Can add log",
+        "content_type": 19
+    },
+    "model": "auth.permission",
+    "pk": 55
+},
+{
+    "fields": {
+        "codename": "change_log",
+        "name": "Can change log",
+        "content_type": 19
+    },
+    "model": "auth.permission",
+    "pk": 56
+},
+{
+    "fields": {
+        "codename": "delete_log",
+        "name": "Can delete log",
+        "content_type": 19
+    },
+    "model": "auth.permission",
+    "pk": 57
+},
+{
+    "fields": {
+        "codename": "add_rplgraph",
+        "name": "Can add rpl graph",
+        "content_type": 20
+    },
+    "model": "auth.permission",
+    "pk": 58
+},
+{
+    "fields": {
+        "codename": "change_rplgraph",
+        "name": "Can change rpl graph",
+        "content_type": 20
+    },
+    "model": "auth.permission",
+    "pk": 59
+},
+{
+    "fields": {
+        "codename": "delete_rplgraph",
+        "name": "Can delete rpl graph",
+        "content_type": 20
+    },
+    "model": "auth.permission",
+    "pk": 60
+},
+{
+    "fields": {
+        "codename": "add_pymap",
+        "name": "Can add py map",
+        "content_type": 21
+    },
+    "model": "auth.permission",
+    "pk": 61
+},
+{
+    "fields": {
+        "codename": "change_pymap",
+        "name": "Can change py map",
+        "content_type": 21
+    },
+    "model": "auth.permission",
+    "pk": 62
+},
+{
+    "fields": {
+        "codename": "delete_pymap",
+        "name": "Can delete py map",
+        "content_type": 21
+    },
+    "model": "auth.permission",
+    "pk": 63
+},
+{
+    "fields": {
+        "codename": "add_pymapreduce",
+        "name": "Can add py map reduce",
+        "content_type": 22
+    },
+    "model": "auth.permission",
+    "pk": 64
+},
+{
+    "fields": {
+        "codename": "change_pymapreduce",
+        "name": "Can change py map reduce",
+        "content_type": 22
+    },
+    "model": "auth.permission",
+    "pk": 65
+},
+{
+    "fields": {
+        "codename": "delete_pymapreduce",
+        "name": "Can delete py map reduce",
+        "content_type": 22
+    },
+    "model": "auth.permission",
+    "pk": 66
+},
+{
+    "fields": {
+        "codename": "add_taskmeta",
+        "name": "Can add task state",
+        "content_type": 23
+    },
+    "model": "auth.permission",
+    "pk": 67
+},
+{
+    "fields": {
+        "codename": "change_taskmeta",
+        "name": "Can change task state",
+        "content_type": 23
+    },
+    "model": "auth.permission",
+    "pk": 68
+},
+{
+    "fields": {
+        "codename": "delete_taskmeta",
+        "name": "Can delete task state",
+        "content_type": 23
+    },
+    "model": "auth.permission",
+    "pk": 69
+},
+{
+    "fields": {
+        "codename": "add_tasksetmeta",
+        "name": "Can add saved group result",
+        "content_type": 24
+    },
+    "model": "auth.permission",
+    "pk": 70
+},
+{
+    "fields": {
+        "codename": "change_tasksetmeta",
+        "name": "Can change saved group result",
+        "content_type": 24
+    },
+    "model": "auth.permission",
+    "pk": 71
+},
+{
+    "fields": {
+        "codename": "delete_tasksetmeta",
+        "name": "Can delete saved group result",
+        "content_type": 24
+    },
+    "model": "auth.permission",
+    "pk": 72
+},
+{
+    "fields": {
+        "codename": "add_intervalschedule",
+        "name": "Can add interval",
+        "content_type": 25
+    },
+    "model": "auth.permission",
+    "pk": 73
+},
+{
+    "fields": {
+        "codename": "change_intervalschedule",
+        "name": "Can change interval",
+        "content_type": 25
+    },
+    "model": "auth.permission",
+    "pk": 74
+},
+{
+    "fields": {
+        "codename": "delete_intervalschedule",
+        "name": "Can delete interval",
+        "content_type": 25
+    },
+    "model": "auth.permission",
+    "pk": 75
+},
+{
+    "fields": {
+        "codename": "add_crontabschedule",
+        "name": "Can add crontab",
+        "content_type": 26
+    },
+    "model": "auth.permission",
+    "pk": 76
+},
+{
+    "fields": {
+        "codename": "change_crontabschedule",
+        "name": "Can change crontab",
+        "content_type": 26
+    },
+    "model": "auth.permission",
+    "pk": 77
+},
+{
+    "fields": {
+        "codename": "delete_crontabschedule",
+        "name": "Can delete crontab",
+        "content_type": 26
+    },
+    "model": "auth.permission",
+    "pk": 78
+},
+{
+    "fields": {
+        "codename": "add_periodictasks",
+        "name": "Can add periodic tasks",
+        "content_type": 27
+    },
+    "model": "auth.permission",
+    "pk": 79
+},
+{
+    "fields": {
+        "codename": "change_periodictasks",
+        "name": "Can change periodic tasks",
+        "content_type": 27
+    },
+    "model": "auth.permission",
+    "pk": 80
+},
+{
+    "fields": {
+        "codename": "delete_periodictasks",
+        "name": "Can delete periodic tasks",
+        "content_type": 27
+    },
+    "model": "auth.permission",
+    "pk": 81
+},
+{
+    "fields": {
+        "codename": "add_periodictask",
+        "name": "Can add periodic task",
+        "content_type": 28
+    },
+    "model": "auth.permission",
+    "pk": 82
+},
+{
+    "fields": {
+        "codename": "change_periodictask",
+        "name": "Can change periodic task",
+        "content_type": 28
+    },
+    "model": "auth.permission",
+    "pk": 83
+},
+{
+    "fields": {
+        "codename": "delete_periodictask",
+        "name": "Can delete periodic task",
+        "content_type": 28
+    },
+    "model": "auth.permission",
+    "pk": 84
+},
+{
+    "fields": {
+        "codename": "add_workerstate",
+        "name": "Can add worker",
+        "content_type": 29
+    },
+    "model": "auth.permission",
+    "pk": 85
+},
+{
+    "fields": {
+        "codename": "change_workerstate",
+        "name": "Can change worker",
+        "content_type": 29
+    },
+    "model": "auth.permission",
+    "pk": 86
+},
+{
+    "fields": {
+        "codename": "delete_workerstate",
+        "name": "Can delete worker",
+        "content_type": 29
+    },
+    "model": "auth.permission",
+    "pk": 87
+},
+{
+    "fields": {
+        "codename": "add_taskstate",
+        "name": "Can add task",
+        "content_type": 30
+    },
+    "model": "auth.permission",
+    "pk": 88
+},
+{
+    "fields": {
+        "codename": "change_taskstate",
+        "name": "Can change task",
+        "content_type": 30
+    },
+    "model": "auth.permission",
+    "pk": 89
+},
+{
+    "fields": {
+        "codename": "delete_taskstate",
+        "name": "Can delete task",
+        "content_type": 30
+    },
+    "model": "auth.permission",
+    "pk": 90
+},
+{
+    "fields": {
+        "codename": "add_logentry",
+        "name": "Can add log entry",
+        "content_type": 31
+    },
+    "model": "auth.permission",
+    "pk": 91
+},
+{
+    "fields": {
+        "codename": "change_logentry",
+        "name": "Can change log entry",
+        "content_type": 31
+    },
+    "model": "auth.permission",
+    "pk": 92
+},
+{
+    "fields": {
+        "codename": "delete_logentry",
+        "name": "Can delete log entry",
+        "content_type": 31
+    },
+    "model": "auth.permission",
+    "pk": 93
+},
+{
+    "fields": {
+        "username": "noes",
+        "first_name": "",
+        "last_name": "",
+        "is_active": true,
+        "is_superuser": true,
+        "is_staff": true,
+        "last_login": "2015-07-08T15:02:53.279",
+        "groups": [],
+        "user_permissions": [],
+        "password": "pbkdf2_sha256$20000$Tl2gTxh48M6A$Q6ymQfx8Nk56gXdW6OqJ+Y0gb11IXUUUByoTBob2qYg=",
+        "email": "noes@noes.it",
+        "date_joined": "2015-07-08T14:59:17.797"
+    },
+    "model": "auth.user",
+    "pk": 1
+},
+{
+    "fields": {
+        "organization": "",
+        "user": 1
+    },
+    "model": "pyot.userprofile",
+    "pk": 1
+},
+{
+    "fields": {
+        "action_flag": 1,
+        "action_time": "2015-07-08T15:03:14.785",
+        "object_repr": "aaaa::/64 - cooja@pyot",
+        "object_id": "1",
+        "change_message": "",
+        "user": 1,
+        "content_type": 7
+    },
+    "model": "admin.logentry",
+    "pk": 1
+}
+]
