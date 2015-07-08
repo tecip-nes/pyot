@@ -1,0 +1,29 @@
+#!/bin/bash
+
+SCRIPTDIR="$(dirname "$(which "$0")")"
+
+function run {
+  CURRENTDIR="$('pwd')"
+  cp $2 /tmp/pf.py
+  filename=$(basename "$2")
+  filename="${filename%.*}"
+  echo Creating ${filename}.pyc...
+  ${SCRIPTDIR}/../../pymite/tools/pmImgCreator.py -f $1 -b  -o /tmp/${filename}.pyc \
+      /tmp/pf.py
+}
+
+function print_help {
+  scriptname="$(basename "$0")"
+  echo "Usage: ${scriptname} [<pmfeatures_file>] <pf_file>"
+}
+
+if [ $# -eq 2 ]
+then
+  run $1 $2
+elif [ $# -eq 1 ]
+then
+  run ${SCRIPTDIR}/../tres_pmfeatures.py $1
+else
+  print_help "$(basename "$0")"
+fi
+

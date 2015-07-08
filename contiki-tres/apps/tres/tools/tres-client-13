@@ -1,0 +1,43 @@
+#!/bin/bash
+
+function run {
+  MYDIR="$(dirname "$(which "$0")")"
+  #${MYDIR}/tres-pf-compile ${MYDIR}/pmfeatures.py $2
+  echo "Creating $1"
+  ${MYDIR}/bin/coap13-client -m put $1
+  echo "Setting $1/pf"
+  ${MYDIR}/bin/coap13-client -m put $1/pf -b 64 -f $2
+  echo "Setting $1/is"
+  IFS=',' read -a is <<< "$3"
+  echo -n "${is[0]}" | ${MYDIR}/bin/coap13-client -m put $1/is -f -
+  unset "is[0]"
+  for element in "${is[@]}"
+  do
+    echo -n "$element" | ${MYDIR}/bin/coap13-client -m post $1/is -f -
+  done
+  if [ -n "$4" ]
+  then
+    echo "Setting $1/od to $4"
+    echo -n "$4" | ${MYDIR}/bin/coap13-client -m put $1/od -f -
+  fi
+  echo "Start T-Res Task"
+  ${MYDIR}/bin/coap13-client -m post $1
+}
+
+function print_help {
+  scriptname="$(basename "$0")"
+  echo "Usage: ${scriptname} <tres_uri> <pf_source file>"           \
+    "<input_uri>[,<input_uri>, ...] [<output_uri>]"
+}
+
+if [ $# -eq 4 ]
+then
+  run $1 $2 $3 $4
+elif [ $# -eq 3 ]
+then
+  run $1 $2 $3
+else
+  print_help "$(basename "$0")"
+fi
+
+

@@ -1,0 +1,7 @@
+ifeq ($(TARGET), seedeye)
+# FIXME: the following CFLAG is a temporary fix for avoiding linking errors 
+# caused by stdlib_img beeing too big. There should be a better solution than
+# completely disabling sdata storage for extern variables (search for 
+# "-mno-extern-sdata" on the Internet for more information)
+CFLAGS += -mno-extern-sdata
+endif
