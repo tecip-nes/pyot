@@ -13,8 +13,15 @@
 
 /* Save some memory for the sky platform. */
 #undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     5
+#define UIP_CONF_DS6_NBR_NBU     4
+
 #undef UIP_CONF_DS6_ROUTE_NBU
-#define UIP_CONF_DS6_ROUTE_NBU   5
+#define UIP_CONF_DS6_ROUTE_NBU   4
+
+#undef UIP_CONF_MAX_ROUTES
+#define UIP_CONF_MAX_ROUTES   4
+
+
+
 
 #endif /* __PROJECT_TRES_EXAMPLE_CONF_H__ */

@@ -21,17 +21,21 @@ along with PyoT.  If not, see <http://www.gnu.org/licenses/>.
 
 @author: Andrea Azzara' <a.azzara@sssup.it>
 '''
-from django.db import models
-from django.conf import settings
-from django.db.models.signals import pre_save, post_save
-from pyot.models.rest import *
-from django.core.validators import validate_slug
-import py_compile
-import pickle
 import base64
-import urllib
-import sys, os
+import os
+import pickle
+import py_compile
 import subprocess
+import sys
+import urllib
+
+from django.conf import settings
+from django.core.validators import validate_slug
+from django.db import models
+from django.db.models.signals import pre_save, post_save
+
+from pyot.models.rest import *
+
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 TFMT = settings.TFMT
@@ -44,6 +48,7 @@ T_RES_TOOLS = settings.PROJECT_PATH + '/../t-res-tools/'
 SCRIPT_FOLDER = MEDIA_ROOT + 'scripts/'
 tresCompile = T_RES_TOOLS + 'tres-pf-compile'
 tresPMfeat = T_RES_TOOLS + 'tres_pmfeatures.py'
+
 
 class TResProcessing(models.Model):
     """
@@ -69,6 +74,7 @@ class TResProcessing(models.Model):
     def __unicode__(self):
         return u"{n}".format(n=self.name)
 
+
 def verify_pf(sender, instance, raw, **kwargs):
     '''
     Validates the syntax of the processing function
@@ -86,6 +92,7 @@ TRES_STATES = (
     (u'CLEARED', u'CLEARED'),
 )
 
+
 class EmulatorState(models.Model):
     """
     Defines the state of an emulator instance (input/output/stack...)
@@ -96,17 +103,20 @@ class EmulatorState(models.Model):
     _out = models.CharField(max_length=1000, blank=True, null=True)
     _stack = models.CharField(max_length=1000, blank=True, null=True)
     result = models.TextField(db_column='result', default='', max_length=4096)
+
     class Meta:
         app_label = 'pyot'
+
     def set_input_data(self, data):
         self._inp = base64.encodestring(data)
+
     def get_input_data(self):
         return base64.decodestring(self._inp)
     inp = property(get_input_data, set_input_data)
 
-
     def set_state_data(self, S):
         self._status = pickle.dumps(S)
+
     def get_state_data(self):
         return pickle.loads(self._status)
     status = property(get_state_data, set_state_data)
@@ -117,12 +127,14 @@ class EmulatorState(models.Model):
 
     def set_stack_data(self, S):
         self._stack = pickle.dumps(S)
+
     def get_stack_data(self):
         return pickle.loads(self._stack)
     stack = property(get_stack_data, set_stack_data)
 
     def set_output_data(self, data):
         self._out = base64.encodestring(data)
+
     def get_output_data(self):
         return base64.decodestring(self._out)
     output = property(get_output_data, set_output_data)
@@ -144,12 +156,14 @@ class EmulatorState(models.Model):
     def __unicode__(self):
         return u"{t}".format(t=self.timeAdded.strftime(TFMT))
 
+
 def init_stack(sender, instance, raw, **kwargs):
     if instance._stack is None:
         instance.stack = []
         instance.save()
 
 post_save.connect(init_stack, sender=EmulatorState)
+
 
 class TResT(models.Model):
     """
@@ -160,20 +174,22 @@ class TResT(models.Model):
     by the emu field.
     """
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
-    inputS = models.ManyToManyField(Resource)
-    output = models.ForeignKey(Resource, related_name='OutputDestination',
-                               null=True)
+    inputS = models.ManyToManyField(Resource, blank=True, related_name='is')
+    output = models.ManyToManyField(Resource, blank=True, related_name='od')
     TResResource = models.ForeignKey(Resource, null=True,
                                      related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
                              default='CREATED')
     period = models.IntegerField(default=0)
     emu = models.ForeignKey(EmulatorState, null=True)
+
     class Meta(object):
         app_label = 'pyot'
 
     def __unicode__(self):
-        return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf, i=str(self.inputS.all()), o=self.output)
+        return u"Pf={p}, inputs={i}, output={o}".format(p=self.pf,
+                                                        i=str(self.inputS.all()),
+                                                        o=str(self.output.all()))
 
     def deploy(self, t_res_resource):
         """
@@ -188,37 +204,46 @@ class TResT(models.Model):
 
         # 1) compile the script
         basename = os.path.basename(str(self.pf.sourcefile))
-        compile_command = tresCompile + ' ' + tresPMfeat + ' ' + str(self.pf.sourcefile)
+        compile_command = tresCompile + ' ' + (tresPMfeat + ' '
+                                               + str(self.pf.sourcefile))
         p = subprocess.check_call([compile_command],
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             shell=True, cwd=SCRIPT_FOLDER)
-
-        # 2) start a task downloading the script from the server
+                                  stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  shell=True, cwd=SCRIPT_FOLDER)
+        # start a task downloading the script from the server
         pycFilename = basename + 'c'
         r = tresDownloadScript.apply_async(args=[pycFilename],
-                                       queue=t_res_resource.host.getQueue())
+                                           queue=t_res_resource.host.getQueue())
         r.wait()
         result = r.result
         if result.code != SUCCESS:
             return Response(FAILURE, 'PWN: Error downloading pyc.')
         try:
-            newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+            newTask = Resource.objects.get(host=self.TResResource.host,
+                                           uri='/tasks/' + self.pf.name)
         except Resource.DoesNotExist:
-            newTask = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+            newTask = Resource.objects.create(host=self.TResResource.host,
+                                              uri='/tasks/' + self.pf.name)
 
         # 3) Create a new task resource
         r = newTask.PUT(query="per=" + str(self.period))
         print 'first put result = ' + r.code
         if r.code != CREATED:
             newTask.delete()
-            return Response(FAILURE, 'Error creating new resource: ' + '/tasks/' + self.pf.name)
+            return Response(FAILURE, 'Error creating new resource: ' +
+                            '/tasks/' + self.pf.name)
 
-        newIs = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/is')
-        newOd = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/od')
-        newPf = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/pf')
-        _newLo = Resource.objects.create(host=self.TResResource.host, uri='/tasks/' + self.pf.name + '/lo')
+        newIs = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/is')
+        newOd = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/od')
+        newPf = Resource.objects.create(host=self.TResResource.host,
+                                        uri='/tasks/' + self.pf.name + '/pf')
+        _newLo = Resource.objects.create(host=self.TResResource.host,
+                                         uri='/tasks/' + self.pf.name + '/lo')
+        _newIn = Resource.objects.create(host=self.TResResource.host,
+                                         uri='/tasks/' + self.pf.name + '/in')
 
         # 4) Upload the processing function
         r = newPf.PUT(inputfile=tmpDir + '/' + pycFilename, block=64)
@@ -228,10 +253,10 @@ class TResT(models.Model):
             self.uninstall()
             return Response(FAILURE, 'Error uploading processing function.')
 
-        # 5) Create output destination resource
-        if self.output:
-            r = newOd.PUT(payload='<' + self.output.getFullURI() + '>')
-            print 'OD put result = ' + r.code
+        # 5) Create output destination resources
+        for od in self.output.all():
+            r = newOd.POST(payload='<' + od.getFullURI() + '>')
+            print 'OD put result = ' + r.code + ' ' + od.getFullURI()
             if r.code != CHANGED:
                 self.uninstall()
                 return Response(FAILURE, 'Error updating OD resource')
@@ -245,7 +270,7 @@ class TResT(models.Model):
                 return Response(FAILURE, 'Error updating IS resource')
 
         self.state = 'INSTALLED'
-        self.save() # update TResResource and state
+        self.save()  # update TResResource and state
 
         return Response(SUCCESS, 'Tres Task ' + str(self) + ' Installed')
 
@@ -253,17 +278,27 @@ class TResT(models.Model):
         """
         Uninstalls a T-Res task from a node.
         """
-        newTask = Resource.objects.get(host=self.TResResource.host, uri='/tasks/' + self.pf.name)
+        if self.state == 'RUNNING':
+            self.stop()
+
+        if self.state == 'CLEARED':
+            return Response(SUCCESS, 'Task ' + self.pf.name +
+                            'already uninstalled')
+
+        newTask = Resource.objects.get(host=self.TResResource.host,
+                                       uri='/tasks/' + self.pf.name)
         r = newTask.DELETE()
         if r.code == DELETED:
             newTask.delete()
             Resource.objects.filter(host=self.TResResource.host,
-                                    uri__startswith='/tasks/' + self.pf.name).delete()
+                                    uri__startswith='/tasks/' +
+                                    self.pf.name).delete()
             self.state = 'CLEARED'
             self.save()
             return Response(SUCCESS, 'Task ' + self.pf.name + ' uninstalled')
         else:
-            return Response(FAILURE, 'Error uninstalling task ' + self.pf.name)
+            return Response(FAILURE, 'Error uninstalling task ' +
+                            self.pf.name)
 
     def start(self):
         '''
@@ -301,15 +336,25 @@ class TResT(models.Model):
         """
         raise NotImplementedError("Still to be implemented in T-Res")
 
-
     def getLastOutput(self):
         """
         Returns the last output resource reference. The resource can be
         retrieved or observed.
         """
         last_output = Resource.objects.get(host=self.TResResource.host,
-                                           uri='/tasks/' + self.pf.name + '/lo')
+                                           uri='/tasks/' +
+                                           self.pf.name + '/lo')
         return last_output
+
+    def getInputResource(self):
+        """
+        Returns the input resource reference. The resource can be
+        retrieved or observed.
+        """
+        input_resource = Resource.objects.get(host=self.TResResource.host,
+                                              uri='/tasks/' +
+                                              self.pf.name + '/in')
+        return input_resource
 
     def getInputSource(self):
         """
@@ -386,6 +431,7 @@ class TResT(models.Model):
             return self.emu.output
         except:
             return None
+
     def getEmuResult(self):
         """
         Returns the result of a processing function

@@ -4,3 +4,4 @@ uses:
 test-warnings: no 
 ignore-paths:
     - t-res-tools
+    - examples

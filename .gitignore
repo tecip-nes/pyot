@@ -77,3 +77,12 @@ local.properties
 
 # PDT-specific
 .buildpath
+
+#venv
+venv/**
+
+#exec and sqlite
+*.wismote
+*.sky
+*.seedeye
+*.sqlite

@@ -4,30 +4,16 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "net/uip.h"
-#include "net/uip-ds6.h"
+#include "net/ip/uip.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/rpl/rpl.h"
 
-#include "erbium.h"
-#if WITH_COAP == 3
-#include "er-coap-03-engine.h"
-#elif WITH_COAP == 6
-#include "er-coap-06-engine.h"
-#elif WITH_COAP == 7
-#include "er-coap-07-engine.h"
-#elif WITH_COAP == 12
-#include "er-coap-12-engine.h"
-#elif WITH_COAP == 13
-#include "er-coap-13-engine.h"
-#else
-#error "CoAP version defined by WITH_COAP not implemented"
-#endif
-
+#include "er-coap.h"
 #include "rplinfo.h"
 
 /* debug */
 #define DEBUG DEBUG_FULL
-#include "net/uip-debug.h"
+#include "net/ip/uip-debug.h"
 
 uint16_t 
 ipaddr_add(const uip_ipaddr_t *addr, char *buf)
@@ -139,7 +125,16 @@ uint16_t create_parent_msg(char *buf, rpl_parent_t *parent, uint8_t preferred)
 }
 
 
-RESOURCE(parents, METHOD_GET, "rplinfo/parents", "title=\"RPL\";rt=\"Data\"");
+//RESOURCE(parents, METHOD_GET, "rplinfo/parents", "title=\"RPL\";rt=\"Data\"");
+void
+parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+RESOURCE(parents, 
+         "title=\"RPL\";rt=\"Data\"", 
+         parents_handler, 
+         NULL, 
+         NULL, 
+         NULL);
 
 static volatile uint8_t cur_neigh_entry;
 static volatile uint8_t entry_char_skip;
@@ -148,9 +143,8 @@ void
 parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 
-//printf("Parents handlers\n");
   int32_t strpos = 0;
-  uip_ds6_route_t *r;
+  //uip_ds6_route_t *r;
   volatile uint8_t i;
   rpl_dag_t *dag;
   rpl_parent_t *parent;
@@ -175,7 +169,7 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 			index = (uint8_t)atoi(pstr);
 
 			if (index >= count) {
-				strpos = snprintf(buffer, preferred_size, "{}");
+				strpos = snprintf((char *)buffer, preferred_size, "{}");
 			} else { 
 				/* seek to the route entry and return it */
 				i = 0;
@@ -186,9 +180,9 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 				}
 				
 				if (parent == dag->preferred_parent) { 
-					strpos = create_parent_msg(buffer, parent, 1);
+					strpos = create_parent_msg((char *)buffer, parent, 1);
 				} else {
-					strpos = create_parent_msg(buffer, parent, 0);
+					strpos = create_parent_msg((char *)buffer, parent, 0);
 				}
 			}	
 
@@ -210,6 +204,6 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 
 void
 rplinfo_activate_resources(void) {
-  rest_activate_resource(&resource_parents);
+  rest_activate_resource(&parents, "rplinfo/parents");
   //rest_activate_resource(&resource_routes);
 }

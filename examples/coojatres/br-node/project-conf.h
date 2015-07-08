@@ -37,6 +37,10 @@
 
 #include "common-conf.h"
 
+/* Enabling TCP on br nodes. */
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   1
+
 #ifndef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
