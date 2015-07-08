@@ -13,3 +13,8 @@ before_install:
 install: pip install -r travisreq.txt
 # command to run tests, e.g. python setup.py test
 script:  python manage.py test
+
+# whitelist
+branches:
+  only:
+    - master
