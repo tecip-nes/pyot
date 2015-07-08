@@ -1,0 +1,6 @@
+[submodule "tools/mspsim"]
+	path = contiki-tres/tools/mspsim
+	url = https://github.com/contiki-os/mspsim.git
+[submodule "tools/cc2538-bsl"]
+	path = contiki-tres/tools/cc2538-bsl
+	url = https://github.com/JelmerT/cc2538-bsl.git
