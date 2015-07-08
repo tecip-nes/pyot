@@ -1,0 +1,8 @@
+#!/bin/bash
+CONTIKI=../../../
+
+while : 
+do
+  $CONTIKI/tools/tunslip6 -a localhost aaaa::1/64
+  sleep 1
+done

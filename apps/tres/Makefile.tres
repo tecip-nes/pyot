@@ -1,0 +1,18 @@
+# @Author Daniele Alessandrelli
+
+TRES_DIR = $(CONTIKI)/apps/tres
+
+PM_STDLIB_SOURCES += $(TRES_DIR)/tres_pymite.py 
+
+###############################################################################
+# VARIABLES USED IN CONTIKI MAIN MAKEFILE
+###############################################################################
+# neeeded to include headers files
+APPDIRS += $(TRES_DIR)
+
+tres_src = tres.c tres-pymite.c tres-interface.c
+
+ifeq ($(strip $(PYMITE_PM_FEATURES)),)
+  PYMITE_PM_FEATURES = $(TRES_DIR)/tres_pmfeatures.py
+endif
+

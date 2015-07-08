@@ -1,0 +1,63 @@
+# @Author Daniele Alessandrelli
+
+# pymite directories
+PM_VM_DIR = $(CONTIKI)/apps/pymite/vm
+PM_LIB_DIR = $(CONTIKI)/apps/pymite/lib
+PM_TOOLS_DIR = $(CONTIKI)/apps/pymite/tools
+
+# tool for converting python files to a pymite image
+PYMITE_IMG_CREATOR := $(PM_TOOLS_DIR)/pmImgCreator.py
+PM_PMFEATURES_GENERATOR = $(PM_TOOLS_DIR)/pmGenPmFeatures.py
+###############################################################################
+# STD LIBRARY
+###############################################################################
+PM_STDLIB_SOURCES += $(addprefix $(PM_LIB_DIR)/, \
+			  list.py  dict.py  __bi.py  sys.py  string.py)
+ifeq ($(PYMITE_IPM),true)
+  PM_STDLIB_SOURCES += $(PM_LIB_DIR)/ipm.py
+endif
+
+PM_STDLIB_IMG_C_FILE = pmstdlib_img.c
+PM_STDLIB_NAT_C_FILE = pmstdlib_nat.c
+
+
+ifeq ($(strip $(PYMITE_PM_FEATURES)),)
+  $(error PYMITE_PM_FEATURES variables not defined!)
+endif
+
+
+$(PM_STDLIB_IMG_C_FILE) $(PM_STDLIB_NAT_C_FILE):    $(PM_STDLIB_SOURCES)       \
+		      $(PYMITE_IMG_CREATOR) $(PYMITE_PM_FEATURES) pmfeatures.h
+	@echo "Creating pymite stdlib image and native function files"
+	$(PYMITE_IMG_CREATOR) -f $(PYMITE_PM_FEATURES) -c -s --memspace=flash  \
+		-o $(PM_STDLIB_IMG_C_FILE)				       \
+		--native-file=$(PM_STDLIB_NAT_C_FILE)			       \
+		$(PM_STDLIB_SOURCES)
+
+pmfeatures.h : $(PYMITE_PM_FEATURES) $(PMGENPMFEATURES) Makefile
+	$(PM_PMFEATURES_GENERATOR) $(PYMITE_PM_FEATURES) > $@
+
+################################################################################
+
+PM_VM_SOURCES = $(PM_STDLIB_IMG_C_FILE) $(PM_STDLIB_NAT_C_FILE)                \
+		$(notdir $(wildcard $(PM_VM_DIR)/*.c))   
+
+################################################################################
+# TARGET TO LAUNCH PYMITE INTERACTIVE SHELL
+################################################################################
+pymite-ipm:
+	$(PM_TOOLS_DIR)/ipm.py -f $(PYMITE_PM_FEATURES)		               \
+					-s $(PYMITE_PC_UART_PORT) -b 115200
+
+###############################################################################
+# VARIABLES USED IN CONTIKI MAIN MAKEFILE
+###############################################################################
+
+# pymite uses the math library
+TARGET_LIBFILES += -lm
+
+# neeeded to include headers files
+APPDS += $(PM_VM_DIR)
+
+# PYMITE_SOURCES is defined in src/vm/Makefile
+pymite_src = $(PM_VM_SOURCES) 

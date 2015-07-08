@@ -1,0 +1,38 @@
+#!/bin/bash
+
+function run {
+  MYDIR="$(dirname "$(which "$0")")"
+  ${MYDIR}/tres-pf-compile $2
+  echo "Creating $1"
+  ${MYDIR}/bin/coap-client -m put $1?per=0
+  echo "Setting $1/pf /tmp/$2c"
+  ${MYDIR}/bin/coap-client -m put $1/pf -b 64 -f /tmp/$2c
+
+  echo "Setting $1/od to $3"
+  IFS=',' read -a od <<< "$3"
+  
+  echo -n "${od[0]}" | ${MYDIR}/bin/coap-client -m put $1/od -f -
+  unset "od[0]"
+  for element in "${od[@]}"
+  do
+    echo -n "$element" | ${MYDIR}/bin/coap-client -m post $1/od -f -
+  done    
+
+  echo "Start T-Res Task"
+  ${MYDIR}/bin/coap-client -m post $1
+}
+
+function print_help {
+  scriptname="$(basename "$0")"
+  echo "Usage: ${scriptname} <tres_uri> <pf_source file>"           \
+    "<input_uri>[,<input_uri>, ...] [<output_uri>]"
+}
+
+if [ $# -eq 3 ]
+then
+  run $1 $2 $3
+else
+  print_help "$(basename "$0")"
+fi
+
+
