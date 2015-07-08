@@ -44,7 +44,7 @@ class UserProfile(models.Model):
     '''
     Custom user profile model including an 'organization' field.
     '''
-    user = models.ForeignKey(User, unique=True, related_name='profile')
+    user = models.OneToOneField(User, unique=True, related_name='profile')
     organization = models.CharField(max_length=50, blank=False)
 
     def save(self, *args, **kwargs):

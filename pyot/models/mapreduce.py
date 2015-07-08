@@ -77,8 +77,7 @@ class pyMapReduce(models.Model):
     network = models.ForeignKey(Network, null=True,
                                 related_name='net')
 
-    tresTasks = models.ManyToManyField(TResT, null=True,
-                                       related_name='tresTasks')
+    tresTasks = models.ManyToManyField(TResT, related_name='tresTasks')
 
     state = models.CharField(max_length=10,
                              blank=False,

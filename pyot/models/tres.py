@@ -174,8 +174,8 @@ class TResT(models.Model):
     by the emu field.
     """
     pf = models.ForeignKey(TResProcessing, related_name='ProcessingFunction')
-    inputS = models.ManyToManyField(Resource, blank=True, related_name='is')
-    output = models.ManyToManyField(Resource, blank=True, related_name='od')
+    inputS = models.ManyToManyField(Resource, blank=True, related_name='isource')
+    output = models.ManyToManyField(Resource, blank=True, related_name='odestination')
     TResResource = models.ForeignKey(Resource, null=True,
                                      related_name='TresResource')
     state = models.CharField(max_length=10, blank=False, choices=TRES_STATES,
