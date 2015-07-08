@@ -1,3 +1,4 @@
+CONTIKI=../../contiki-tres/
 
 include $(CONTIKI)/Makefile.include
 

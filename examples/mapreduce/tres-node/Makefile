@@ -1,3 +1,4 @@
+CONTIKI=../../contiki-tres/
 ifndef TARGET
   TARGET = wismote
 endif
