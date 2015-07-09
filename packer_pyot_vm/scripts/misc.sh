@@ -6,7 +6,7 @@
 
 # Install some packages using apt-get
 export DEBIAN_FRONTEND=noninteractive
-
+rm -rf /var/lib/apt/lists/*
 apt-get update -q
 apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       -o Dpkg::Options::="--force-confold" \
@@ -17,6 +17,7 @@ apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       gnome-utils \
                       git \
                       build-essential \
+                      autoconf \
                       linux-headers-generic \
                       openjdk-7-jdk \
                       openjdk-7-jre \
@@ -26,7 +27,6 @@ apt-get install -q -y -o Dpkg::Options::="--force-confdef" \
                       gedit \
                       nautilus-open-terminal \
                       python-pip \
-                      gcc-msp430 \
                       chromium-browser\
                       python-mysqldb \
                       libmysqlclient-dev \
@@ -59,41 +59,21 @@ gsettings set org.gnome.desktop.lockdown disable-lock-screen true
 
 #sudo apt-get install  ttf-ubuntu-font-family  sudo aptitude install --without-recommends ubuntu-desktop
 
-wget http://archive.ubuntu.com/ubuntu/pool/main/t/texinfo/texinfo_4.13a.dfsg.1-8ubuntu2_i386.deb
-dpkg -i texinfo_4.13a.dfsg.1-8ubuntu2_i386.deb
-
-cd /home/vagrant
-git clone https://github.com/contiki-os/contiki.git
-cd contiki
-git checkout 2.7
-git submodule update --init
-
-#workaround to stop flooding of cooja warning messages
-sed -i '221 s/^/\/\//' /home/vagrant/contiki/tools/cooja/apps/mspsim/src/se/sics/cooja/mspmote/MspMote.java
-
-cd tools
-make tunslip6
-cd cooja
-ant run
-
-echo "export CONTIKI=\"/home/vagrant/contiki\"" >> /home/vagrant/.profile
+cd /opt/
+wget http://retis.sssup.it/~a.azzara/mspgcc-4.7.2.zip
+unzip mspgcc-4.7.2.zip
 
 cd /home/vagrant
 
 PYOT=/home/vagrant/pyot
 DESKTOP=/home/vagrant/Desktop
 git clone https://github.com/tecip-nes/pyot.git
-cd $PYOT
-
-cd libcoap-4.0.1/
-./configure && make
 
 cd $PYOT
 ./a_install_reqs.sh
+./b_install_db.sh
 
 ln -s $PYOT                     $DESKTOP/pyot 
-
-./b_install_db.sh
 
 GDMCONF=/etc/gdm/custom.conf
 echo -e "[daemon]" > $GDMCONF
@@ -106,5 +86,5 @@ echo -e "DefaultSession=gnome-2d" >> $GDMCONF
 
 PROFILE=/home/vagrant/.profile
 echo -e "gsettings set org.gnome.desktop.screensaver lock-enabled false" >> $PROFILE
-
+echo -e "export PATH=${PATH}:/opt/mspgcc-4.7.2/bin"  >> $PROFILE
 chown -R vagrant /home/vagrant/
