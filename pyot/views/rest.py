@@ -127,10 +127,10 @@ def hostsList(request):
     if request.method != 'GET':
         response = 'Bad request, needs a GET method'
         return HttpResponseBadRequest(response)
-    sortname = request.REQUEST.get('sortname', 'timeadded')
-    sortorder = request.REQUEST.get('sortorder', 'asc') # Ascending/descending
-    page = request.REQUEST.get('page', 1) # What page we are on
-    rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
+    sortname = request.GET.get('sortname', 'timeadded')
+    sortorder = request.GET.get('sortorder', 'asc') # Ascending/descending
+    page = request.GET.get('page', 1) # What page we are on
+    rp = int(request.GET.get('rp', 15)) # Num requests per page
     order = ''
     if sortorder == 'desc':
         order = '-'
@@ -156,7 +156,7 @@ def hostsList(request):
 
 #@login_required
 def resources(request):
-    hostid = request.REQUEST.get('id', '')
+    hostid = request.GET.get('id', '')
 
     if hostid == '':
         logging.debug('vuoto')
@@ -178,10 +178,10 @@ def resources(request):
 #@login_required
 def resourceList(request):
     hostidList = None
-    query = request.REQUEST.get('query', '')
-    querytype = request.REQUEST.get('qtype', '')
-    page = request.REQUEST.get('page', 1) # What page we are on
-    rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
+    query = request.GET.get('query', '')
+    querytype = request.GET.get('qtype', '')
+    page = request.GET.get('page', 1) # What page we are on
+    rp = int(request.GET.get('rp', 15)) # Num requests per page
 
     if querytype == 'id' and query != '':
         hostidList = query.split(',')
@@ -235,10 +235,10 @@ def resourceStatus(request, rid):
 #@login_required
 def obsList(request):
     rid = request.GET['query']
-    sortname = request.REQUEST.get('sortname', 'timeadded')
-    sortorder = request.REQUEST.get('sortorder', 'asc') # Ascending/descending
-    page = request.REQUEST.get('page', 1) # What page we are on
-    rp = int(request.REQUEST.get('rp', 15)) # Num requests per page
+    sortname = request.GET.get('sortname', 'timeadded')
+    sortorder = request.GET.get('sortorder', 'asc') # Ascending/descending
+    page = request.GET.get('page', 1) # What page we are on
+    rp = int(request.GET.get('rp', 15)) # Num requests per page
     order = ''
     if sortorder == 'desc':
         order = '-'
@@ -298,7 +298,7 @@ def subList(request, rid):
 
 #@staff_member_required
 def cancelSub(request):
-    pid = request.REQUEST.get('pid', '')
+    pid = request.GET.get('pid', '')
     try:
         s = Subscription.objects.get(pid=pid)
         s.cancel_subscription()
@@ -310,9 +310,9 @@ def cancelSub(request):
 #@login_required
 def opRes(request):
     try:
-        rid = request.REQUEST.get('id', '')
-        payload = request.REQUEST.get('pd', None)
-        operation = request.REQUEST.get('op', '')
+        rid = request.GET.get('id', '')
+        payload = request.GET.get('pd', None)
+        operation = request.GET.get('op', '')
         try:
             r = Resource.objects.get(id=rid)
         except ObjectDoesNotExist:
@@ -336,10 +336,10 @@ def opRes(request):
 #@staff_member_required
 def observe(request):
     try:
-        rid = request.REQUEST.get('id', '')
-        duration = request.REQUEST.get('duration', '30')
-        handler = request.REQUEST.get('handler', '')
-        renew = request.REQUEST.get('renew', 'false')
+        rid = request.GET.get('id', '')
+        duration = request.GET.get('duration', '30')
+        handler = request.GET.get('handler', '')
+        renew = request.GET.get('renew', 'false')
 
         if handler == 'undefined':
             handler = None
