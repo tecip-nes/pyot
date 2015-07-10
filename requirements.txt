@@ -35,3 +35,5 @@ six==1.9.0
 terminado==0.5
 tornado==4.2
 wsgiref==0.1.2
+matplotlib==1.4.3
+numpy==1.9.2
