@@ -13,9 +13,11 @@ PyoT is a Web-Based Macroprogramming Interface for the IoT
 
 <img src="https://raw.github.com/tecip-nes/pyot/master/screenshots/arch.png" alt="PyoT Architecture" width="500px" />
 
-PyoT comes with a Contiki Cooja simulation for local testing.
+PyoT comes with some Contiki Cooja simulations for local testing. The examples included in the package require the gcc-msp430 version 4.7.2 compiler. [Here] you can find instructions on how to build the compiler. For simplicity a packer-based virtual machine is provided in the *packer_pyot_vm* folder. To build the VM just execute *run.sh*. The resulting VM can be loaded on VirtualBox and contains a ready-to-run version of PyoT, with all the required dependencies.
 
-Requirements and installation (tested on Ubuntu 12.04)
+[Here]:https://github.com/tecip-nes/contiki-tres/wiki/Building-the-latest-version-of-mspgcc
+
+Requirements and manual installation (tested on Ubuntu 12.04)
 --------------
 
 Install general requirements:
@@ -28,10 +30,11 @@ The next step will install python requirements, in a local virtual env folder, a
 ./a_install_reqs.sh
 ```
 
-Then create a local sqlite database:
+This command creates a local sqlite database and loads some preliminary data on it:
 ```sh
 ./b_install_db.sh
 ```
+An admin user account is automatically created. Username: *noes*. Password: *noes*.
 
 How to run the application
 --------------
@@ -45,7 +48,7 @@ Start the worker node in another terminal:
 ./2_worker_start.sh
 ```
 
-Optionally open a new terminal to start IPython Notebook interface:
+Open a new terminal to start IPython Notebook interface:
 ```sh
 ./3_notebook_start.sh
 ```
@@ -60,7 +63,7 @@ Start tunslip, open another terminal and type:
 ./5_tunslip_start.sh
 ```
 
-Open Cooja simulator and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
+Open the Cooja simulator window and start the simulation. In a few seconds you should see the Host and Resource page populating with the nodes. The system will automatically perform resource discovery on the hosts.
 
 Macroprogramming
 --------------
