@@ -53,10 +53,20 @@ Open a new terminal to start IPython Notebook interface:
 ./3_notebook_start.sh
 ```
 
-Compile and start Cooja simulation. For this step I assume you have ant, jdk, msp430gcc and everything required to run a Cooja simulation already installed:
+Compile and start on the provided Cooja simulations. For the following steps I assume you have ant, jdk, msp430gcc and everything required to run a Cooja simulation already installed:
+
 ```sh
-./4_cooja_start.sh
+./4a_cooja_erbium_start.sh
 ```
+The first simulation includes a set of simple CoAP servers with simulated sensors and actuators. It can be tested opening and executing the 'demo' notebook.
+
+```sh
+./4b_cooja_tres_start.sh
+```
+
+The second simulation includes a [T-Res] example. To test it just open and execute the 'T-Res' notebook.
+
+[T-Res]:https://github.com/tecip-nes/contiki-tres
 
 Start tunslip, open another terminal and type:
 ```sh
