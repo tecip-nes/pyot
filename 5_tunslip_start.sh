@@ -1,5 +1,5 @@
 #! /bin/bash
-cd examples/contiki_cooja
+CONTIKI=./contiki-tres
 
 while : 
 do
