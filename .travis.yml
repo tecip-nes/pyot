@@ -1,14 +1,26 @@
 language: python
 python:
   - "2.7"
+  
+sudo: false
 
 services:
   - rabbitmq
-  
-before_install:
- - sudo apt-get update -qq
- - sudo apt-get install -qq python-mysqldb libmysqlclient-dev rabbitmq-server python-pip python-dev libcurl4-gnutls-dev graphviz libgraphviz-dev  libfreetype6-dev libpng12-dev
-
+ 
+addons:
+  apt:
+    packages:
+    - python-mysqldb 
+    - libmysqlclient-dev 
+    - rabbitmq-server 
+    - python-pip 
+    - python-dev 
+    - libcurl4-gnutls-dev 
+    - graphviz 
+    - libgraphviz-dev  
+    - libfreetype6-dev 
+    - libpng12-dev
+ 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -r travisreq.txt
 # command to run tests, e.g. python setup.py test
