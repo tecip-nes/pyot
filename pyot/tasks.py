@@ -589,12 +589,9 @@ def autostart_rd(sender=None, conf=None, **kwargs):
     the associated route to become available and starts the resource directory
     task.
     """
-    try:
-        n = Network.objects.get(hostname=sender.hostname)
-        while checkRoute(str(n.network)) is False:
-            time.sleep(1)
-        print 'starting rd server ' + str(n)
-        n.startRD()
-    except Exception, exc:
-      autostart_rd.retry(exc=exc, countdown=5)
+    n = Network.objects.get(hostname=sender.hostname)
+    while checkRoute(str(n.network)) is False:
+        time.sleep(1)
+    print 'starting rd server ' + str(n)
+    n.startRD()
 
